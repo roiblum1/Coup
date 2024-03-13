@@ -107,7 +107,10 @@ public class HelloApplication extends Application {
                 } else if (selectedAction.equals("Action 2")) {
                     addNewCard("Player 1", "Screenshot_16.png");
                 }
-
+                else if(selectedAction.equals("Action 3"))
+                {
+                    switchCard("Player 1", "Screenshot_15.png");
+                }
                 // Reset the ComboBox selection later
                 Platform.runLater(() -> actionsComboBox.setValue(null));
             }
