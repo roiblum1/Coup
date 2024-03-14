@@ -20,11 +20,7 @@ public class Game
 
     public void initAllPossibleAction()
     {
-        rules.put("income", new Action("income"));
-        rules.put("steal", new Action("steal"));
-        rules.put("assassination", new Action("assassination"));
-        rules.put("tax", new Action("tax"));
-        rules.put("block", new Action("block"));
+        rules.put("income", new IncomeAction(playerList.get(0)));
     }
     // Adds a new player to the game.
     public void addPlayer(String name) {
@@ -39,7 +35,7 @@ public class Game
     {
         Map<String, Action> possibleActions = new HashMap<String, Action>();
         for (String action : rules.keySet()) {
-            if (rules.get(action).canPlayerPerform(player))
+            if (rules.get(action).canPlayerPerform())
                 possibleActions.put(action, rules.get(action));
         }
         return possibleActions;

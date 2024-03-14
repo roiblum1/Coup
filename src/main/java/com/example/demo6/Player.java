@@ -27,6 +27,10 @@ public class Player
         this.currentDeck = currentDeck;
     }
 
+    public int getCoins() {
+        return this.coins;
+    }
+
     public void updateCoins(int coins)
     {
         this.coins += coins;
@@ -84,10 +88,20 @@ public class Player
         this.action = action;
     }
 
-    public void doAction() { if (action != null) action.execute(this);}
+    public void doAction() { if (action != null) action.execute();}
 
     @Override
     public String toString() {
         return getName();
+    }
+
+
+    public boolean hasCard(Card givenCard) {
+        for (Card card : cards) {
+            if (card.equals(givenCard)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

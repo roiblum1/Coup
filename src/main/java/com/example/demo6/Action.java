@@ -1,21 +1,15 @@
 package com.example.demo6;
 
-public class Action {
-    String name;
-    public Action(String name)
-    {
-        this.name = name;
-    }
-    public void execute(Player player)
-    {
-        if (this.name.equals("income"))
-        {
-            player.updateCoins(1);
-        }
+public abstract class Action {
+    protected Player player;
 
+    public Action(Player player) {
+        this.player = player;
     }
 
-    public boolean canPlayerPerform(Player player) {
-        return true;
-    }
+    // This method checks if the action can be performed by the player.
+    public abstract boolean canPlayerPerform();
+
+    // Executes the action.
+    public abstract void execute();
 }
