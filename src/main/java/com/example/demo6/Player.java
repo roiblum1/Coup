@@ -70,8 +70,8 @@ public class Player
         List<Card> oldCards = new ArrayList<>(this.cards); // Store old cards
         this.cards.clear(); // Clear current cards
 
-        // Draw new cards
-        for (int i = 0; i < oldCards.size(); i++) {
+        // Draw two new cards
+        for (int i = 0; i < 2; i++) {
             Card card = this.currentDeck.getCard();
             if (card != null) {
                 this.cards.add(card);
@@ -80,8 +80,26 @@ public class Player
             }
         }
 
-        // Return old cards to the deck
-        for (Card card : oldCards) {
+        // Mix the drawn cards with the old cards
+        List<Card> mixedCards = new ArrayList<>(oldCards);
+        mixedCards.addAll(this.cards);
+
+        // Prompt the player to select two cards to keep
+        System.out.println("Select two cards to keep:");
+        for (int i = 0; i < mixedCards.size(); i++) {
+            System.out.println((i + 1) + ". " + mixedCards.get(i));
+        }
+        Scanner scanner = new Scanner(System.in);
+        int card1Index = scanner.nextInt() - 1;
+        int card2Index = scanner.nextInt() - 1;
+
+        // Place the selected cards in the player's hand and return the remaining cards to the deck
+        List<Card> selectedCards = new ArrayList<>();
+        selectedCards.add(mixedCards.get(card1Index));
+        selectedCards.add(mixedCards.get(card2Index));
+        this.cards = selectedCards;
+        mixedCards.removeAll(selectedCards);
+        for (Card card : mixedCards) {
             this.currentDeck.returnCard(card);
         }
     }
