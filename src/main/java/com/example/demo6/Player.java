@@ -1,7 +1,10 @@
 package com.example.demo6;
 
+import com.example.demo6.Actions.Action;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class Player
 {
@@ -81,6 +84,15 @@ public class Player
         for (Card card : oldCards) {
             this.currentDeck.returnCard(card);
         }
+    }
+
+    public void selectCardToGiveUp() {
+        System.out.println("Select card to give up");
+        for (Card card : cards) {
+            System.out.println(card);
+        }
+        Scanner scanner = new Scanner(System.in);
+        returnCard(new Card(scanner.nextLine()));
     }
 
     //Action Functions :

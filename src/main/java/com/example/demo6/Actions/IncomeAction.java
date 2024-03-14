@@ -1,9 +1,12 @@
-package com.example.demo6;
+package com.example.demo6.Actions;
+
+import com.example.demo6.Actions.Action;
+import com.example.demo6.Player;
 
 public class IncomeAction extends Action {
 
     public IncomeAction(Player player) {
-        super(player);
+        super(player, "income");
     }
 
     @Override

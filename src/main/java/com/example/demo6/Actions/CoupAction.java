@@ -1,4 +1,8 @@
-package com.example.demo6;
+package com.example.demo6.Actions;
+
+import com.example.demo6.Actions.Action;
+import com.example.demo6.Card;
+import com.example.demo6.Player;
 
 import java.util.Scanner;
 
@@ -6,7 +10,7 @@ public class CoupAction extends Action {
     private Player targetPlayer;
 
     public CoupAction(Player player, Player targetPlayer) {
-        super(player);
+        super(player, "coup");
         this.targetPlayer = targetPlayer;
     }
 
@@ -21,12 +25,7 @@ public class CoupAction extends Action {
         if (canPlayerPerform()) {
             player.updateCoins(-7); // Deduct the cost of performing a coup.
             // Logic to make the target player lose an Influence card.
-            System.out.println("Select card to give up");
-            for (Card card : targetPlayer.getCards()) {
-                System.out.println(card);
-            }
-            Scanner scanner = new Scanner(System.in);
-            targetPlayer.returnCard(new Card(scanner.nextLine()));
+            targetPlayer.selectCardToGiveUp();
             System.out.println(player.getName() + " has successfully executed a coup on " + targetPlayer.getName());
         }
         else {
