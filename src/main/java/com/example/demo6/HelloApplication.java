@@ -79,7 +79,7 @@ public class HelloApplication extends Application {
         cardsArea.setAlignment(Pos.CENTER);
 
         for (String cardImageName : cardImages) {
-            ImageView cardView = new ImageView(new Image("C:\\Users\\Roi Blum\\IdeaProjects\\demo6\\src\\main\\resources\\com\\example\\demo6\\" + cardImageName));
+            ImageView cardView = new ImageView(new Image("C:\\Users\\roibl\\source\\javaInt\\demo6\\src\\main\\resources\\com\\example\\demo6\\" + cardImageName));
             cardView.setFitHeight(100);
             cardView.setFitWidth(70);
             cardsArea.getChildren().add(cardView);
@@ -122,7 +122,7 @@ public class HelloApplication extends Application {
         cardStackArea = new VBox();
         cardStackArea.setAlignment(Pos.CENTER);
 
-        Image cardStackImage = new Image("C:\\Users\\Roi Blum\\IdeaProjects\\demo6\\src\\main\\resources\\com\\example\\demo6\\" + imagePath);
+        Image cardStackImage = new Image("C:\\Users\\roibl\\source\\javaInt\\demo6\\src\\main\\resources\\com\\example\\demo6\\" + imagePath);
         ImageView cardStackImageView = new ImageView(cardStackImage);
         cardStackImageView.setFitHeight(200);
         cardStackImageView.setFitWidth(150);
@@ -142,14 +142,30 @@ public class HelloApplication extends Application {
 
             HBox playerCards = playerCardsMap.get(playerName);
             if (playerCards != null && !playerCards.getChildren().isEmpty()) {
-                ImageView newCardView = new ImageView(new Image("C:\\Users\\Roi Blum\\IdeaProjects\\demo6\\src\\main\\resources\\com\\example\\demo6\\" + newCardImageName));
+                ImageView oldCardView = (ImageView) playerCards.getChildren().get(0);
+                ImageView newCardView = new ImageView(new Image("file:///C:/Users/roibl/source/javaInt/demo6/src/main/resources/com/example/demo6/" + newCardImageName));
                 newCardView.setFitHeight(100);
                 newCardView.setFitWidth(70);
-                if (!playerCards.getChildren().isEmpty()) {
+
+                // Create a fade out transition for the old card
+                FadeTransition fadeOut = new FadeTransition(Duration.millis(500), oldCardView);
+                fadeOut.setFromValue(1.0);
+                fadeOut.setToValue(0.0);
+
+                fadeOut.setOnFinished(event -> {
+                    // Replace the old card with the new one after the fade out is complete
                     playerCards.getChildren().set(0, newCardView);
-                } else {
-                    System.out.println(playerName + " has no cards to switch.");
-                }
+
+                    // Create a fade in transition for the new card
+                    FadeTransition fadeIn = new FadeTransition(Duration.millis(500), newCardView);
+                    fadeIn.setFromValue(0.0);
+                    fadeIn.setToValue(1.0);
+                    fadeIn.play();
+                });
+
+                fadeOut.play();
+            } else {
+                System.out.println(playerName + " has no cards to switch.");
             }
         } else {
             System.out.println("No cards left in the stack to switch.");
@@ -197,7 +213,7 @@ public class HelloApplication extends Application {
                 cardStackCountLabel.setText("Number of cards: " + cardStackCount);
 
                 // Create the new card ImageView
-                ImageView newCardView = new ImageView(new Image("C:\\Users\\Roi Blum\\IdeaProjects\\demo6\\src\\main\\resources\\com\\example\\demo6\\" + newCardImageName));
+                ImageView newCardView = new ImageView(new Image("C:\\Users\\roibl\\source\\javaInt\\demo6\\src\\main\\resources\\com\\example\\demo6\\" + newCardImageName));
                 newCardView.setFitHeight(100);
                 newCardView.setFitWidth(70);
                 newCardView.setPreserveRatio(true);
@@ -211,6 +227,7 @@ public class HelloApplication extends Application {
                 fadeTransition.setFromValue(0); // Start from transparent
                 fadeTransition.setToValue(1); // Fade to fully opaque
                 fadeTransition.play();
+                int x;
             }
         } else {
             System.out.println("No cards left in the stack to add.");
