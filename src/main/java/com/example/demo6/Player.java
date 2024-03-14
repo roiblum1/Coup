@@ -84,7 +84,7 @@ public class Player
         this.action = action;
     }
 
-    public void doAction() { if (action != null) action.execute();}
+    public void doAction() { if (action != null) action.execute(this);}
 
     @Override
     public String toString() {

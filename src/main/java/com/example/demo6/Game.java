@@ -20,11 +20,11 @@ public class Game
 
     public void initAllPossibleAction()
     {
-        rules.put("income", new Action());
-        rules.put("steal", new Action());
-        rules.put("assassination", new Action());
-        rules.put("tax", new Action());
-        rules.put("block", new Action());
+        rules.put("income", new Action("income"));
+        rules.put("steal", new Action("steal"));
+        rules.put("assassination", new Action("assassination"));
+        rules.put("tax", new Action("tax"));
+        rules.put("block", new Action("block"));
     }
     // Adds a new player to the game.
     public void addPlayer(String name) {
@@ -43,5 +43,16 @@ public class Game
                 possibleActions.put(action, rules.get(action));
         }
         return possibleActions;
+    }
+
+    //get the active players
+    private List<Player> getActivePlayers()
+    {
+        List<Player> activePlayers = new ArrayList<>();
+        for (Player player : playerList) {
+            if (!player.getCards().isEmpty())
+                activePlayers.add(player);
+        }
+        return activePlayers;
     }
 }
