@@ -1,10 +1,6 @@
-package com.example.demo6.Actions;
+package com.example.demo6.Model.Actions;
 
-import com.example.demo6.Actions.Action;
-import com.example.demo6.Card;
-import com.example.demo6.Player;
-
-import java.util.Scanner;
+import com.example.demo6.Model.Player;
 
 public class CoupAction extends Action {
     private Player targetPlayer;

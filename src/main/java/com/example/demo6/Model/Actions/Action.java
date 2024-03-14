@@ -1,7 +1,6 @@
-package com.example.demo6.Actions;
+package com.example.demo6.Model.Actions;
 
-import com.example.demo6.Card;
-import com.example.demo6.Player;
+import com.example.demo6.Model.Player;
 
 public abstract class Action {
     protected Player player;

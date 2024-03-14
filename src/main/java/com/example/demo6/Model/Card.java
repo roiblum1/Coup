@@ -1,4 +1,4 @@
-package com.example.demo6;
+package com.example.demo6.Model;
 
 public class Card {
     private String name;

@@ -1,7 +1,7 @@
-package com.example.demo6.Actions;
+package com.example.demo6.Model.Actions;
 
-import com.example.demo6.Card;
-import com.example.demo6.Player;
+import com.example.demo6.Model.Card;
+import com.example.demo6.Model.Player;
 
 import java.util.Scanner;
 
@@ -27,9 +27,7 @@ public class SwapAction extends Action {
                     return;
                 }
             }
-
             player.swap();
-            System.out.println(player.getName() + " has successfully swapped influence cards.");
         }
     }
 

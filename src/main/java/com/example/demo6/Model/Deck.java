@@ -1,4 +1,4 @@
-package com.example.demo6;
+package com.example.demo6.Model;
 
 import java.util.Collections;
 import java.util.Set;

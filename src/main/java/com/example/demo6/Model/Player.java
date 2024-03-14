@@ -1,6 +1,6 @@
-package com.example.demo6;
+package com.example.demo6.Model;
 
-import com.example.demo6.Actions.Action;
+import com.example.demo6.Model.Actions.Action;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -102,6 +102,7 @@ public class Player
         for (Card card : mixedCards) {
             this.currentDeck.returnCard(card);
         }
+        System.out.println(this.getName() + " has successfully swapped influence cards.");
     }
 
     public void selectCardToGiveUp() {

@@ -1,7 +1,7 @@
-package com.example.demo6;
+package com.example.demo6.Model;
 
-import com.example.demo6.Actions.Action;
-import com.example.demo6.Actions.IncomeAction;
+import com.example.demo6.Model.Actions.Action;
+import com.example.demo6.Model.Actions.IncomeAction;
 
 import java.util.ArrayList;
 import java.util.HashMap;

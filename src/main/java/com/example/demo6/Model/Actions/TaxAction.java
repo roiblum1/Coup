@@ -1,8 +1,7 @@
-package com.example.demo6.Actions;
+package com.example.demo6.Model.Actions;
 
-import com.example.demo6.Actions.Action;
-import com.example.demo6.Card;
-import com.example.demo6.Player;
+import com.example.demo6.Model.Card;
+import com.example.demo6.Model.Player;
 
 import java.util.Scanner;
 
