@@ -29,6 +29,10 @@ public class TaxAction extends Action {
                     player.selectCardToGiveUp();
                     player.updateCoins(-3);
                 }
+                else
+                {
+                    opponent.selectCardToGiveUp();
+                }
             }
         }
     }

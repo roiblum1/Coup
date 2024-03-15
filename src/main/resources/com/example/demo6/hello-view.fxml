@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<?import javafx.scene.control.Button?>
-<VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.example.demo6.HelloController">
-    <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
-    </padding>
-
-    <Label fx:id="welcomeText"/>
-    <Button text="Hello!" onAction="#onHelloButtonClick"/>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.demo6.GameController" spacing="20" alignment="CENTER">
+    <HBox>
+        <Label fx:id="playerNameLabel" text="Player 1" />
+        <Label fx:id="playerCoinsLabel" text="Coins: 0" />
+    </HBox>
+    <HBox>
+        <Label fx:id="opponentNameLabel" text="Player 2" />
+        <Label fx:id="opponentCoinsLabel" text="Coins: 0" />
+    </HBox>
+    <Button fx:id="incomeButton" text="Income" onAction="#handleIncomeAction" />
+    <Button fx:id="foreignAidButton" text="Foreign Aid" onAction="#handleForeignAidAction" />
+    <Button fx:id="coupButton" text="Coup" onAction="#handleCoupAction" />
+    <Button fx:id="taxButton" text="Tax" onAction="#handleTaxAction" />
+    <Button fx:id="assassinateButton" text="Assassinate" onAction="#handleAssassinateAction" />
+    <Button fx:id="stealButton" text="Steal" onAction="#handleStealAction" />
+    <Button fx:id="swapButton" text="Swap" onAction="#handleSwapAction" />
 </VBox>

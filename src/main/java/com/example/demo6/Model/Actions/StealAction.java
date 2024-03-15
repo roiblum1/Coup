@@ -1,5 +1,6 @@
 package com.example.demo6.Model.Actions;
 
+import com.example.demo6.HelloApplication;
 import com.example.demo6.Model.Player;
 import com.example.demo6.Model.Card;
 import java.util.Scanner;
@@ -20,7 +21,8 @@ public class StealAction extends Action {
 
     @Override
     public void execute() {
-        if (canPlayerPerform()) {
+        if (canPlayerPerform())
+        {
             if (isChallenged())
             {
                 if (!challenge()) {

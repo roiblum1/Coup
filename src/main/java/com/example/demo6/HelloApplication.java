@@ -1,5 +1,10 @@
 package com.example.demo6;
 
+import com.example.demo6.Model.Actions.Action;
+import com.example.demo6.Model.Card;
+import com.example.demo6.Model.Deck;
+import com.example.demo6.Model.Game;
+import com.example.demo6.Model.Player;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -7,8 +12,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -19,10 +23,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class HelloApplication extends Application {
@@ -31,6 +32,10 @@ public class HelloApplication extends Application {
     private Label cardStackCountLabel;
     private int cardStackCount;
     private VBox cardStackArea;
+
+    private Game game;
+    private Player currentPlayer;
+    private Player opponent;
 
     public static void main(String[] args) {
         launch(args);
@@ -44,13 +49,25 @@ public class HelloApplication extends Application {
         gameContent = new VBox(20);
         gameContent.setAlignment(Pos.CENTER);
 
-        createPlayerArea("AI", 2, Arrays.asList("Screenshot_15.png", "Screenshot_15.png"));
-        createTurnTable("Player 1's turn");
-        createPlayerArea("Player 1", 3, Arrays.asList("Screenshot_16.png", "Screenshot_16.png"));
+        // Initialize the game and players
+        Set<Deck.CardType> allCardTypes = EnumSet.allOf(Deck.CardType.class);
+        game = new Game(new Deck(allCardTypes, 2)); // Assuming 3 copies of each card
+        currentPlayer = new Player("Player 1");
+        opponent = new Player("Player 2");
+        game.addPlayer(currentPlayer);
+        game.addPlayer(opponent);
+        updatePlayerInfo();
 
-        addPossibleAction(Arrays.asList("Action 1", "Action 2", "Action 3"));
+        // Create player areas for both players
+        createPlayerArea(opponent, Arrays.asList(getCardImage(opponent.getCards().get(0)), getCardImage(opponent.getCards().get(1))));
+        createPlayerArea(currentPlayer, Arrays.asList(getCardImage(currentPlayer.getCards().get(0)), getCardImage(currentPlayer.getCards().get(1))));
 
-        cardStackArea = createCardStackArea("Stack.png", 15);
+        createTurnTable(game.getCurrentPlayer().getName() + "'s turn");
+
+        List<Action> currentPlayerActions = game.getPossibleActions(currentPlayer);
+        addPossibleAction(currentPlayer, currentPlayerActions);
+
+        cardStackArea = createCardStackArea(game.getDeck());
         root.getChildren().addAll(gameContent, cardStackArea);
 
         HBox.setHgrow(gameContent, Priority.ALWAYS);
@@ -60,75 +77,90 @@ public class HelloApplication extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
     }
+    private void updateTurnTable() {
+        Label turnLabel = (Label) gameContent.lookup(".turn-label");
+        if (turnLabel != null) {
+            turnLabel.setText(game.getCurrentPlayer().getName() + "'s turn");
+        }
+    }
+
 
     private void createTurnTable(String text) {
         Label turnLabel = new Label(text);
         turnLabel.setFont(new Font("Arial", 24));
+        turnLabel.getStyleClass().add("turn-label");
         VBox.setMargin(turnLabel, new Insets(20, 0, 20, 0));
         gameContent.getChildren().addAll(turnLabel);
     }
 
-    private void createPlayerArea(String playerName, int coinCount, List<String> cardImages) {
+    private void createPlayerArea(Player player, List<String> cardImages) {
         VBox playerArea = new VBox(10);
         playerArea.setAlignment(Pos.CENTER);
 
-        Label nameLabel = new Label(playerName);
+        Label nameLabel = new Label(player.getName());
         nameLabel.setFont(new Font("Arial", 20));
 
         HBox cardsArea = new HBox(10);
         cardsArea.setAlignment(Pos.CENTER);
 
         for (String cardImageName : cardImages) {
-            ImageView cardView = new ImageView(new Image("C:\\Users\\roibl\\source\\javaInt\\demo6\\src\\main\\resources\\com\\example\\demo6\\" + cardImageName));
+            ImageView cardView = new ImageView(new Image("C:\\Users\\Roi Blum\\IdeaProjects\\demo6\\src\\main\\resources\\com\\example\\demo6\\" + cardImageName));
             cardView.setFitHeight(100);
             cardView.setFitWidth(70);
             cardsArea.getChildren().add(cardView);
         }
 
-        Label coinsLabel = new Label("Coins: " + coinCount);
+        Label coinsLabel = new Label("Coins: " + player.getCoins());
         coinsLabel.setFont(new Font("Arial", 16));
+        coinsLabel.getStyleClass().add("coins-label"); // Add the CSS class to the label
 
-        playerCardsMap.put(playerName, cardsArea);
+        playerCardsMap.put(player.getName(), cardsArea);
 
         playerArea.getChildren().addAll(nameLabel, cardsArea, coinsLabel);
         gameContent.getChildren().addAll(playerArea);
     }
 
-    public void addPossibleAction(List<String> actions) {
+    public void addPossibleAction(Player player, List<Action> actions) {
         ComboBox<String> actionsComboBox = new ComboBox<>();
-        actionsComboBox.getItems().addAll(actions);
+        actionsComboBox.getItems().addAll(actions.stream().map(Action::getNameOfAction).collect(Collectors.toList()));
         actionsComboBox.setPromptText("Choose an action");
         actionsComboBox.setOnAction(event -> {
-            String selectedAction = actionsComboBox.getValue();
-            if (selectedAction != null) {
-                System.out.println("Player selected: " + selectedAction);
-                if (selectedAction.equals("Action 1")) {
-                    removeCard("Player 1", "Screenshot_16.png");
-                } else if (selectedAction.equals("Action 2")) {
-                    addNewCard("Player 1", "Screenshot_16.png");
+            String selectedActionName = actionsComboBox.getValue();
+            if (selectedActionName != null) {
+                Action selectedAction = actions.stream()
+                        .filter(action -> action.getNameOfAction().equals(selectedActionName))
+                        .findFirst()
+                        .orElse(null);
+                if (selectedAction != null) {
+                    System.out.println("Player selected: " + selectedActionName);
+                    performAction(selectedAction);
+                    // Reset the ComboBox selection later
+                    Platform.runLater(() -> actionsComboBox.setValue(null));
                 }
-                else if(selectedAction.equals("Action 3"))
-                {
-                    switchCard("Player 1", "Screenshot_15.png");
-                }
-                // Reset the ComboBox selection later
-                Platform.runLater(() -> actionsComboBox.setValue(null));
             }
         });
         gameContent.getChildren().add(actionsComboBox);
     }
 
-    private VBox createCardStackArea(String imagePath, int cardCount) {
+    private void performAction(Action action) {
+        action.execute();
+        game.switchTurns();
+        updatePlayerInfo();
+        updateActionButtons();
+        updateTurnTable();
+    }
+
+    private VBox createCardStackArea(Deck deck) {
         cardStackArea = new VBox();
         cardStackArea.setAlignment(Pos.CENTER);
 
-        Image cardStackImage = new Image("C:\\Users\\roibl\\source\\javaInt\\demo6\\src\\main\\resources\\com\\example\\demo6\\" + imagePath);
+        Image cardStackImage = new Image("C:\\Users\\Roi Blum\\IdeaProjects\\demo6\\src\\main\\resources\\com\\example\\demo6\\" + "Stack.png");
         ImageView cardStackImageView = new ImageView(cardStackImage);
         cardStackImageView.setFitHeight(200);
         cardStackImageView.setFitWidth(150);
         cardStackImageView.setPreserveRatio(true);
 
-        cardStackCount = cardCount;
+        cardStackCount = deck.getSize();
         cardStackCountLabel = new Label("Number of cards: " + cardStackCount);
 
         cardStackArea.getChildren().addAll(cardStackImageView, cardStackCountLabel);
@@ -143,7 +175,7 @@ public class HelloApplication extends Application {
             HBox playerCards = playerCardsMap.get(playerName);
             if (playerCards != null && !playerCards.getChildren().isEmpty()) {
                 ImageView oldCardView = (ImageView) playerCards.getChildren().get(0);
-                ImageView newCardView = new ImageView(new Image("file:///C:/Users/roibl/source/javaInt/demo6/src/main/resources/com/example/demo6/" + newCardImageName));
+                ImageView newCardView = new ImageView(new Image("C:\\Users\\Roi Blum\\IdeaProjects\\demo6\\src\\main\\resources\\com\\example\\demo6\\" + newCardImageName));
                 newCardView.setFitHeight(100);
                 newCardView.setFitWidth(70);
 
@@ -198,6 +230,90 @@ public class HelloApplication extends Application {
         }
     }
 
+    public boolean askToBlockAction() {
+        final boolean[] answer = {false};
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Block Action");
+            alert.setHeaderText("Do you want to block the action?");
+
+            ComboBox<String> comboBox = new ComboBox<>();
+            comboBox.getItems().addAll("Yes", "No");
+
+            VBox content = new VBox();
+            content.getChildren().add(comboBox);
+            alert.getDialogPane().setContent(content);
+
+            alert.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.OK && "Yes".equals(comboBox.getValue())) {
+                    answer[0] = true;
+                }
+            });
+        });
+        return answer[0];
+    }
+
+    private void updatePlayerInfo() {
+        // Update player information labels
+        for (Player player : game.getPlayers()) {
+            HBox playerCards = playerCardsMap.get(player.getName());
+            if (playerCards != null) {
+                // Update player's card images
+                playerCards.getChildren().clear();
+                for (Card card : player.getCards()) {
+                    ImageView cardView = new ImageView(new Image("C:\\Users\\Roi Blum\\IdeaProjects\\demo6\\src\\main\\resources\\com\\example\\demo6\\" + getCardImage(card)));
+                    cardView.setFitHeight(100);
+                    cardView.setFitWidth(70);
+                    playerCards.getChildren().add(cardView);
+                }
+
+                // Update player's coin count
+                VBox playerArea = (VBox) playerCards.getParent();
+                for (Node node : playerArea.getChildren()) {
+                    if (node instanceof Label) {
+                        Label label = (Label) node;
+                        if (label.getText().startsWith("Coins:")) {
+                            label.setText("Coins: " + player.getCoins());
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    private String getCardImage(Card card) {
+        // Map card names to image file names
+        Map<String, String> cardImageMap = new HashMap<>();
+        cardImageMap.put("Duke", "duke.png");
+        cardImageMap.put("Assassin", "assassin.png");
+        cardImageMap.put("Captain", "captain.png");
+        cardImageMap.put("Ambassador", "ambassador.png");
+        cardImageMap.put("Contessa", "contessa.png");
+        return cardImageMap.getOrDefault(card.getName(), "s.png");
+    }
+
+    private void updateActionButtons() {
+        // Update action buttons based on the current player's available actions
+        List<Action> currentPlayerActions = game.getPossibleActions(currentPlayer);
+
+        // Clear existing action buttons
+        Node actionsNode = gameContent.lookup(".actions-box");
+        if (actionsNode instanceof HBox) {
+            HBox actionsBox = (HBox) actionsNode;
+            actionsBox.getChildren().clear();
+
+            // Add new action buttons
+            for (Action action : currentPlayerActions) {
+                Button actionButton = new Button(action.getNameOfAction());
+                actionButton.setOnAction(event -> {
+                    action.execute();
+                    updatePlayerInfo();
+                    updateActionButtons();
+                });
+                actionsBox.getChildren().add(actionButton);
+            }
+        }
+    }
     public void addNewCard(String playerName, String newCardImageName) {
         if (cardStackCount > 0) {
             HBox playerCards = playerCardsMap.get(playerName);
@@ -213,7 +329,7 @@ public class HelloApplication extends Application {
                 cardStackCountLabel.setText("Number of cards: " + cardStackCount);
 
                 // Create the new card ImageView
-                ImageView newCardView = new ImageView(new Image("C:\\Users\\roibl\\source\\javaInt\\demo6\\src\\main\\resources\\com\\example\\demo6\\" + newCardImageName));
+                ImageView newCardView = new ImageView(new Image("C:\\Users\\Roi Blum\\source\\javaInt\\demo6\\src\\main\\resources\\com\\example\\demo6\\" + newCardImageName));
                 newCardView.setFitHeight(100);
                 newCardView.setFitWidth(70);
                 newCardView.setPreserveRatio(true);
@@ -227,7 +343,6 @@ public class HelloApplication extends Application {
                 fadeTransition.setFromValue(0); // Start from transparent
                 fadeTransition.setToValue(1); // Fade to fully opaque
                 fadeTransition.play();
-                int x;
             }
         } else {
             System.out.println("No cards left in the stack to add.");
