@@ -2,7 +2,10 @@ package com.example.demo6.Model.Actions;
 
 import com.example.demo6.Model.Card;
 import com.example.demo6.Model.Player;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 
+import java.util.Optional;
 import java.util.Scanner;
 
 public class SwapAction extends Action {
@@ -32,11 +35,16 @@ public class SwapAction extends Action {
     }
 
     private boolean isChallenged() {
-        System.out.println("Does any player want to challenge the swap action? (Y/N)");
-        String input = new Scanner(System.in).nextLine().trim().toUpperCase();
-        return input.equals("Y");
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Challenge Action");
+        alert.setHeaderText(null);
+        alert.setContentText("Does any player want to challenge the swap action?");
+        ButtonType buttonYes = new ButtonType("Yes");
+        ButtonType buttonNo = new ButtonType("No");
+        alert.getButtonTypes().setAll(buttonYes, buttonNo);
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.isPresent() && result.get() == buttonYes;
     }
-
     private boolean challenge() {
         // Check if the player has the Ambassador card
         return player.hasCard(new Card("Ambassador"));

@@ -1,7 +1,10 @@
 package com.example.demo6.Model.Actions;
 
 import com.example.demo6.Model.Player;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 
+import java.util.Optional;
 import java.util.Scanner;
 
 public class ForeignAidAction extends Action {
@@ -32,21 +35,25 @@ public class ForeignAidAction extends Action {
     }
 
     private boolean isBlocked() {
-        Scanner scanner = new Scanner(System.in);
+        Alert blockAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        blockAlert.setTitle("Block Action");
+        blockAlert.setHeaderText(null);
+        blockAlert.setContentText(targetPlayer.getName() + ", do you want to block the "+this.getNameOfAction()+" action?");
 
-        System.out.println(targetPlayer.getName() + ", do you want to block the foreign aid action? (Y/N)");
-        String input = scanner.nextLine().trim().toUpperCase();
+        blockAlert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
 
-        if (input.equals("Y")) {
-            System.out.println(targetPlayer.getName() + " attempts to block the foreign aid action.");
+        Optional<ButtonType> result = blockAlert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.YES) {
+            System.out.println(targetPlayer.getName() + " attempts to block the "+this.getNameOfAction()+" action.");
             BlockAction blockAction = new BlockAction(targetPlayer, this);
             if (blockAction.canPlayerPerform()) {
                 blockAction.execute();
                 return blockAction.isBlocked();
             }
+            else return false;
+        } else {
+            System.out.println(targetPlayer.getName() + " does not block the "+this.getNameOfAction()+" action.");
+            return false;
         }
-
-        System.out.println(targetPlayer.getName() + " does not block the foreign aid action.");
-        return false;
     }
 }

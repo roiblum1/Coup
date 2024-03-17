@@ -2,7 +2,10 @@ package com.example.demo6.Model.Actions;
 
 import com.example.demo6.Model.Card;
 import com.example.demo6.Model.Player;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 
+import java.util.Optional;
 import java.util.Scanner;
 
 public class TaxAction extends Action {
@@ -44,15 +47,22 @@ public class TaxAction extends Action {
     }
 
     private boolean isChallenged() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println(player.getName() + " claims to be the Duke and takes the tax action.");
-        System.out.println(opponent.getName() + ", do you want to challenge this action? (Y/N)");
-        String input = scanner.nextLine().trim().toUpperCase();
-        if (input.equals("Y")) {
+        Alert challengeAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        challengeAlert.setTitle("Challenge Action");
+        challengeAlert.setHeaderText(null);
+        challengeAlert.setContentText(opponent.getName() + ", do you want to challenge this action?");
+
+        ButtonType yesButton = new ButtonType("Yes");
+        ButtonType noButton = new ButtonType("No");
+        challengeAlert.getButtonTypes().setAll(yesButton, noButton);
+
+        Optional<ButtonType> result = challengeAlert.showAndWait();
+        if (result.isPresent() && result.get() == yesButton) {
             System.out.println(opponent.getName() + " challenges the action!");
             return true;
+        } else {
+            System.out.println("No one challenges the action.");
+            return false;
         }
-        System.out.println("No one challenges the action.");
-        return false;
     }
 }

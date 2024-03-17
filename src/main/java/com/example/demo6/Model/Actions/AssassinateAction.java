@@ -2,7 +2,10 @@ package com.example.demo6.Model.Actions;
 
 import com.example.demo6.Model.Card;
 import com.example.demo6.Model.Player;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 
+import java.util.Optional;
 import java.util.Scanner;
 
 public class AssassinateAction extends Action {
@@ -43,9 +46,23 @@ public class AssassinateAction extends Action {
     }
 
     private boolean isChallenged() {
-        System.out.println(targetPlayer.getName() + ", do you want to challenge the assassination? (Y/N)");
-        String input = new Scanner(System.in).nextLine().trim().toUpperCase();
-        return input.equals("Y");
+        Alert challengeAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        challengeAlert.setTitle("Challenge Action");
+        challengeAlert.setHeaderText(null);
+        challengeAlert.setContentText(targetPlayer.getName() + ", do you want to challenge this action?");
+
+        ButtonType yesButton = new ButtonType("Yes");
+        ButtonType noButton = new ButtonType("No");
+        challengeAlert.getButtonTypes().setAll(yesButton, noButton);
+
+        Optional<ButtonType> result = challengeAlert.showAndWait();
+        if (result.isPresent() && result.get() == yesButton) {
+            System.out.println(targetPlayer.getName() + " challenges the action!");
+            return true;
+        } else {
+            System.out.println("No one challenges the action.");
+            return false;
+        }
     }
 
     private boolean challenge() {
@@ -54,15 +71,25 @@ public class AssassinateAction extends Action {
     }
 
     private boolean isBlocked() {
-        System.out.println(targetPlayer.getName() + ", do you want to block the assassination? (Y/N)");
-        String input = new Scanner(System.in).nextLine().trim().toUpperCase();
-        if (input.equals("Y")) {
+        Alert blockAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        blockAlert.setTitle("Block Action");
+        blockAlert.setHeaderText(null);
+        blockAlert.setContentText(targetPlayer.getName() + ", do you want to block the "+this.getNameOfAction()+" action?");
+
+        blockAlert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
+
+        Optional<ButtonType> result = blockAlert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.YES) {
+            System.out.println(targetPlayer.getName() + " attempts to block the "+this.getNameOfAction()+" action.");
             BlockAction blockAction = new BlockAction(targetPlayer, this);
             if (blockAction.canPlayerPerform()) {
                 blockAction.execute();
                 return blockAction.isBlocked();
             }
+            else return false;
+        } else {
+            System.out.println(targetPlayer.getName() + " does not block the "+this.getNameOfAction()+" action.");
+            return false;
         }
-        return false;
     }
 }
