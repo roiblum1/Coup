@@ -6,7 +6,7 @@ import com.example.demo6.Model.Player;
 
 public class SwapAction extends Action {
     public SwapAction(Player player) {
-        super(player, "swap");
+        super(player, ActionName.SWAP);
     }
 
     @Override

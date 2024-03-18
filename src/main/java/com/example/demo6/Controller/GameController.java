@@ -9,17 +9,22 @@ import com.example.demo6.View.GameView;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public class GameController {
     private Game game;
     private GameView view;
     private Player currentPlayer;
+    private Map<Class<? extends Action>, Consumer<Action>> actionExecutors;
+
 
     public GameController(GameView view, Game game) {
         this.game = game;
         this.view = view;
         this.view.setController(this);
+        initializeActionExecutors();
     }
 
     // Initialize game and update view
@@ -42,24 +47,26 @@ public class GameController {
         // ... update other view components as needed
     }
 
+    private void initializeActionExecutors() {
+        actionExecutors = Map.of(
+                StealAction.class, action -> executeStealAction((StealAction) action),
+                AssassinateAction.class, action -> executeAssassinateAction((AssassinateAction) action),
+                ForeignAidAction.class, action -> executeForeignAidAction((ForeignAidAction) action),
+                TaxAction.class, action -> executeTaxAction((TaxAction) action),
+                IncomeAction.class, action -> executeIncomeAction((IncomeAction) action),
+                CoupAction.class, action -> executeCoupAction((CoupAction) action),
+                SwapAction.class, action -> executeSwapAction((SwapAction) action)
+        );
+    }
+
     // Handles executing an action
     public void executeAction(Action action) {
-        if (action instanceof StealAction) {
-            executeStealAction((StealAction) action);
-        } else if (action instanceof AssassinateAction) {
-            executeAssassinateAction((AssassinateAction) action);
-        } else if (action instanceof ForeignAidAction) {
-            executeForeignAidAction((ForeignAidAction) action);
-        } else if (action instanceof TaxAction) {
-            executeTaxAction((TaxAction) action);
-        } else if (action instanceof IncomeAction) {
-            executeIncomeAction((IncomeAction) action);
-        } else if (action instanceof CoupAction) {
-            executeCoupAction((CoupAction) action);
-        } else if (action instanceof SwapAction) {
-            executeSwapAction((SwapAction) action);
+        Consumer<Action> executor = actionExecutors.get(action.getClass());
+        if (executor != null) {
+            executor.accept(action);
+        } else {
+            System.err.println("Unsupported action: " + action.getClass().getName());
         }
-        // Check if the game is over after each action
         if (isGameOver()) {
             endGame();
         } else {

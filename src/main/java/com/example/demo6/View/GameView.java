@@ -83,7 +83,7 @@ public class GameView extends Application {
         alert.getButtonTypes().setAll(buttonTypeYes, buttonTypeNo);
 
         // Show the alert and wait for the user's response.
-        java.util.Optional<ButtonType> result = alert.showAndWait();
+        Optional<ButtonType> result = alert.showAndWait();
 
         // Return true if the user clicks "Yes", indicating they want to challenge.
         return result.isPresent() && result.get() == buttonTypeYes;
@@ -102,7 +102,7 @@ public class GameView extends Application {
         alert.getButtonTypes().setAll(buttonTypeYes, buttonTypeNo);
 
         // Show the alert and wait for the user's response.
-        java.util.Optional<ButtonType> result = alert.showAndWait();
+        Optional<ButtonType> result = alert.showAndWait();
 
         // Return true if the user clicks "Block", indicating they want to block the action.
         return result.isPresent() && result.get() == buttonTypeYes;

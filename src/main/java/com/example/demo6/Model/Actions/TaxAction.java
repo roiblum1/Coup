@@ -6,7 +6,7 @@ import com.example.demo6.Model.Player;
 
 public class TaxAction extends Action {
     public TaxAction(Player player) {
-        super(player, "tax");
+        super(player, ActionName.TAX);
     }
 
     @Override

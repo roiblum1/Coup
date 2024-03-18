@@ -8,7 +8,7 @@ public class StealAction extends Action {
     private Player targetPlayer;
 
     public StealAction(Player player, Player targetPlayer) {
-        super(player, "steal");
+        super(player, ActionName.STEAL);
         this.targetPlayer = targetPlayer;
     }
 

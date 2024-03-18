@@ -4,15 +4,17 @@ import com.example.demo6.Model.Player;
 
 public abstract class Action {
     protected Player player;
-    protected String nameOfAction;
+    protected ActionName nameOfAction;
 
-    public Action(Player player, String name) {
+    public Action(Player player, ActionName name) {
         this.player = player;
         this.nameOfAction = name;
     }
-
-    public String getNameOfAction() {
+    public ActionName getActionName() {
         return nameOfAction;
+    }
+    public String getNameOfAction() {
+        return nameOfAction.toString();
     }
 
     // This method checks if the action can be performed by the player.

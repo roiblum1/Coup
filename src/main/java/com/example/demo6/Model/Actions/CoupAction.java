@@ -6,7 +6,7 @@ public class CoupAction extends Action {
     private Player targetPlayer;
 
     public CoupAction(Player player, Player targetPlayer) {
-        super(player, "coup");
+        super(player, ActionName.COUP);
         this.targetPlayer = targetPlayer;
     }
 

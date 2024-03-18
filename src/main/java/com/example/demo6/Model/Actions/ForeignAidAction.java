@@ -4,7 +4,7 @@ import com.example.demo6.Model.Player;
 
 public class ForeignAidAction extends Action {
     public ForeignAidAction(Player player) {
-        super(player, "foreign_aid");
+        super(player, ActionName.FOREIGN_AID);
     }
 
     @Override

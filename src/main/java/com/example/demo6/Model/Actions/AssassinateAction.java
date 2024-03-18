@@ -8,7 +8,7 @@ public class AssassinateAction extends Action {
     private Player targetPlayer;
 
     public AssassinateAction(Player player, Player targetPlayer) {
-        super(player, "assassinate");
+        super(player, ActionName.ASSASSINATE);
         this.targetPlayer = targetPlayer;
     }
 

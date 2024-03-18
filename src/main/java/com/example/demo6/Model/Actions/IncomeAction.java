@@ -4,7 +4,7 @@ import com.example.demo6.Model.Player;
 
 public class IncomeAction extends Action {
     public IncomeAction(Player player) {
-        super(player, "income");
+        super(player, ActionName.INCOME);
     }
 
     @Override
