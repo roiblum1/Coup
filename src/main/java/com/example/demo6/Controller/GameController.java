@@ -6,6 +6,7 @@ import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Game;
 import com.example.demo6.Model.Player;
 import com.example.demo6.View.GameView;
+import javafx.application.Platform;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -29,23 +30,28 @@ public class GameController {
 
     // Initialize game and update view
     public void initializeGame() {
-        // Initialize the game and players
+        // Initialize the game with all card types and two copies of each card
         Set<Deck.CardType> allCardTypes = EnumSet.allOf(Deck.CardType.class);
-        Game game = new Game(new Deck(allCardTypes, 2)); // Assuming 3 copies of each card
-        Player currentPlayer = new Player("Player 1");
-        Player opponent = new Player("Player 2");
-        game.addPlayer(currentPlayer);
-        game.addPlayer(opponent);
-        this.currentPlayer = game.getCurrentPlayer();
+        this.game = new Game(new Deck(allCardTypes, 2)); // Make sure the number of copies matches your game design
 
-        // Update the view with the initial game state
-        view.updatePlayerInfo(game.getPlayers());
-        view.updateCurrentPlayer(game.getCurrentPlayer());
-        view.updateAvailableActions(game.getAvailableActions(game.getCurrentPlayer()));
-        view.createCardStackArea(game.getDeck());
-        view.setCurrentPlayer(this.currentPlayer);
-        // ... update other view components as needed
+        // Create players and add them to the game
+        Player playerOne = new Player("Player 1");
+        Player playerTwo = new Player("Player 2");
+        this.game.addPlayer(playerOne);
+        this.game.addPlayer(playerTwo);
+
+        // The current player is the first player by default
+        this.currentPlayer = this.game.getCurrentPlayer();
+
+        // Now that the game is initialized, update the view components
+        Platform.runLater(() -> {
+            view.updatePlayerInfo(this.game.getPlayers());
+            view.updateCurrentPlayer(this.currentPlayer);
+            view.updateAvailableActions(this.game.getAvailableActions(this.currentPlayer));
+            view.createCardStackArea(this.game.getDeck()); // This line should add the card stack area to the gameContent layout
+        });
     }
+
 
     private void initializeActionExecutors() {
         actionExecutors = Map.of(

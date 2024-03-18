@@ -6,23 +6,18 @@ import com.example.demo6.Model.Card;
 import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Game;
 import com.example.demo6.Model.Player;
-import javafx.animation.FadeTransition;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import javafx.util.StringConverter;
 
 import java.util.*;
@@ -43,18 +38,26 @@ public class GameView extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        // Main horizontal box that will contain everything
+        HBox mainContent = new HBox(10);
+        mainContent.setAlignment(Pos.CENTER);
+        mainContent.setPadding(new Insets(15, 12, 15, 12));
+
+        // VBox for player info and actions
         gameContent = new VBox(10);
-        gameContent.setPadding(new Insets(15, 12, 15, 12));
-        gameContent.setSpacing(10);   // Gap between nodes
         gameContent.setAlignment(Pos.CENTER);
 
-        // Create UI components for turn and deck information
         createTurnTable();
-        // Note: createCardStackArea should ideally be called after the game and deck are initialized
-        // So it might be moved to be called within initializeGame in the GameController
+        // VBox for the card stack area
+        cardStackArea = new VBox(10);
+        cardStackArea.setAlignment(Pos.CENTER_RIGHT);
 
+        // Add gameContent and cardStackArea to mainContent
+        mainContent.getChildren().addAll(gameContent, cardStackArea);
+
+        // Use a BorderPane as the root for scene for flexibility
         BorderPane root = new BorderPane();
-        root.setCenter(gameContent);
+        root.setCenter(mainContent);  // Set the HBox in the center of the BorderPane
 
         Scene scene = new Scene(root, 800, 600);
         primaryStage.setTitle("Coup Game");
@@ -254,7 +257,8 @@ public class GameView extends Application {
         Label turnLabel = new Label("Turn: ");
         turnLabel.setFont(new Font("Arial", 24));
         turnLabel.getStyleClass().add("turn-label"); // Adding a style class for potential CSS styling
-        VBox.setMargin(turnLabel, new Insets(20, 0, 20, 0));
+        VBox.setMargin(turnLabel, new Insets(10, 10, 10, 10));
+        turnLabel.setAlignment(Pos.CENTER);
 
         gameContent.getChildren().add(turnLabel); // Assuming gameContent is your main VBox container
     }
@@ -310,10 +314,11 @@ public class GameView extends Application {
     }
 
 
-    public VBox createCardStackArea(Deck deck) {
-        cardStackArea = new VBox();
-        cardStackArea.setAlignment(Pos.CENTER);
-        Image cardStackImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/demo6/" + "Stack.png")));
+    public void createCardStackArea(Deck deck) {
+        // cardStackArea is a member variable of type VBox
+        cardStackArea.getChildren().clear();  // Clear it first in case it's being re-initialized
+
+        Image cardStackImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/demo6/Stack.png")));
         ImageView cardStackImageView = new ImageView(cardStackImage);
         cardStackImageView.setFitHeight(200);
         cardStackImageView.setFitWidth(150);
@@ -321,9 +326,9 @@ public class GameView extends Application {
 
         cardStackCount = deck.getSize();
         cardStackCountLabel = new Label("Number of cards: " + cardStackCount);
+        cardStackCountLabel.setAlignment(Pos.CENTER); // Center the label
 
         cardStackArea.getChildren().addAll(cardStackImageView, cardStackCountLabel);
-        return cardStackArea;
     }
 
     // This method updates the deck information in the view.
