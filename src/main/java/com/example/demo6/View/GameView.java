@@ -16,12 +16,14 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.util.StringConverter;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,25 +43,26 @@ public class GameView extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        HBox root = new HBox(20);
-        root.setAlignment(Pos.CENTER);
-
-        gameContent = new VBox(20);
+        gameContent = new VBox(10);
+        gameContent.setPadding(new Insets(15, 12, 15, 12));
+        gameContent.setSpacing(10);   // Gap between nodes
         gameContent.setAlignment(Pos.CENTER);
 
-        createTurnTable("");
+        // Create UI components for turn and deck information
+        createTurnTable();
+        // Note: createCardStackArea should ideally be called after the game and deck are initialized
+        // So it might be moved to be called within initializeGame in the GameController
 
-        cardStackArea = createCardStackArea(null);
-        root.getChildren().addAll(gameContent, cardStackArea);
+        BorderPane root = new BorderPane();
+        root.setCenter(gameContent);
 
-        HBox.setHgrow(gameContent, Priority.ALWAYS);
-
-        Scene scene = new Scene(root, 800, 650);
+        Scene scene = new Scene(root, 800, 600);
         primaryStage.setTitle("Coup Game");
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        // Initialize the game using the controller
+        // Initialize the game controller and game state
+        controller = new GameController(this, new Game(new Deck(EnumSet.allOf(Deck.CardType.class), 3)));
         controller.initializeGame();
     }
 
@@ -193,6 +196,39 @@ public class GameView extends Application {
 
         ComboBox<Action> actionsComboBox = new ComboBox<>();
         actionsComboBox.setPromptText("Choose an action");
+
+        // Set a cell factory to use for rendering the action names in the dropdown list
+        actionsComboBox.setCellFactory(lv -> new ListCell<Action>() {
+            @Override
+            protected void updateItem(Action action, boolean empty) {
+                super.updateItem(action, empty);
+                setText(empty ? null : action.getNameOfAction());
+            }
+        });
+
+        // Similarly, set the button cell for displaying the selected item
+        actionsComboBox.setButtonCell(new ListCell<Action>() {
+            @Override
+            protected void updateItem(Action action, boolean empty) {
+                super.updateItem(action, empty);
+                setText(empty ? null : action.getNameOfAction());
+            }
+        });
+
+        // Provide a StringConverter to correctly handle the conversion between the string representation and the Action object
+        actionsComboBox.setConverter(new StringConverter<Action>() {
+            @Override
+            public String toString(Action action) {
+                return action == null ? null : action.getNameOfAction();
+            }
+
+            @Override
+            public Action fromString(String actionName) {
+                // This method is not needed for the ComboBox's functionality in this context
+                return null;
+            }
+        });
+
         actionsComboBox.getItems().addAll(availableActions);
         actionsComboBox.setOnAction(event -> {
             Action selectedAction = actionsComboBox.getValue();
@@ -214,13 +250,15 @@ public class GameView extends Application {
     }
 
 
-    private void createTurnTable(String text) {
-        Label turnLabel = new Label(text);
+    private void createTurnTable() {
+        Label turnLabel = new Label("Turn: ");
         turnLabel.setFont(new Font("Arial", 24));
-        turnLabel.getStyleClass().add("turn-label");
+        turnLabel.getStyleClass().add("turn-label"); // Adding a style class for potential CSS styling
         VBox.setMargin(turnLabel, new Insets(20, 0, 20, 0));
-        gameContent.getChildren().addAll(turnLabel);
+
+        gameContent.getChildren().add(turnLabel); // Assuming gameContent is your main VBox container
     }
+
 
     private void createPlayerArea(Player player, List<String> cardImages) {
         VBox playerArea = new VBox(10);
@@ -314,5 +352,9 @@ public class GameView extends Application {
         cardImageMap.put("Ambassador", "ambassador.png");
         cardImageMap.put("Contessa", "contessa.png");
         return cardImageMap.getOrDefault(card.getName(), "s.png");
+    }
+
+    public void setCurrentPlayer(Player currentPlayer) {
+        this.currentPlayer = currentPlayer;
     }
 }

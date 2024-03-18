@@ -1,6 +1,7 @@
 package com.example.demo6.Model.Actions;
 
 import com.example.demo6.Model.Card;
+import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
 public class TaxAction extends Action {
@@ -29,6 +30,6 @@ public class TaxAction extends Action {
     private boolean challenge() {
         // Here, you should verify if the player has a "Duke" card to successfully collect tax.
         // The logic depends on your game's specific rules for card visibility and verification.
-        return player.hasCard(new Card("Duke"));
+        return player.hasCard(new Card(Deck.CardType.DUKE.getName()));
     }
 }

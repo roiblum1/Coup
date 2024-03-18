@@ -1,6 +1,7 @@
 package com.example.demo6.Model.Actions;
 
 import com.example.demo6.Model.Card;
+import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
 public class AssassinateAction extends Action {
@@ -40,7 +41,7 @@ public class AssassinateAction extends Action {
     public boolean challenge() {
         // Here, you should verify if the player has an "Assassin" card to successfully assassinate.
         // The logic depends on your game's specific rules for card visibility and verification.
-        return player.hasCard(new Card("Assassin"));
+        return player.hasCard(new Card(Deck.CardType.ASSASSIN.getName()));
     }
 
     public Player getTargetPlayer() {

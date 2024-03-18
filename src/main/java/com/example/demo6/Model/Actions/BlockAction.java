@@ -1,6 +1,7 @@
 package com.example.demo6.Model.Actions;
 
 import com.example.demo6.Model.Card;
+import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
 public class BlockAction extends Action {
@@ -19,11 +20,11 @@ public class BlockAction extends Action {
         String actionName = actionToBlock.getNameOfAction();
         switch (actionName) {
             case "foreign_aid":
-                return player.hasCard(new Card("Duke"));
+                return player.hasCard(new Card(Deck.CardType.DUKE.getName()));
             case "assassinate":
-                return player.hasCard(new Card("Contessa"));
+                return player.hasCard(new Card(Deck.CardType.CONTESSA.getName()));
             case "steal":
-                return player.hasCard(new Card("Ambassador")) || player.hasCard(new Card("Captain"));
+                return player.hasCard(new Card(Deck.CardType.AMBASSADOR.getName())) || player.hasCard(new Card(Deck.CardType.CAPTAIN.getName()));
             default:
                 return false;
         }
@@ -62,11 +63,11 @@ public class BlockAction extends Action {
         String actionName = actionToBlock.getNameOfAction();
         switch (actionName) {
             case "foreign_aid":
-                return player.hasCard(new Card("Duke"));
+                return player.hasCard(new Card(Deck.CardType.DUKE.getName()));
             case "assassinate":
-                return player.hasCard(new Card("Contessa"));
+                return player.hasCard(new Card(Deck.CardType.CONTESSA.getName()));
             case "steal":
-                return player.hasCard(new Card("Ambassador")) || player.hasCard(new Card("Captain"));
+                return player.hasCard(new Card(Deck.CardType.ASSASSIN.getName())) || player.hasCard(new Card(Deck.CardType.CAPTAIN.getName()));
             default:
                 return false;
         }

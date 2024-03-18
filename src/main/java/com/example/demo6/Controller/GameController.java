@@ -31,12 +31,14 @@ public class GameController {
         Player opponent = new Player("Player 2");
         game.addPlayer(currentPlayer);
         game.addPlayer(opponent);
+        this.currentPlayer = game.getCurrentPlayer();
 
         // Update the view with the initial game state
         view.updatePlayerInfo(game.getPlayers());
         view.updateCurrentPlayer(game.getCurrentPlayer());
         view.updateAvailableActions(game.getAvailableActions(game.getCurrentPlayer()));
         view.createCardStackArea(game.getDeck());
+        view.setCurrentPlayer(this.currentPlayer);
         // ... update other view components as needed
     }
 
@@ -57,12 +59,10 @@ public class GameController {
         } else if (action instanceof SwapAction) {
             executeSwapAction((SwapAction) action);
         }
-
         // Check if the game is over after each action
         if (isGameOver()) {
             endGame();
         } else {
-            // Switch turns if the game is not over
             endTurn();
         }
     }

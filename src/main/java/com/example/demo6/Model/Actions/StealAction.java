@@ -1,6 +1,7 @@
 package com.example.demo6.Model.Actions;
 
 import com.example.demo6.Model.Card;
+import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
 public class StealAction extends Action {
@@ -39,7 +40,7 @@ public class StealAction extends Action {
     private boolean challenge() {
         // Here, you should verify if the player has a "Captain" card to successfully steal.
         // The logic depends on your game's specific rules for card visibility and verification.
-        return player.hasCard(new Card("Captain"));
+        return player.hasCard(new Card(Deck.CardType.CAPTAIN.getName()));
     }
 
     public Player getTargetPlayer() {
