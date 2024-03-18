@@ -12,20 +12,16 @@ public class CoupAction extends Action {
 
     @Override
     public boolean canPlayerPerform() {
-        // Check if the player has enough coins to perform a coup.
-        return player.getCoins() >= 7 || player.getCoins() >= 10; // Including the rule for 10+ coins.
+        return player.getCoins() >= 7;
     }
 
     @Override
-    public void execute() {
+    public boolean execute(boolean isChallenged, boolean isBlocked) {
         if (canPlayerPerform()) {
-            player.updateCoins(-7); // Deduct the cost of performing a coup.
-            // Logic to make the target player lose an Influence card.
-            targetPlayer.selectCardToGiveUp();
-            System.out.println(player.getName() + " has successfully executed a coup on " + targetPlayer.getName());
-        }
-        else {
-            System.out.println(player.getName() + " does not have enough coins to execute a coup.");
+            player.updateCoins(-7);
+            return true;
+        } else {
+            return false;
         }
     }
 }

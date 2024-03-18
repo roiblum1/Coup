@@ -9,4 +9,8 @@ module com.example.demo6 {
     opens com.example.demo6.Model.Actions to javafx.fxml;
     exports com.example.demo6.Model;
     opens com.example.demo6.Model to javafx.fxml;
+    exports com.example.demo6.Controller;
+    opens com.example.demo6.Controller to javafx.fxml;
+    exports com.example.demo6.View;
+    opens com.example.demo6.View to javafx.fxml;
 }

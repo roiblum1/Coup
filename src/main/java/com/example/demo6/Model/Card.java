@@ -21,11 +21,16 @@ public class Card {
         return this.name;
     }
 
-    public int hashCode() {
-        return this.name.hashCode();
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Card card = (Card) o;
+        return name.equals(card.name);
     }
 
-    public boolean equals(Object o) {
-        return o instanceof Card && o.hashCode() == this.hashCode() && !((Card) o).isRevealed();
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 }

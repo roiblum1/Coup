@@ -2,11 +2,6 @@ package com.example.demo6.Model.Actions;
 
 import com.example.demo6.Model.Card;
 import com.example.demo6.Model.Player;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-
-import java.util.Optional;
-import java.util.Scanner;
 
 public class AssassinateAction extends Action {
     private Player targetPlayer;
@@ -18,78 +13,37 @@ public class AssassinateAction extends Action {
 
     @Override
     public boolean canPlayerPerform() {
-        // Check if the player has enough coins to perform an assassination.
         return player.getCoins() >= 3;
     }
 
     @Override
-    public void execute() {
-        if (canPlayerPerform()) {
-            player.updateCoins(-3); // Deduct the cost of performing an assassination.
-            if (isChallenged()) {
-                if (!challenge()) {
-                    // Player failed the challenge, so the action is not performed
-                    // Apply consequences for failing the challenge, e.g., losing a card
-                    player.selectCardToGiveUp();
-                    return;
-                }
-            }
-            if (isBlocked()) {
-                System.out.println(targetPlayer.getName() + " blocked the assassination attempt.");
-            } else {
-                targetPlayer.selectCardToGiveUp();
-                System.out.println(player.getName() + " has successfully assassinated " + targetPlayer.getName());
-            }
-        } else {
-            System.out.println(player.getName() + " does not have enough coins to perform an assassination.");
-        }
-    }
-
-    private boolean isChallenged() {
-        Alert challengeAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        challengeAlert.setTitle("Challenge Action");
-        challengeAlert.setHeaderText(null);
-        challengeAlert.setContentText(targetPlayer.getName() + ", do you want to challenge this action?");
-
-        ButtonType yesButton = new ButtonType("Yes");
-        ButtonType noButton = new ButtonType("No");
-        challengeAlert.getButtonTypes().setAll(yesButton, noButton);
-
-        Optional<ButtonType> result = challengeAlert.showAndWait();
-        if (result.isPresent() && result.get() == yesButton) {
-            System.out.println(targetPlayer.getName() + " challenges the action!");
-            return true;
-        } else {
-            System.out.println("No one challenges the action.");
+    public boolean execute(boolean isChallenged, boolean isBlocked) {
+        if (!canPlayerPerform()) {
             return false;
         }
+
+        if (isChallenged) {
+            if (!challenge()) {
+                return false; // Assassination attempt fails due to unsuccessful challenge
+            }
+        }
+
+        if (isBlocked) {
+            return false; // Assassination attempt is blocked
+        }
+
+        // If the method reaches this point, the assassination attempt is neither blocked nor failed
+        return true;
     }
 
-    private boolean challenge() {
-        // Check if the player has the Assassin card
+
+    public boolean challenge() {
+        // Here, you should verify if the player has an "Assassin" card to successfully assassinate.
+        // The logic depends on your game's specific rules for card visibility and verification.
         return player.hasCard(new Card("Assassin"));
     }
 
-    private boolean isBlocked() {
-        Alert blockAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        blockAlert.setTitle("Block Action");
-        blockAlert.setHeaderText(null);
-        blockAlert.setContentText(targetPlayer.getName() + ", do you want to block the "+this.getNameOfAction()+" action?");
-
-        blockAlert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
-
-        Optional<ButtonType> result = blockAlert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.YES) {
-            System.out.println(targetPlayer.getName() + " attempts to block the "+this.getNameOfAction()+" action.");
-            BlockAction blockAction = new BlockAction(targetPlayer, this);
-            if (blockAction.canPlayerPerform()) {
-                blockAction.execute();
-                return blockAction.isBlocked();
-            }
-            else return false;
-        } else {
-            System.out.println(targetPlayer.getName() + " does not block the "+this.getNameOfAction()+" action.");
-            return false;
-        }
+    public Player getTargetPlayer() {
+        return targetPlayer;
     }
 }

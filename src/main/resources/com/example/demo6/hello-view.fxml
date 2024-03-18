@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.demo6.GameController" spacing="20" alignment="CENTER">
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.demo6.Controller.GameController" spacing="20" alignment="CENTER">
     <HBox>
         <Label fx:id="playerNameLabel" text="Player 1" />
         <Label fx:id="playerCoinsLabel" text="Coins: 0" />

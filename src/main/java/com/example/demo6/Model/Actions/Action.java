@@ -4,24 +4,25 @@ import com.example.demo6.Model.Player;
 
 public abstract class Action {
     protected Player player;
-    protected String NameOfAction;
+    protected String nameOfAction;
 
     public Action(Player player, String name) {
         this.player = player;
-        this.NameOfAction = name;
+        this.nameOfAction = name;
     }
 
     public String getNameOfAction() {
-        return NameOfAction;
+        return nameOfAction;
     }
 
     // This method checks if the action can be performed by the player.
     public abstract boolean canPlayerPerform();
 
     // Executes the action.
-    public abstract void execute();
+    public abstract boolean execute(boolean isChallenged, boolean isBlocked);
 
     protected Player getPlayer() {
         return this.player;
     }
+
 }

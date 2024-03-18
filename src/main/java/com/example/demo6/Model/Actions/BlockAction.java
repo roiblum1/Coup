@@ -3,8 +3,6 @@ package com.example.demo6.Model.Actions;
 import com.example.demo6.Model.Card;
 import com.example.demo6.Model.Player;
 
-import java.util.Scanner;
-
 public class BlockAction extends Action {
     private Action actionToBlock;
     private boolean isBlocked;
@@ -17,59 +15,60 @@ public class BlockAction extends Action {
 
     @Override
     public boolean canPlayerPerform() {
-        // Check if the action can be blocked
+        // Logic to determine if the action can be blocked
         String actionName = actionToBlock.getNameOfAction();
-        return actionName.equals("foreign_aid") || actionName.equals("assassinate") || actionName.equals("steal");
+        switch (actionName) {
+            case "foreign_aid":
+                return player.hasCard(new Card("Duke"));
+            case "assassinate":
+                return player.hasCard(new Card("Contessa"));
+            case "steal":
+                return player.hasCard(new Card("Ambassador")) || player.hasCard(new Card("Captain"));
+            default:
+                return false;
+        }
     }
 
     @Override
-    public void execute() {
-        if (canPlayerPerform()) {
-            if (isChallenged()) {
-                if (!challenge()) {
-                    // Player failed the challenge, so the block is not successful
-                    // Apply consequences for failing the challenge, e.g., losing a card
-                    player.selectCardToGiveUp();
-                    isBlocked = false;
-                } else {
-                    // Player successfully blocked the action
-                    System.out.println(player.getName() + " successfully blocked the " + actionToBlock.getNameOfAction() + " action.");
-                    isBlocked = true;
-                }
+    public boolean execute(boolean isChallenged, boolean isBlocked) {
+        if (!canPlayerPerform()) {
+            this.isBlocked = false;
+            return false; // Player cannot block the action
+        }
+
+        if (isChallenged) {
+            if (!challenge()) {
+                // Player failed to block because the challenge was lost
+                this.isBlocked = false;
+                return false;
             } else {
-                // No challenge, so the block is successful
-                System.out.println(player.getName() + " blocked the " + actionToBlock.getNameOfAction() + " action.");
-                isBlocked = true;
+                // Player successfully blocked the action
+                this.isBlocked = true;
+                return true;
             }
         } else {
-            isBlocked = false;
+            // Player has blocked the action without challenge
+            this.isBlocked = true;
+            return true;
         }
     }
 
-    private boolean isChallenged() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println(actionToBlock.getPlayer().getName() + ", do you want to challenge the block? (Y/N)");
-        String input = scanner.nextLine().trim().toUpperCase();
-        if (input.equals("Y")) {
-            System.out.println(actionToBlock.getPlayer().getName() + " challenges the block!");
-            return true;
-        }
-        System.out.println(actionToBlock.getPlayer().getName() + " does not challenge the block.");
-        return false;
+    public boolean isBlocked() {
+        return isBlocked;
     }
 
     private boolean challenge() {
         // Check if the player has the appropriate card to block the action
         String actionName = actionToBlock.getNameOfAction();
-        return switch (actionName) {
-            case "foreign_aid" -> player.hasCard(new Card("Duke"));
-            case "assassinate" -> player.hasCard(new Card("Contessa"));
-            case "steal" -> player.hasCard(new Card("Ambassador")) || player.hasCard(new Card("Captain"));
-            default -> false;
-        };
-    }
-
-    public boolean isBlocked() {
-        return isBlocked;
+        switch (actionName) {
+            case "foreign_aid":
+                return player.hasCard(new Card("Duke"));
+            case "assassinate":
+                return player.hasCard(new Card("Contessa"));
+            case "steal":
+                return player.hasCard(new Card("Ambassador")) || player.hasCard(new Card("Captain"));
+            default:
+                return false;
+        }
     }
 }
