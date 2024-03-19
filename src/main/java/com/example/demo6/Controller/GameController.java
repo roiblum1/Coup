@@ -168,12 +168,10 @@ public class GameController {
         boolean success = taxAction.execute(isChallenged, false);
         if (isChallenged) {
             if (success) {
-                // The action was valid, but challenged. The challenger loses a card.
                 Player challenger = game.getOpponent(currentPlayer);
                 handleLoseCard(challenger);
                 view.displayMessage(currentPlayer.getName() + " successfully proved their action. " + challenger.getName() + " loses a card.");
             } else {
-                // The challenge was successful, meaning the action was not valid. The action taker loses a card.
                 handleLoseCard(currentPlayer);
                 view.displayMessage(currentPlayer.getName() + " could not prove their action. They lose a card.");
             }
@@ -181,24 +179,23 @@ public class GameController {
         updateView();
     }
 
-    // Handles executing an IncomeAction
+    //* Handles executing an IncomeAction */
     private void executeIncomeAction(IncomeAction incomeAction) {
         incomeAction.execute(false, false);
-        updateView(); // Action concluded
+        updateView();
     }
 
-    // Handles executing a CoupAction
+    //* Handles executing a CoupAction */
     private void executeCoupAction(CoupAction coupAction) {
         boolean success = coupAction.execute(false, false);
         if (success)
         {
-            // the opponent loses a card due to successful coup
             handleLoseCard(game.getOpponent(currentPlayer));
         }
-        updateView(); // Action concluded
+        updateView();
     }
 
-    // Handles executing a SwapAction
+    //* Handles executing a SwapAction */
     private void executeSwapAction(SwapAction swapAction) {
         boolean isChallenged = view.promptForChallenge(currentPlayer.getName() + " is attempting to swap influence.");
         if (isChallenged) {
@@ -218,7 +215,7 @@ public class GameController {
         updateView();
     }
 
-    // Handles the outcome of a BlockAction, potentially including a challenge
+    //* Handles the outcome of a BlockAction, potentially including a challenge */
     private void handleBlockAction(Player blocker, Action actionToBlock, boolean isChallenged) {
         BlockAction blockAction = new BlockAction(blocker, actionToBlock);
         boolean blockSuccessful = blockAction.execute(isChallenged, false);
@@ -260,73 +257,61 @@ public class GameController {
         updateView();
     }
 
-    // Handles resolving a challenge when an action is performed
+    //* Handles resolving a challenge when an action is performed */
     private boolean handleChallenge(Action action) {
         boolean challengeSuccess = action.challenge();
         if (challengeSuccess) {
-            // The player successfully proves they can perform the action; the challenger loses a card.
-            Player challenger = game.getOpponent(action.getPlayer()); // You'll need to determine who the challenger is. This might involve UI interaction or game state.
+            Player challenger = game.getOpponent(action.getPlayer());
             Card lostCard = view.promptPlayerForCardToGiveUp(challenger);
             challenger.returnCard(lostCard);
             Platform.runLater(() -> {
                 try {
-                    Thread.sleep(1000); // Delay for 1 second before displaying the message
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt(); // Handle thread interruption
+                    Thread.currentThread().interrupt();
                 }
                 view.displayMessage("Challenge failed. " + challenger.getName() + " loses a card.");
             });
         } else {
-            // The player fails to prove they can perform the action; they lose a card.
             Card lostCard = view.promptPlayerForCardToGiveUp(action.getPlayer());
             action.getPlayer().returnCard(lostCard);
             Platform.runLater(() -> {
                 try {
-                    Thread.sleep(1000); // Delay for 1 second before displaying the message
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt(); // Handle thread interruption
+                    Thread.currentThread().interrupt();
                 }
                 view.displayMessage("Challenge successful. " + action.getPlayer().getName() + " loses a card.");
             });
         }
-
-        // Return true if the challenge was unsuccessful (action proceeds), false otherwise (action stopped).
         return challengeSuccess;
     }
 
-
-    // Ends the current player's turn and switches to the next player
+    //* Ends the current player's turn and switches to the next player */
     private void endTurn() {
         currentPlayer = game.switchTurns();
         updateView();
     }
 
-    // Checks if the game has ended (e.g., only one player remains)
+    //* Checks if the game has ended */
     private boolean isGameOver() {
         return game.getActivePlayers().size() == 1;
     }
 
-    // Retrieves the winner of the game
-    public Player getWinner() {
-        if (isGameOver()) {
-            return game.getActivePlayers().get(0);
-        }
-        return null;
-    }
-
+    //* handle the view and the model in case of returning card */
     public void handleLoseCard(Player player) {
         Card cardToLose = view.promptPlayerForCardToGiveUp(player);
         player.returnCard(cardToLose);
         updateView();
     }
 
-    // Ends the game and displays the winner
+    //* Ends the game and displays the winner */
     private void endGame() {
         Player winner = game.getActivePlayers().get(0);
         view.displayWinner(winner);
-        // Optionally, you can ask the players if they want to play again here
     }
 
+    //* Update the view */
     private void updateView() {
         Platform.runLater(() -> {
             view.updatePlayerInfo(game.getPlayers());
