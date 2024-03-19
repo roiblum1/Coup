@@ -54,8 +54,9 @@ public class BlockAction extends Action {
         return isBlocked;
     }
 
+    @Override
     // Handles the challenge to the blocking action
-    private boolean challenge() {
+    public boolean challenge() {
         // Check if the player has the appropriate card to block the action
         if (actionToBlock.nameOfAction.equals(ActionName.FOREIGN_AID)) {
             return player.hasCard(new Card(Deck.CardType.DUKE.getName()));

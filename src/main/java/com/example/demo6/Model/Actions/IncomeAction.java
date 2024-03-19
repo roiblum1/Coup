@@ -19,4 +19,9 @@ public class IncomeAction extends Action {
         player.updateCoins(1);
         return true;
     }
+
+    @Override
+    public boolean challenge() {
+        return true;
+    }
 }

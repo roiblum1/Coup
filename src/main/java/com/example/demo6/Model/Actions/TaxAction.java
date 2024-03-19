@@ -30,7 +30,7 @@ public class TaxAction extends Action {
     }
 
     // Handles the challenge to the tax action
-    private boolean challenge() {
+    public boolean challenge() {
         return player.hasCard(new Card(Deck.CardType.DUKE.getName()));
     }
 }

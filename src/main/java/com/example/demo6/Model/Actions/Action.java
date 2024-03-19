@@ -27,8 +27,10 @@ public abstract class Action {
     // Executes the action
     public abstract boolean execute(boolean isChallenged, boolean isBlocked);
 
+    public abstract boolean challenge();
+
     // Retrieves the player associated with the action
-    protected Player getPlayer() {
+    public Player getPlayer() {
         return this.player;
     }
 }

@@ -8,10 +8,7 @@ import com.example.demo6.Model.Player;
 import com.example.demo6.View.GameView;
 import javafx.application.Platform;
 
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class GameController {
@@ -82,39 +79,63 @@ public class GameController {
 
     // Handles executing a StealAction
     private void executeStealAction(StealAction stealAction) {
+        // Challenge Phase
         boolean isChallenged = view.promptForChallenge(currentPlayer.getName() + " is attempting to steal from " + stealAction.getTargetPlayer().getName());
+        if (isChallenged) {
+            boolean challengeResult = handleChallenge(stealAction);
+            if (!challengeResult) {
+                updateView(); // Update view due to challenge outcome.
+                return; // Stop action if challenge was successful.
+            }
+            // Continue to block phase if challenge fails (action is valid).
+        }
+
+        // Block Phase
         boolean isBlocked = view.promptForBlock(stealAction.getTargetPlayer().getName() + ", do you want to block the steal?");
-        stealAction.execute(isChallenged, isBlocked);
         if (isBlocked) {
-            isChallenged = view.promptForChallenge(currentPlayer.getName() + " is do you want to challenged the block of " + stealAction.getTargetPlayer().getName());
-            handleBlockAction(stealAction.getTargetPlayer(), stealAction, isChallenged);
+            // Challenge the Block
+            boolean isBlockChallenged = view.promptForChallenge(currentPlayer.getName() + ", do you want to challenge the block of " + stealAction.getTargetPlayer().getName() + "?");
+            handleBlockAction(stealAction.getTargetPlayer(), stealAction, isBlockChallenged);
+            // Note: handleBlockAction will decide if action proceeds based on block challenge outcome.
         } else {
-            updateView(); // Action concluded without block, or block was not challenged
+            // Execute the steal action directly if not blocked.
+            stealAction.execute(false, false);
+            updateView(); // Update view as action concludes successfully.
         }
     }
+
+
     private void executeStealAction2(StealAction stealAction) {
         stealAction.execute(false, false);
     }
 
     // Handles executing an AssassinateAction
     private void executeAssassinateAction(AssassinateAction assassinateAction) {
+        // Initial challenge phase
         boolean isChallenged = view.promptForChallenge(currentPlayer.getName() + " is attempting to assassinate " + assassinateAction.getTargetPlayer().getName());
-        boolean isBlocked = false;
-        if (!isChallenged || assassinateAction.challenge()) {
-            isBlocked = view.promptForBlock(assassinateAction.getTargetPlayer().getName() + ", do you want to block the assassination?");
+        if (isChallenged) {
+            boolean challengeResult = handleChallenge(assassinateAction);
+            if (!challengeResult) {
+                // Assassination stopped due to successful challenge against the assassin
+                return; // Stop the action here.
+            }
         }
-        boolean assassinationSuccessful = assassinateAction.execute(isChallenged, isBlocked);
-        if (isChallenged && !assassinationSuccessful) {
-            handleLoseCard(currentPlayer); // Current player loses a card due to unsuccessful challenge
-        } else if (isBlocked) {
-            isChallenged = view.promptForChallenge(currentPlayer.getName() + " is do you want to challenged the block of " + assassinateAction.getTargetPlayer().getName());
-            handleBlockAction(assassinateAction.getTargetPlayer(), assassinateAction, isChallenged);
-        } else if (assassinationSuccessful) {
-            currentPlayer.updateCoins(-3); // Current player pays 3 coins for successful assassination
-            handleLoseCard(assassinateAction.getTargetPlayer()); // Target player loses a card
+        // Block phase only if the action was not successfully challenged or if the assassin proved their role
+        boolean isBlocked = view.promptForBlock(assassinateAction.getTargetPlayer().getName() + ", do you want to block the assassination?");
+        if (isBlocked) {
+            boolean blockChallengeResult = view.promptForChallenge(currentPlayer.getName() + ", do you want to challenge the block?");
+            handleBlockAction(assassinateAction.getTargetPlayer(), assassinateAction, blockChallengeResult);
+            return; // Block handling will take care of action conclusion.
+        }
+        // Proceed with the assassination if not blocked or if the block challenge fails
+        if (assassinateAction.execute(false, false)) {
+            // Assassination successful
+            currentPlayer.updateCoins(-3); // Deduct cost of assassination
+            handleLoseCard(assassinateAction.getTargetPlayer()); // Target loses a card
         }
         updateView();
     }
+
     private void executeAssassinateAction2(AssassinateAction assassinateAction) {
         boolean assassinationSuccessful = assassinateAction.execute(false, false);
         if (assassinationSuccessful)
@@ -145,10 +166,19 @@ public class GameController {
     private void executeTaxAction(TaxAction taxAction) {
         boolean isChallenged = view.promptForChallenge(currentPlayer.getName() + " is attempting to collect tax.");
         boolean success = taxAction.execute(isChallenged, false);
-        if (!success) {
-            handleLoseCard(currentPlayer);
+        if (isChallenged) {
+            if (success) {
+                // The action was valid, but challenged. The challenger loses a card.
+                Player challenger = game.getOpponent(currentPlayer);
+                handleLoseCard(challenger);
+                view.displayMessage(currentPlayer.getName() + " successfully proved their action. " + challenger.getName() + " loses a card.");
+            } else {
+                // The challenge was successful, meaning the action was not valid. The action taker loses a card.
+                handleLoseCard(currentPlayer);
+                view.displayMessage(currentPlayer.getName() + " could not prove their action. They lose a card.");
+            }
         }
-        updateView(); // Action concluded
+        updateView();
     }
 
     // Handles executing an IncomeAction
@@ -171,18 +201,21 @@ public class GameController {
     // Handles executing a SwapAction
     private void executeSwapAction(SwapAction swapAction) {
         boolean isChallenged = view.promptForChallenge(currentPlayer.getName() + " is attempting to swap influence.");
-        boolean success = swapAction.execute(isChallenged, false);
-
-        if (success) {
-            // Prompt the player to select the cards to swap
-            List<Card> selectedCards = view.promptForCardSelection(currentPlayer, 2);
-            currentPlayer.swapCards(selectedCards);
-        } else if (isChallenged) {
-            // If the swap action failed and was challenged, the player loses a card
-            handleLoseCard(currentPlayer);
+        if (isChallenged) {
+            boolean challengeSuccess = handleChallenge(swapAction);
+            if (!challengeSuccess) {
+                return;
+            }
         }
-
-        updateView(); // Reflect the new game state in the view
+        List<Card> newCards = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            newCards.add(game.getDeck().getCard());
+        }
+        List<Card> swapOptions = new ArrayList<>(currentPlayer.getCards());
+        swapOptions.addAll(newCards);
+        List<Card> selectedCards = view.promptForCardSelection(swapOptions, 2);
+        currentPlayer.swapCards(selectedCards, newCards);
+        updateView();
     }
 
     // Handles the outcome of a BlockAction, potentially including a challenge
@@ -215,8 +248,6 @@ public class GameController {
             } else {
                 // Block failed without challenge
                 System.out.println(blocker.getName() + " failed to block " + actionToBlock.getNameOfAction() + " action.");
-
-                // Execute the original action directly
                 if (actionToBlock instanceof StealAction) {
                     executeStealAction2((StealAction) actionToBlock);
                 } else if (actionToBlock instanceof AssassinateAction) {
@@ -226,9 +257,43 @@ public class GameController {
                 }
             }
         }
-
-        updateView(); // Reflect the new game state in the view
+        updateView();
     }
+
+    // Handles resolving a challenge when an action is performed
+    private boolean handleChallenge(Action action) {
+        boolean challengeSuccess = action.challenge();
+        if (challengeSuccess) {
+            // The player successfully proves they can perform the action; the challenger loses a card.
+            Player challenger = game.getOpponent(action.getPlayer()); // You'll need to determine who the challenger is. This might involve UI interaction or game state.
+            Card lostCard = view.promptPlayerForCardToGiveUp(challenger);
+            challenger.returnCard(lostCard);
+            Platform.runLater(() -> {
+                try {
+                    Thread.sleep(1000); // Delay for 1 second before displaying the message
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // Handle thread interruption
+                }
+                view.displayMessage("Challenge failed. " + challenger.getName() + " loses a card.");
+            });
+        } else {
+            // The player fails to prove they can perform the action; they lose a card.
+            Card lostCard = view.promptPlayerForCardToGiveUp(action.getPlayer());
+            action.getPlayer().returnCard(lostCard);
+            Platform.runLater(() -> {
+                try {
+                    Thread.sleep(1000); // Delay for 1 second before displaying the message
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // Handle thread interruption
+                }
+                view.displayMessage("Challenge successful. " + action.getPlayer().getName() + " loses a card.");
+            });
+        }
+
+        // Return true if the challenge was unsuccessful (action proceeds), false otherwise (action stopped).
+        return challengeSuccess;
+    }
+
 
     // Ends the current player's turn and switches to the next player
     private void endTurn() {

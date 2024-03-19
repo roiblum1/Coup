@@ -24,4 +24,9 @@ public class ForeignAidAction extends Action {
             return true;
         }
     }
+
+    @Override
+    public boolean challenge() {
+        return true;
+    }
 }

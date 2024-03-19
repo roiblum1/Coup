@@ -110,17 +110,12 @@ public class GameView extends Application {
         // Return true if the user clicks "Block", indicating they want to block the action.
         return result.isPresent() && result.get() == buttonTypeYes;
     }
-    public List<Card> promptForCardSelection(Player player, int numberOfCards) {
-        // Fetch the list of cards from the player
-        List<Card> cards = player.getCards();
-
+    public List<Card> promptForCardSelection(List<Card> options, int numberOfCardsToSelect) {
         // Map the Card objects to their string representations for display
-        List<String> choices = cards.stream().map(Card::toString).collect(Collectors.toList());
-
+        List<String> choices = options.stream().map(Card::toString).collect(Collectors.toList());
         // List to hold the selected Card objects
         List<Card> selectedCards = new ArrayList<>();
-
-        for (int i = 0; i < numberOfCards; i++) {
+        for (int i = 0; i < numberOfCardsToSelect; i++) {
             ChoiceDialog<String> dialog = new ChoiceDialog<>(choices.get(0), choices);
             dialog.setTitle("Select Cards");
             dialog.setHeaderText("Select a card:");
@@ -128,7 +123,7 @@ public class GameView extends Application {
             Optional<String> result = dialog.showAndWait();
             result.ifPresent(cardDescription -> {
                 // Find the selected Card object based on the selection string
-                for (Card card : cards) {
+                for (Card card : options) {
                     if (card.toString().equals(cardDescription)) {
                         selectedCards.add(card);
                         // Remove the selected card from the list of choices to avoid reselection
@@ -140,8 +135,10 @@ public class GameView extends Application {
             // If the user closes the dialog without making a selection, break the loop to prevent further selections
             if (result.isEmpty()) break;
         }
+
         return selectedCards;
     }
+
 
     public Card promptPlayerForCardToGiveUp(Player player) {
         // Convert the player's cards to a list of string representations
@@ -336,6 +333,18 @@ public class GameView extends Application {
             alert.showAndWait();
         });
     }
+    public void displayMessage(String message) {
+        // Ensure UI updates are done on the JavaFX Application Thread
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Game Information");
+            alert.setHeaderText(null); // No header text
+            alert.setContentText(message);
+
+            alert.showAndWait();
+        });
+    }
+
 
     private String getCardImage(Card card) {
         // Map card names to image file names

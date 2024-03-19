@@ -2,6 +2,7 @@ package com.example.demo6.Model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Player {
     private final int NUMBER_OF_CARDS = 2;
@@ -61,16 +62,31 @@ public class Player {
         this.currentDeck.returnCard(card);
     }
 
-    //* Swaps cards with the deck */
-    public void swapCards(List<Card> selectedCards) {
-        List<Card> oldCards = new ArrayList<>(this.cards);
+    /**
+     * Swaps the player's selected cards with the deck, returning any unselected cards to the deck.
+     *
+     * @param selectedCards The cards to keep in the player's hand.
+     * @param newCards The new cards drawn from the deck.
+     */
+    public void swapCards(List<Card> selectedCards, List<Card> newCards) {
+        // Combine the current cards and new cards to form the total pool of cards to choose from.
+        List<Card> totalCards = new ArrayList<>(this.cards);
+        totalCards.addAll(newCards);
+
+        // Determine which cards need to be returned to the deck.
+        // These are the cards in the total pool that are not in the selected cards.
+        List<Card> toReturn = totalCards.stream()
+                .filter(card -> !selectedCards.contains(card))
+                .toList();
+
+        // Return the unselected cards to the deck.
+        toReturn.forEach(this.currentDeck::returnCard);
+
+        // Clear the current cards and add the selected cards to the player's hand.
         this.cards.clear();
         this.cards.addAll(selectedCards);
-        oldCards.removeAll(selectedCards);
-        for (Card card : oldCards) {
-            this.currentDeck.returnCard(card);
-        }
     }
+
 
     //* Checks if the player has a specific card */
     public boolean hasCard(Card givenCard) {

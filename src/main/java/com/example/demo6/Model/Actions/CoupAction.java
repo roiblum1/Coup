@@ -26,4 +26,9 @@ public class CoupAction extends Action {
             return false;
         }
     }
+
+    @Override
+    public boolean challenge() {
+        return true;
+    }
 }

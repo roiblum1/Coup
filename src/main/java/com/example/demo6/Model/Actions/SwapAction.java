@@ -25,7 +25,8 @@ public class SwapAction extends Action {
     }
 
     // Handles the challenge to the swap action
-    private boolean challenge() {
+    @Override
+    public boolean challenge() {
         return player.hasCard(new Card(Deck.CardType.AMBASSADOR.getName()));
     }
 }

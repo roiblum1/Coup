@@ -41,6 +41,7 @@ public class AssassinateAction extends Action {
         return true;
     }
 
+    @Override
     // check if the player is capable of do
     public boolean challenge() {
         return player.hasCard(new Card(Deck.CardType.ASSASSIN.getName()));

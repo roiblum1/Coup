@@ -43,7 +43,7 @@ public class StealAction extends Action {
     }
 
     // Handles the challenge to the steal action
-    private boolean challenge() {
+    public boolean challenge() {
         return player.hasCard(new Card(Deck.CardType.CAPTAIN.getName()));
     }
 
