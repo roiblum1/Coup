@@ -87,9 +87,7 @@ public class GameController {
                 updateView(); // Update view due to challenge outcome.
                 return; // Stop action if challenge was successful.
             }
-            // Continue to block phase if challenge fails (action is valid).
         }
-
         // Block Phase
         boolean isBlocked = view.promptForBlock(stealAction.getTargetPlayer().getName() + ", do you want to block the steal?");
         if (isBlocked) {
@@ -116,8 +114,7 @@ public class GameController {
         if (isChallenged) {
             boolean challengeResult = handleChallenge(assassinateAction);
             if (!challengeResult) {
-                // Assassination stopped due to successful challenge against the assassin
-                return; // Stop the action here.
+                return;
             }
         }
         // Block phase only if the action was not successfully challenged or if the assassin proved their role
@@ -154,7 +151,7 @@ public class GameController {
             boolean isChallenged = view.promptForChallenge(currentPlayer.getName() + " is do you want to challenged the block of " + game.getOpponent(currentPlayer).getName());
             handleBlockAction(game.getOpponent(currentPlayer), foreignAidAction, isChallenged);
         } else {
-            updateView(); // Action concluded without block
+            updateView();
         }
     }
     private void executeForeignAidAction2(ForeignAidAction foreignAidAction) {
@@ -165,16 +162,19 @@ public class GameController {
     // Handles executing a TaxAction
     private void executeTaxAction(TaxAction taxAction) {
         boolean isChallenged = view.promptForChallenge(currentPlayer.getName() + " is attempting to collect tax.");
-        boolean success = taxAction.execute(isChallenged, false);
         if (isChallenged) {
-            if (success) {
-                Player challenger = game.getOpponent(currentPlayer);
-                handleLoseCard(challenger);
-                view.displayMessage(currentPlayer.getName() + " successfully proved their action. " + challenger.getName() + " loses a card.");
-            } else {
-                handleLoseCard(currentPlayer);
-                view.displayMessage(currentPlayer.getName() + " could not prove their action. They lose a card.");
+            boolean challengeSuccess = handleChallenge(taxAction);
+            if (!challengeSuccess) {
+                view.displayMessage(currentPlayer.getName() + "'s tax collection was stopped due to a successful challenge.");
+                updateView();
+                return;
             }
+        }
+        boolean success = taxAction.execute(false, false);
+        if (success) {
+            view.displayMessage(currentPlayer.getName() + " successfully collects tax.");
+        } else {
+            view.displayMessage(currentPlayer.getName() + " could not collect tax for some reason.");
         }
         updateView();
     }
