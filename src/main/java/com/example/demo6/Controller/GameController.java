@@ -86,6 +86,7 @@ public class GameController {
         boolean isBlocked = view.promptForBlock(stealAction.getTargetPlayer().getName() + ", do you want to block the steal?");
         stealAction.execute(isChallenged, isBlocked);
         if (isBlocked) {
+            isChallenged = view.promptForChallenge(currentPlayer.getName() + " is do you want to challenged the block of " + stealAction.getTargetPlayer().getName());
             handleBlockAction(stealAction.getTargetPlayer(), stealAction, isChallenged);
         } else {
             updateView(); // Action concluded without block, or block was not challenged
