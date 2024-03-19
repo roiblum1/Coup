@@ -138,7 +138,7 @@ public class GameView extends Application {
                 }
             });
             // If the user closes the dialog without making a selection, break the loop to prevent further selections
-            if (!result.isPresent()) break;
+            if (result.isEmpty()) break;
         }
         return selectedCards;
     }
