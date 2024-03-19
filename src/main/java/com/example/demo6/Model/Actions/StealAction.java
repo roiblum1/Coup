@@ -12,37 +12,42 @@ public class StealAction extends Action {
         this.targetPlayer = targetPlayer;
     }
 
+    // Checks if the player can perform the steal action
     @Override
     public boolean canPlayerPerform() {
         // Assuming the player can always attempt to steal, but you might add more conditions here.
         return true;
     }
 
+    // Executes the steal action
+    @Override
     public boolean execute(boolean isChallenged, boolean isBlocked) {
         if (isChallenged) {
             // If challenged, the stealing player must verify they have the capability (e.g., they have a "Captain")
             if (!challenge()) {
-                return false; // Player failed the challenge and cannot steal
+                // Player failed the challenge and cannot steal
+                return false;
             }
         }
-
         if (isBlocked) {
-            return false; // The steal action was blocked
+            // The steal action was blocked
+            return false;
         } else {
             // Perform the steal action
             int stolenCoins = Math.min(2, targetPlayer.getCoins());
             player.updateCoins(stolenCoins);
             targetPlayer.updateCoins(-stolenCoins);
-            return true; // The steal action was successful
+            // The steal action was successful
+            return true;
         }
     }
 
+    // Handles the challenge to the steal action
     private boolean challenge() {
-        // Here, you should verify if the player has a "Captain" card to successfully steal.
-        // The logic depends on your game's specific rules for card visibility and verification.
         return player.hasCard(new Card(Deck.CardType.CAPTAIN.getName()));
     }
 
+    // Retrieves the target player of the steal action
     public Player getTargetPlayer() {
         return targetPlayer;
     }

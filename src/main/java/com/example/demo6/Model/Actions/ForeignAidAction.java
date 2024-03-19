@@ -7,15 +7,18 @@ public class ForeignAidAction extends Action {
         super(player, ActionName.FOREIGN_AID);
     }
 
+    // Checks if the player can perform the foreign aid action
     @Override
     public boolean canPlayerPerform() {
         return true;
     }
 
+    // Executes the foreign aid action
     @Override
     public boolean execute(boolean isChallenged, boolean isBlocked) {
         if (isBlocked) {
-            return false; // The foreign aid action was blocked
+            // The foreign aid action was blocked
+            return false;
         } else {
             player.updateCoins(2);
             return true;

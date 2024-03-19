@@ -10,11 +10,13 @@ public class CoupAction extends Action {
         this.targetPlayer = targetPlayer;
     }
 
+    // Checks if the player can perform the coup action
     @Override
     public boolean canPlayerPerform() {
         return player.getCoins() >= 7;
     }
 
+    // Executes the coup action
     @Override
     public boolean execute(boolean isChallenged, boolean isBlocked) {
         if (canPlayerPerform()) {

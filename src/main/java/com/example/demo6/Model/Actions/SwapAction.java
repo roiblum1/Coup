@@ -9,22 +9,23 @@ public class SwapAction extends Action {
         super(player, ActionName.SWAP);
     }
 
+    // Checks if the player can perform the swap action
     @Override
     public boolean canPlayerPerform() {
         return true;
     }
 
+    // Executes the swap action
     public boolean execute(boolean isChallenged, boolean isBlocked) {
         if (isChallenged) {
-            // If challenged, the player must verify they have the capability (e.g., they have an "Ambassador")
-            return challenge(); // Player failed the challenge and cannot swap
+            // Player failed the challenge and cannot swap
+            return challenge();
         }
         return true;
     }
 
+    // Handles the challenge to the swap action
     private boolean challenge() {
-        // Here, you should verify if the player has an "Ambassador" card to successfully swap.
-        // The logic depends on your game's specific rules for card visibility and verification.
         return player.hasCard(new Card(Deck.CardType.AMBASSADOR.getName()));
     }
 }

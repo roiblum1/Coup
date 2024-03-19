@@ -26,7 +26,7 @@ public class Deck {
 
     private Stack<Card> contents;
 
-    // Initialises deck with each card -copies' times.
+    //* Initializes the deck with each card and specified number of copies */
     public Deck(Set<CardType> cardTypes, int copies) {
         this.contents = new Stack<>();
         for (CardType cardType : cardTypes) {
@@ -37,17 +37,17 @@ public class Deck {
         Collections.shuffle(contents);
     }
 
-    // Return the number of cards left in the deck
+    //* Returns the number of cards left in the deck */
     public int getSize() {
         return this.contents.size();
     }
 
-    // Check if there are no cards left
+    //* Checks if there are no cards left in the deck */
     public boolean isEmpty() {
         return contents.isEmpty();
     }
 
-    // Get the top card off the deck if not empty, otherwise throw an exception
+    //* Retrieves the top card from the deck, throws an exception if empty */
     public Card getCard() {
         if (isEmpty()) {
             throw new NoSuchElementException("Deck is empty.");
@@ -55,16 +55,14 @@ public class Deck {
         return contents.pop();
     }
 
-    // Add card into the deck and shuffle
+    //* Adds a card into the deck and shuffles */
     public void returnCard(Card card) {
         contents.add(card);
         Collections.shuffle(contents);
     }
 
-    // A simple factory for creating cards
     static class CardFactory {
         static Card createCard(String name) {
-            // This method can be expanded to handle different types of cards more complexly
             return new Card(name);
         }
     }

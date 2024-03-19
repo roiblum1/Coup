@@ -12,11 +12,13 @@ public class AssassinateAction extends Action {
         this.targetPlayer = targetPlayer;
     }
 
+    // Checks if the player can perform the assassination action
     @Override
     public boolean canPlayerPerform() {
         return player.getCoins() >= 3;
     }
 
+    // Executes the assassination action
     @Override
     public boolean execute(boolean isChallenged, boolean isBlocked) {
         if (!canPlayerPerform()) {
@@ -25,25 +27,26 @@ public class AssassinateAction extends Action {
 
         if (isChallenged) {
             if (!challenge()) {
-                return false; // Assassination attempt fails due to unsuccessful challenge
+                // Assassination attempt fails due to unsuccessful challenge
+                return false;
             }
         }
 
         if (isBlocked) {
-            return false; // Assassination attempt is blocked
+            // Assassination attempt is blocked
+            return false;
         }
 
         // If the method reaches this point, the assassination attempt is neither blocked nor failed
         return true;
     }
 
-
+    // check if the player is capable of do
     public boolean challenge() {
-        // Here, you should verify if the player has an "Assassin" card to successfully assassinate.
-        // The logic depends on your game's specific rules for card visibility and verification.
         return player.hasCard(new Card(Deck.CardType.ASSASSIN.getName()));
     }
 
+    // Retrieves the target player of the assassination
     public Player getTargetPlayer() {
         return targetPlayer;
     }

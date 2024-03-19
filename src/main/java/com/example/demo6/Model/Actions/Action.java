@@ -10,21 +10,25 @@ public abstract class Action {
         this.player = player;
         this.nameOfAction = name;
     }
+
+    // Retrieves the action name
     public ActionName getActionName() {
         return nameOfAction;
     }
+
+    // Retrieves the name of the action
     public String getNameOfAction() {
         return nameOfAction.toString();
     }
 
-    // This method checks if the action can be performed by the player.
+    // Checks if the action can be performed by the player
     public abstract boolean canPlayerPerform();
 
-    // Executes the action.
+    // Executes the action
     public abstract boolean execute(boolean isChallenged, boolean isBlocked);
 
+    // Retrieves the player associated with the action
     protected Player getPlayer() {
         return this.player;
     }
-
 }

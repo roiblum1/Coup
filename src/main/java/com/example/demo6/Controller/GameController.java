@@ -107,6 +107,7 @@ public class GameController {
         if (isChallenged && !assassinationSuccessful) {
             handleLoseCard(currentPlayer); // Current player loses a card due to unsuccessful challenge
         } else if (isBlocked) {
+            isChallenged = view.promptForChallenge(currentPlayer.getName() + " is do you want to challenged the block of " + assassinateAction.getTargetPlayer().getName());
             handleBlockAction(assassinateAction.getTargetPlayer(), assassinateAction, isChallenged);
         } else if (assassinationSuccessful) {
             currentPlayer.updateCoins(-3); // Current player pays 3 coins for successful assassination
@@ -129,7 +130,8 @@ public class GameController {
         boolean isBlocked = view.promptForBlock(currentPlayer.getName() + " is attempting to take foreign aid. Does anyone want to block it?");
         foreignAidAction.execute(false, isBlocked);
         if (isBlocked) {
-            handleBlockAction(game.getOpponent(currentPlayer), foreignAidAction, false);
+            boolean isChallenged = view.promptForChallenge(currentPlayer.getName() + " is do you want to challenged the block of " + game.getOpponent(currentPlayer).getName());
+            handleBlockAction(game.getOpponent(currentPlayer), foreignAidAction, isChallenged);
         } else {
             updateView(); // Action concluded without block
         }
@@ -249,7 +251,7 @@ public class GameController {
 
     public void handleLoseCard(Player player) {
         Card cardToLose = view.promptPlayerForCardToGiveUp(player);
-        player.loseCard(cardToLose);
+        player.returnCard(cardToLose);
         updateView();
     }
 
@@ -261,10 +263,12 @@ public class GameController {
     }
 
     private void updateView() {
-        view.updatePlayerInfo(game.getPlayers());
-        view.updateCurrentPlayer(currentPlayer);
-        view.updateAvailableActions(game.getAvailableActions(currentPlayer));
-        view.updateDeckInfo(game.getDeck());
+        Platform.runLater(() -> {
+            view.updatePlayerInfo(game.getPlayers());
+            view.updateCurrentPlayer(currentPlayer);
+            view.updateAvailableActions(game.getAvailableActions(currentPlayer));
+            view.updateDeckInfo(game.getDeck());
+        });
     }
 
 }

@@ -13,4 +13,6 @@ module com.example.demo6 {
     opens com.example.demo6.Controller to javafx.fxml;
     exports com.example.demo6.View;
     opens com.example.demo6.View to javafx.fxml;
+    exports com.example.demo6.AI;
+    opens com.example.demo6.AI to javafx.fxml;
 }

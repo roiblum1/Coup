@@ -7,6 +7,7 @@ import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Game;
 import com.example.demo6.Model.Player;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -24,7 +25,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class GameView extends Application {
-
     private VBox gameContent;
     private Map<String, HBox> playerCardsMap = new HashMap<>();
     private Label cardStackCountLabel;
@@ -66,7 +66,7 @@ public class GameView extends Application {
 
         // Initialize the game controller and game state
         controller = new GameController(this, new Game(new Deck(EnumSet.allOf(Deck.CardType.class), 3)));
-        controller.initializeGame();
+        Platform.runLater(() -> controller.initializeGame());
     }
 
     public void setController(GameController controller) {
@@ -173,83 +173,91 @@ public class GameView extends Application {
     }
 
     public void updatePlayerInfo(List<Player> players) {
-        // Clear the existing player information
-        gameContent.getChildren().removeIf(node -> node instanceof VBox && ((VBox) node).getStyleClass().contains("player-area"));
+        Platform.runLater(() -> {
+            // Clear the existing player information
+            gameContent.getChildren().removeIf(node -> node instanceof VBox && node.getStyleClass().contains("player-area"));
 
-        // Create updated player areas for each player
-        for (Player player : players) {
-            List<String> cardImages = player.getCards().stream()
-                    .map(this::getCardImage)
-                    .collect(Collectors.toList());
-            createPlayerArea(player, cardImages);
-        }
+            // Create updated player areas for each player
+            for (Player player : players) {
+                List<String> cardImages = player.getCards().stream()
+                        .map(this::getCardImage)
+                        .collect(Collectors.toList());
+                createPlayerArea(player, cardImages);
+            }
+        });
     }
 
     public void updateCurrentPlayer(Player currentPlayer) {
-        this.currentPlayer = currentPlayer;
-        updateTurnTable();
+        Platform.runLater(() -> {
+            this.currentPlayer = currentPlayer;
+            updateTurnTable();
+        });
     }
 
     public void updateAvailableActions(List<Action> availableActions) {
-        gameContent.getChildren().removeIf(node -> node instanceof HBox && ((HBox) node).getStyleClass().contains("actions-box"));
+        Platform.runLater(() -> {
+            gameContent.getChildren().removeIf(node -> node instanceof HBox && node.getStyleClass().contains("actions-box"));
 
-        HBox actionsBox = new HBox(10);
-        actionsBox.setAlignment(Pos.CENTER);
-        actionsBox.getStyleClass().add("actions-box");
+            HBox actionsBox = new HBox(10);
+            actionsBox.setAlignment(Pos.CENTER);
+            actionsBox.getStyleClass().add("actions-box");
 
-        ComboBox<Action> actionsComboBox = new ComboBox<>();
-        actionsComboBox.setPromptText("Choose an action");
+            ComboBox<Action> actionsComboBox = new ComboBox<>();
+            actionsComboBox.setPromptText("Choose an action");
 
-        // Set a cell factory to use for rendering the action names in the dropdown list
-        actionsComboBox.setCellFactory(lv -> new ListCell<Action>() {
-            @Override
-            protected void updateItem(Action action, boolean empty) {
-                super.updateItem(action, empty);
-                setText(empty ? null : action.getNameOfAction());
-            }
+            // Set a cell factory to use for rendering the action names in the dropdown list
+            actionsComboBox.setCellFactory(lv -> new ListCell<>() {
+                @Override
+                protected void updateItem(Action action, boolean empty) {
+                    super.updateItem(action, empty);
+                    setText(empty ? null : action.getNameOfAction());
+                }
+            });
+
+            // Similarly, set the button cell for displaying the selected item
+            actionsComboBox.setButtonCell(new ListCell<>() {
+                @Override
+                protected void updateItem(Action action, boolean empty) {
+                    super.updateItem(action, empty);
+                    setText(empty ? null : action.getNameOfAction());
+                }
+            });
+
+            // Provide a StringConverter to correctly handle the conversion between the string representation and the Action object
+            actionsComboBox.setConverter(new StringConverter<>() {
+                @Override
+                public String toString(Action action) {
+                    return action == null ? null : action.getNameOfAction();
+                }
+
+                @Override
+                public Action fromString(String actionName) {
+                    // This method is not needed for the ComboBox's functionality in this context
+                    return null;
+                }
+            });
+
+            actionsComboBox.getItems().addAll(availableActions);
+            actionsComboBox.setOnAction(event -> {
+                Action selectedAction = actionsComboBox.getValue();
+                if (selectedAction != null) {
+                    controller.executeAction(selectedAction);
+                    actionsComboBox.setValue(null); // Reset the selection
+                }
+            });
+
+            actionsBox.getChildren().add(actionsComboBox);
+            gameContent.getChildren().add(actionsBox);
         });
-
-        // Similarly, set the button cell for displaying the selected item
-        actionsComboBox.setButtonCell(new ListCell<Action>() {
-            @Override
-            protected void updateItem(Action action, boolean empty) {
-                super.updateItem(action, empty);
-                setText(empty ? null : action.getNameOfAction());
-            }
-        });
-
-        // Provide a StringConverter to correctly handle the conversion between the string representation and the Action object
-        actionsComboBox.setConverter(new StringConverter<Action>() {
-            @Override
-            public String toString(Action action) {
-                return action == null ? null : action.getNameOfAction();
-            }
-
-            @Override
-            public Action fromString(String actionName) {
-                // This method is not needed for the ComboBox's functionality in this context
-                return null;
-            }
-        });
-
-        actionsComboBox.getItems().addAll(availableActions);
-        actionsComboBox.setOnAction(event -> {
-            Action selectedAction = actionsComboBox.getValue();
-            if (selectedAction != null) {
-                controller.executeAction(selectedAction);
-                actionsComboBox.setValue(null); // Reset the selection
-            }
-        });
-
-        actionsBox.getChildren().add(actionsComboBox);
-        gameContent.getChildren().add(actionsBox);
     }
 
     private void updateTurnTable() {
-        Label turnLabel = (Label) gameContent.lookup(".turn-label");
-        if (turnLabel != null) {
-            turnLabel.setText(currentPlayer.getName() + "'s turn");
-        }
+        Platform.runLater(() -> {
+            Label turnLabel = (Label) gameContent.lookup(".turn-label");
+            if (turnLabel != null) {
+                turnLabel.setText(currentPlayer.getName() + "'s turn");
+            }
+        });
     }
 
 
@@ -292,28 +300,6 @@ public class GameView extends Application {
         gameContent.getChildren().addAll(playerArea);
     }
 
-    public void addPossibleAction(List<Action> actions) {
-        HBox actionsBox = new HBox(10);
-        actionsBox.setAlignment(Pos.CENTER);
-        actionsBox.getStyleClass().add("actions-box");
-
-        ComboBox<Action> actionsComboBox = new ComboBox<>();
-        actionsComboBox.setPromptText("Choose an action");
-        actionsComboBox.getItems().addAll(actions);
-        actionsComboBox.setOnAction(event -> {
-            Action selectedAction = actionsComboBox.getValue();
-            if (selectedAction != null) {
-                System.out.println("Player selected: " + selectedAction.getNameOfAction());
-                controller.executeAction(selectedAction);
-                actionsComboBox.setValue(null); // Reset the selection
-            }
-        });
-
-        actionsBox.getChildren().add(actionsComboBox);
-        gameContent.getChildren().add(actionsBox);
-    }
-
-
     public void createCardStackArea(Deck deck) {
         // cardStackArea is a member variable of type VBox
         cardStackArea.getChildren().clear();  // Clear it first in case it's being re-initialized
@@ -333,19 +319,22 @@ public class GameView extends Application {
 
     // This method updates the deck information in the view.
     public void updateDeckInfo(Deck deck) {
-        // Get the current size of the deck
-        int numberOfRemainingCards = deck.getSize();
-        // Assuming cardStackCountLabel is a member variable that is already added to the scene
-        cardStackCountLabel.setText("Number of cards: " + numberOfRemainingCards);
+        Platform.runLater(() -> {
+            int numberOfRemainingCards = deck.getSize();
+            cardStackCountLabel.setText("Number of cards: " + numberOfRemainingCards);
+        });
     }
 
-    public void displayWinner(Player winner) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Game Over");
-        alert.setHeaderText(null);
-        alert.setContentText("The game is over. The winner is " + winner.getName() + "!");
 
-        alert.showAndWait();
+    public void displayWinner(Player winner) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Game Over");
+            alert.setHeaderText(null);
+            alert.setContentText("The game is over. The winner is " + winner.getName() + "!");
+
+            alert.showAndWait();
+        });
     }
 
     private String getCardImage(Card card) {
@@ -357,9 +346,5 @@ public class GameView extends Application {
         cardImageMap.put("Ambassador", "ambassador.png");
         cardImageMap.put("Contessa", "contessa.png");
         return cardImageMap.getOrDefault(card.getName(), "s.png");
-    }
-
-    public void setCurrentPlayer(Player currentPlayer) {
-        this.currentPlayer = currentPlayer;
     }
 }

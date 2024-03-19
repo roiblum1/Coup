@@ -14,6 +14,7 @@ public class BlockAction extends Action {
         this.isBlocked = false;
     }
 
+    // Checks if the player can perform the blocking action
     @Override
     public boolean canPlayerPerform() {
         // Logic to determine if the action can be blocked
@@ -22,11 +23,13 @@ public class BlockAction extends Action {
                 actionToBlock instanceof AssassinateAction;
     }
 
+    // Executes the blocking action
     @Override
     public boolean execute(boolean isChallenged, boolean isBlocked) {
         if (!canPlayerPerform()) {
+            // Player cannot block the action
             this.isBlocked = false;
-            return false; // Player cannot block the action
+            return false;
         }
 
         if (isChallenged) {
@@ -46,10 +49,12 @@ public class BlockAction extends Action {
         }
     }
 
+    // Checks if the action is blocked
     public boolean isBlocked() {
         return isBlocked;
     }
 
+    // Handles the challenge to the blocking action
     private boolean challenge() {
         // Check if the player has the appropriate card to block the action
         if (actionToBlock.nameOfAction.equals(ActionName.FOREIGN_AID)) {
