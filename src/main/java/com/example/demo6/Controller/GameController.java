@@ -181,7 +181,11 @@ public class GameController {
 
     //* Handles executing an IncomeAction */
     private void executeIncomeAction(IncomeAction incomeAction) {
-        incomeAction.execute(false, false);
+        boolean success = incomeAction.execute(false, false);
+        if (!success)
+        {
+            view.displayMessage(currentPlayer.getName() + " could not collect income for some reason.");
+        }
         updateView();
     }
 
