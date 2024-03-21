@@ -227,10 +227,11 @@ public class GameController {
         if (isChallenged) {
             if (blockSuccessful) {
                 // Block succeeded and was challenged
-                System.out.println(blocker.getName() + " successfully blocked " + actionToBlock.getNameOfAction() + " action.");
+                System.out.println(blocker.getName() + " successfully blocked " + actionToBlock.getCodeOfAction() + " action.");
+                handleLoseCard(actionToBlock.getPlayer());
             } else {
                 // Block failed and was challenged
-                System.out.println(blocker.getName() + " failed to block " + actionToBlock.getNameOfAction() + " action.");
+                System.out.println(blocker.getName() + " failed to block " + actionToBlock.getCodeOfAction() + " action.");
                 handleLoseCard(blocker); // Blocker loses a card
 
                 // Execute the original action directly
@@ -245,10 +246,10 @@ public class GameController {
         } else {
             if (blockSuccessful) {
                 // Block succeeded without challenge
-                System.out.println(blocker.getName() + " blocked " + actionToBlock.getNameOfAction() + " action.");
+                System.out.println(blocker.getName() + " blocked " + actionToBlock.getCodeOfAction() + " action.");
             } else {
                 // Block failed without challenge
-                System.out.println(blocker.getName() + " failed to block " + actionToBlock.getNameOfAction() + " action.");
+                System.out.println(blocker.getName() + " failed to block " + actionToBlock.getCodeOfAction() + " action.");
                 if (actionToBlock instanceof StealAction) {
                     executeStealAction2((StealAction) actionToBlock);
                 } else if (actionToBlock instanceof AssassinateAction) {

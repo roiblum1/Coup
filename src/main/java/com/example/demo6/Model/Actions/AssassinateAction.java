@@ -8,8 +8,9 @@ public class AssassinateAction extends Action {
     private Player targetPlayer;
 
     public AssassinateAction(Player player, Player targetPlayer) {
-        super(player, ActionName.ASSASSINATE);
+        super(player, ActionCode.ASSASSINATE);
         this.targetPlayer = targetPlayer;
+        this.isBlockAble = true;
     }
 
     // Checks if the player can perform the assassination action

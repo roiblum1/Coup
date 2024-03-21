@@ -8,8 +8,9 @@ public class StealAction extends Action {
     private Player targetPlayer;
 
     public StealAction(Player player, Player targetPlayer) {
-        super(player, ActionName.STEAL);
+        super(player, ActionCode.STEAL);
         this.targetPlayer = targetPlayer;
+        this.isBlockAble = true;
     }
 
     // Checks if the player can perform the steal action
@@ -43,8 +44,23 @@ public class StealAction extends Action {
     }
 
     // Handles the challenge to the steal action
+    //TODO : change has Card to get Cardtype and not Card object
     public boolean challenge() {
+//        return player.hasCard(Deck.CardType.CAPTAIN);
         return player.hasCard(new Card(Deck.CardType.CAPTAIN.getName()));
+    }
+
+
+
+    //TODO : move this function into the Action Class
+
+//    public boolean challenge() {
+////        return player.hasCard( getMyChallengedCard());
+//    }
+
+    //TODO : this card will return the card type that needed to execute the action
+    Deck.CardType getMyChallengedCard(){
+        return Deck.CardType.CAPTAIN;
     }
 
     // Retrieves the target player of the steal action

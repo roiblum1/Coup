@@ -6,7 +6,8 @@ import com.example.demo6.Model.Player;
 
 public class SwapAction extends Action {
     public SwapAction(Player player) {
-        super(player, ActionName.SWAP);
+        super(player, ActionCode.SWAP);
+        this.isBlockAble = false;
     }
 
     // Checks if the player can perform the swap action
@@ -29,4 +30,5 @@ public class SwapAction extends Action {
     public boolean challenge() {
         return player.hasCard(new Card(Deck.CardType.AMBASSADOR.getName()));
     }
+
 }

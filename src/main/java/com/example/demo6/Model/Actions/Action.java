@@ -2,23 +2,25 @@ package com.example.demo6.Model.Actions;
 
 import com.example.demo6.Model.Player;
 
+//TODO : add isBlockable boolean.
 public abstract class Action {
     protected Player player;
-    protected ActionName nameOfAction;
+    protected ActionCode codeOfAction;
+    protected boolean isBlockAble;
 
-    public Action(Player player, ActionName name) {
+    public Action(Player player, ActionCode name) {
         this.player = player;
-        this.nameOfAction = name;
+        this.codeOfAction = name;
     }
 
     // Retrieves the action name
-    public ActionName getActionName() {
-        return nameOfAction;
+    public ActionCode getActionCode() {
+        return codeOfAction;
     }
 
     // Retrieves the name of the action
-    public String getNameOfAction() {
-        return nameOfAction.toString();
+    public String getCodeOfAction() {
+        return codeOfAction.toString();
     }
 
     // Checks if the action can be performed by the player

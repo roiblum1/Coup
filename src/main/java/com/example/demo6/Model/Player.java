@@ -92,4 +92,9 @@ public class Player {
     public boolean hasCard(Card givenCard) {
         return this.cards.stream().anyMatch(card -> card.equals(givenCard));
     }
+
+    public boolean hasCard(Deck.CardType cardType)
+    {
+        return this.cards.stream().anyMatch(card -> card.getName().equals(cardType.getName()));
+    }
 }

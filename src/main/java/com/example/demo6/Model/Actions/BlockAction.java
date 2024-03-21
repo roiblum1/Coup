@@ -9,12 +9,16 @@ public class BlockAction extends Action {
     private boolean isBlocked;
 
     public BlockAction(Player player, Action actionToBlock) {
-        super(player, ActionName.BLOCK);
+        super(player, ActionCode.BLOCK);
         this.actionToBlock = actionToBlock;
         this.isBlocked = false;
+        this.isBlockAble = false;
     }
 
+
+
     // Checks if the player can perform the blocking action
+    //TODO : change instance of to polymorphism
     @Override
     public boolean canPlayerPerform() {
         // Logic to determine if the action can be blocked
@@ -56,13 +60,14 @@ public class BlockAction extends Action {
 
     @Override
     // Handles the challenge to the blocking action
+    //TODO : check with switch
     public boolean challenge() {
         // Check if the player has the appropriate card to block the action
-        if (actionToBlock.nameOfAction.equals(ActionName.FOREIGN_AID)) {
+        if (actionToBlock.codeOfAction == (ActionCode.FOREIGN_AID)) {
             return player.hasCard(new Card(Deck.CardType.DUKE.getName()));
-        } else if (actionToBlock.nameOfAction.equals(ActionName.ASSASSINATE)) {
+        } else if (actionToBlock.codeOfAction == (ActionCode.ASSASSINATE)) {
             return player.hasCard(new Card(Deck.CardType.CONTESSA.getName()));
-        } else if (actionToBlock.getActionName().equals(ActionName.STEAL)) {
+        } else if (actionToBlock.getActionCode() == (ActionCode.STEAL)) {
             return player.hasCard(new Card(Deck.CardType.AMBASSADOR.getName())) || player.hasCard(new Card(Deck.CardType.CAPTAIN.getName()));
         } else {
             return false;

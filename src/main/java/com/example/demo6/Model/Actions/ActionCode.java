@@ -1,6 +1,6 @@
 package com.example.demo6.Model.Actions;
 
-public enum ActionName {
+public enum ActionCode {
     INCOME,
     FOREIGN_AID,
     COUP,

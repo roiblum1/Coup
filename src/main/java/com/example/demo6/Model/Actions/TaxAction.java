@@ -6,7 +6,8 @@ import com.example.demo6.Model.Player;
 
 public class TaxAction extends Action {
     public TaxAction(Player player) {
-        super(player, ActionName.TAX);
+        super(player, ActionCode.TAX);
+        this.isBlockAble = false;
     }
 
     // Checks if the player can perform the tax action
