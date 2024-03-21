@@ -1,6 +1,7 @@
 package com.example.demo6.AI;
 
 import com.example.demo6.Model.Actions.Action;
+import com.example.demo6.Model.Actions.IncomeAction;
 import com.example.demo6.Model.Card;
 import com.example.demo6.Model.Game;
 import com.example.demo6.Model.Player;
@@ -17,6 +18,10 @@ public class MCTS {
     public MCTS(Game game) {
         this.rootGame = deepCopy(game);
         this.root = new Node(null);
+        for(Player player : rootGame.getPlayers())
+        {
+            System.out.println(player.getName());
+        }
     }
 
     public Action bestMove() {
@@ -24,11 +29,16 @@ public class MCTS {
             return null;
         }
 
+        // Perform MCTS search
+        search(1000); // Adjust the time limit as needed
+
         double maxValue = Double.NEGATIVE_INFINITY;
         List<Node> maxNodes = new ArrayList<>();
 
+        System.out.println("Available actions:");
         for (Node child : root.getChildren().values()) {
             double childValue = child.getVisitCount();
+            System.out.println(child.getAction().getCodeOfAction() + ": Visit Count = " + child.getVisitCount() + ", Reward = " + child.getReward());
             if (childValue > maxValue) {
                 maxValue = childValue;
                 maxNodes.clear();
@@ -38,7 +48,13 @@ public class MCTS {
             }
         }
 
+        if (maxNodes.isEmpty()) {
+            System.out.println("No valid moves available.");
+            return null;
+        }
+
         Node bestChild = maxNodes.get(ThreadLocalRandom.current().nextInt(maxNodes.size()));
+        System.out.println("Selected best action: " + bestChild.getAction().getCodeOfAction());
         return bestChild.getAction();
     }
 
@@ -51,7 +67,19 @@ public class MCTS {
             Node node = nodeGamePair.node;
             Game game = nodeGamePair.game;
 
+            if (node.getAction() != null) {
+                System.out.println("Selected node: " + node.getAction().getCodeOfAction());
+            } else {
+                System.out.println("Selected node: null");
+            }
+
             Player winner = rollOut(game);
+            if (winner != null) {
+                System.out.println("Rollout winner: " + winner.getName());
+            } else {
+                System.out.println("Rollout ended with no winner.");
+            }
+
             backPropagate(node, game.getCurrentPlayer(), winner);
             numRollouts++;
         }
@@ -59,6 +87,7 @@ public class MCTS {
         long runtime = System.currentTimeMillis() - startTime;
         System.out.println("Runtime: " + runtime + ", numRollouts: " + numRollouts);
     }
+
 
     private NodeGamePair selectNode() {
         Node node = root;
@@ -70,6 +99,7 @@ public class MCTS {
 
             for (Node child : node.getChildren().values()) {
                 double childValue = child.getUCTValue();
+                System.out.println("Child action: " + child.getAction().getCodeOfAction() + ", UCT value: " + childValue);
                 if (childValue > maxValue) {
                     maxValue = childValue;
                     maxNodes.clear();
@@ -89,6 +119,10 @@ public class MCTS {
 
         expand(node, game);
         List<Node> children = new ArrayList<>(node.getChildren().values());
+        if (children.isEmpty()) {
+            // Handle the case when there are no valid child nodes
+            return new NodeGamePair(node, game); // or return a default value or handle accordingly
+        }
         node = children.get(ThreadLocalRandom.current().nextInt(children.size()));
         executeAction(game, node.getAction(), false, false);
 
@@ -100,18 +134,49 @@ public class MCTS {
             return;
         }
 
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) {
+            // Handle the case when there are no active players
+            return;
+        }
+
         List<Node> children = new ArrayList<>();
-        for (Action action : game.getAvailableActions(game.getCurrentPlayer())) {
-            children.add(new Node(action, parent));
+        for (Action action : game.getAvailableActions(currentPlayer)) {
+            Node child = new Node(action, parent);
+            children.add(child);
+            System.out.println("Created child node for action: " + action.getCodeOfAction());
         }
         parent.addChildren(children);
     }
 
     private Player rollOut(Game game) {
+        List<Player> players = game.getPlayers();
+        if (players != null) {
+            for (Player player : players) {
+                System.out.println(player.getName());
+            }
+        } else {
+            System.out.println("No players found in the game.");
+        }
         while (!game.isGameOver()) {
             Player currentPlayer = game.getCurrentPlayer();
+            if (currentPlayer == null) {
+                // Handle the case when there are no active players
+                // You can either terminate the rollout or take appropriate action
+                break; // Terminate the rollout early
+            }
+
             List<Action> availableActions = game.getAvailableActions(currentPlayer);
+            if (availableActions.isEmpty()) {
+                // Handle the case when there are no available actions for the current player
+                // You can either skip the player's turn or take appropriate action
+                game.switchTurns(); // Skip the player's turn
+                continue; // Move to the next iteration
+            }
+
             Action action = availableActions.get(ThreadLocalRandom.current().nextInt(availableActions.size()));
+
+            System.out.println("Rollout action: " + action.getCodeOfAction());
 
             // Simulate challenges and blocks
             boolean isChallenged = simulateChallenge(game, action);
@@ -119,21 +184,30 @@ public class MCTS {
 
             executeAction(game, action, isChallenged, isBlocked);
         }
-        return game.getWinner();
-    }
 
+        Player winner = game.getWinner();
+        if (winner == null) {
+            // Handle the case when there is no winner
+            // You can return a default value or handle it based on your game's rules
+            return game.getPlayers().get(0); // Return the first player as the default winner
+        }
+        return winner;
+    }
     private void backPropagate(Node node, Player turn, Player outcome) {
         int reward = (outcome == turn) ? 1 : 0;
 
         while (node != null) {
             node.incrementVisitCount();
             node.incrementReward(reward);
+            System.out.println("Backpropagation: Action = " + node.getAction().getCodeOfAction() + ", Visit Count = " + node.getVisitCount() + ", Reward = " + node.getReward());
             node = node.getParent();
         }
     }
 
     public void handleAction(Action action) {
-        executeAction(rootGame, action, false, false);
+        if (rootGame != null) {
+            executeAction(rootGame, action, false, false);
+        }
 
         if (root.getChildren().containsKey(action)) {
             root = root.getChildren().get(action);
@@ -141,6 +215,7 @@ public class MCTS {
             root = new Node(null);
         }
     }
+
     public void handleGameOver(Player winner) {
         // Update the reward of the root node based on the winner
         if (winner == rootGame.getPlayers().get(0)) {
@@ -177,7 +252,9 @@ public class MCTS {
         if (isBlocked) {
             if (simulateBlockChallenge(game, action)) {
                 // Block challenged successfully, blocker loses a card
-                targetPlayer.loseRandomInfluence();
+                if (targetPlayer != null) {
+                    targetPlayer.loseRandomInfluence();
+                }
             } else {
                 // Block not challenged or challenge failed, action is blocked
                 return;
@@ -196,20 +273,26 @@ public class MCTS {
                 currentPlayer.updateCoins(3);
                 break;
             case STEAL:
-                int stolenCoins = Math.min(2, targetPlayer.getCoins());
-                currentPlayer.updateCoins(stolenCoins);
-                targetPlayer.updateCoins(-stolenCoins);
+                if (targetPlayer != null) {
+                    int stolenCoins = Math.min(2, targetPlayer.getCoins());
+                    currentPlayer.updateCoins(stolenCoins);
+                    targetPlayer.updateCoins(-stolenCoins);
+                }
                 break;
             case ASSASSINATE:
                 if (currentPlayer.getCoins() >= 3) {
                     currentPlayer.updateCoins(-3);
-                    targetPlayer.loseRandomInfluence();
+                    if (targetPlayer != null) {
+                        targetPlayer.loseRandomInfluence();
+                    }
                 }
                 break;
             case COUP:
                 if (currentPlayer.getCoins() >= 7) {
                     currentPlayer.updateCoins(-7);
-                    targetPlayer.loseRandomInfluence();
+                    if (targetPlayer != null) {
+                        targetPlayer.loseRandomInfluence();
+                    }
                 }
                 break;
             case SWAP:
@@ -261,6 +344,19 @@ public class MCTS {
             ObjectInputStream ois = new ObjectInputStream(bais);
             T clonedObject = (T) ois.readObject();
             ois.close();
+
+            // Manually copy the playerList and its associated objects
+            Game clonedGame = (Game) clonedObject;
+            List<Player> clonedPlayerList = new ArrayList<>();
+            for (Player player : object.getPlayers()) {
+                Player clonedPlayer = new Player(player.getName());
+                clonedPlayer.setCoins(player.getCoins());
+                List<Card> clonedCards = new ArrayList<>(player.getCards());
+                clonedPlayer.setCards(clonedCards);
+                clonedPlayerList.add(clonedPlayer);
+            }
+            clonedGame.setPlayerList(clonedPlayerList);
+
             return clonedObject;
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -324,6 +420,10 @@ public class MCTS {
 
         public Map<Action, Node> getChildren() {
             return children;
+        }
+
+        public String getReward() {
+            return "" + this.reward;
         }
     }
 

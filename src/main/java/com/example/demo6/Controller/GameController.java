@@ -36,14 +36,14 @@ public class GameController {
         this.game = new Game(new Deck(allCardTypes, 2)); // Make sure the number of copies matches your game design
 
         // Create players and add them to the game
-        Player playerOne = new Player("Player 1");
-        Player playerTwo = new Player("Player 2");
-        this.game.addPlayer(playerOne);
-        this.game.addPlayer(playerTwo);
+        Player humanPlayer = new Player("Human Player");
+        Player aiPlayer = new Player("AI Player");
+        this.game.addPlayer(humanPlayer);
+        this.game.addPlayer(aiPlayer);
 
-        // The current player is the first player by default
+        // Set the current player and AI player
         this.currentPlayer = this.game.getCurrentPlayer();
-        this.aiPlayer = game.getPlayers().get(1);
+        this.aiPlayer = aiPlayer;
 
         // Now that the game is initialized, update the view components
         Platform.runLater(() -> {
@@ -311,6 +311,13 @@ public class GameController {
             Action bestAction = mcts.bestMove();
             if (bestAction != null) {
                 executeAction(bestAction);
+            } else {
+                // No valid moves available for the AI player
+                // Pass the turn to the next player or handle the situation accordingly
+                if (!game.isGameOver()) {
+                    currentPlayer = game.switchTurns();
+                    updateView();
+                }
             }
         }
     }
@@ -335,7 +342,13 @@ public class GameController {
         // Update the MCTS tree with the game result
         mcts.handleGameOver(winner);
     }
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
 
+    public Player getAIPlayer() {
+        return aiPlayer;
+    }
 
     //* Update the view */
     private void updateView() {

@@ -1,11 +1,12 @@
 package com.example.demo6.Model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-public class Player {
+public class Player implements Serializable {
     private final int NUMBER_OF_CARDS = 2;
     private final String name;
     private int coins;
@@ -132,4 +133,11 @@ public class Player {
         return selectedCards;
     }
 
+    public void setCoins(int coins) {
+        this.coins = coins;
+    }
+
+    public void setCards(List<Card> clonedCards) {
+        this.cards = clonedCards;
+    }
 }

@@ -1,6 +1,8 @@
 package com.example.demo6.Model;
 
-public class Card {
+import java.io.Serializable;
+
+public class Card implements Serializable {
     private String name;
 
     //* Constructor to initialize the card with a name */

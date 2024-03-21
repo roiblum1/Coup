@@ -36,7 +36,9 @@ public class Game implements Serializable {
         actions.add(new AssassinateAction(currentPlayer, getOpponent(currentPlayer)));
         actions.add(new StealAction(currentPlayer, getOpponent(currentPlayer)));
         actions.add(new SwapAction(currentPlayer));
-        return actions.stream().filter(Action::canPlayerPerform).collect(Collectors.toList());
+        List<Action> availableActions = actions.stream().filter(Action::canPlayerPerform).collect(Collectors.toList());
+        System.out.println("Available actions for " + currentPlayer.getName() + ": " + availableActions);
+        return availableActions;
     }
 
     //* Retrieves the opponent of the specified player */
@@ -51,6 +53,13 @@ public class Game implements Serializable {
 
     //* Retrieves the current player */
     public Player getCurrentPlayer() {
+        if (playerList.isEmpty()) {
+            if (isGameOver())
+            {
+                System.out.println("Game Over");
+            }
+            return null; // or throw an appropriate exception
+        }
         return playerList.get(currentPlayerIndex);
     }
 
@@ -76,8 +85,13 @@ public class Game implements Serializable {
 
     //* Switches turns to the next player */
     public Player switchTurns() {
-        currentPlayerIndex = (currentPlayerIndex + 1) % playerList.size();
-        return getCurrentPlayer();
+        List<Player> activePlayers = getActivePlayers();
+        if (activePlayers.isEmpty()) {
+            return null; // No active players left, return null or handle accordingly
+        }
+
+        int nextPlayerIndex = (activePlayers.indexOf(getCurrentPlayer()) + 1) % activePlayers.size();
+        return activePlayers.get(nextPlayerIndex);
     }
 
     //* Retrieve the winner of the game //
@@ -89,5 +103,7 @@ public class Game implements Serializable {
     }
 
 
-
+    public void setPlayerList(List<Player> clonedPlayerList) {
+        this.playerList = clonedPlayerList;
+    }
 }

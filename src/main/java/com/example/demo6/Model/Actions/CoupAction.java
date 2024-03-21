@@ -4,6 +4,7 @@ import com.example.demo6.Model.Player;
 
 public class CoupAction extends Action {
     private Player targetPlayer;
+    private Player player;
 
     public CoupAction(Player player, Player targetPlayer) {
         super(player, ActionCode.COUP);
@@ -14,7 +15,11 @@ public class CoupAction extends Action {
     // Checks if the player can perform the coup action
     @Override
     public boolean canPlayerPerform() {
-        return player.getCoins() >= 7;
+        if(this.player != null)
+        {
+            return this.player.getCoins() >= 7;
+        }
+        return false;
     }
 
     // Executes the coup action

@@ -1,11 +1,12 @@
 package com.example.demo6.Model;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Stack;
 
-public class Deck {
+public class Deck implements Serializable {
     public enum CardType {
         DUKE("Duke"),
         ASSASSIN("Assassin"),
