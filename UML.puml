@@ -1,0 +1,239 @@
+@startuml
+class com.example.demo6.AI.MCTS {
+}
+enum com.example.demo6.Model.Actions.ActionName {
++  INCOME
++  FOREIGN_AID
++  COUP
++  TAX
++  ASSASSINATE
++  STEAL
++  SWAP
++  BLOCK
+}
+
+class com.example.demo6.Controller.GameController {
+- Game game
+- GameView view
+- Player currentPlayer
+- Map<Class<? extends Action>,Consumer<Action>> actionExecutors
++ <<Create>> GameController(GameView,Game)
++ void initializeGame()
+- void initializeActionExecutors()
++ void executeAction(Action)
+- void executeStealAction(StealAction)
+- void executeStealAction2(StealAction)
+- void executeAssassinateAction(AssassinateAction)
+- void executeAssassinateAction2(AssassinateAction)
+- void executeForeignAidAction(ForeignAidAction)
+- void executeForeignAidAction2(ForeignAidAction)
+- void executeTaxAction(TaxAction)
+- void executeIncomeAction(IncomeAction)
+- void executeCoupAction(CoupAction)
+- void executeSwapAction(SwapAction)
+- void handleBlockAction(Player,Action,boolean)
+- boolean handleChallenge(Action)
+- void endTurn()
+- boolean isGameOver()
++ void handleLoseCard(Player)
+- void endGame()
+- void updateView()
+}
+
+
+class com.example.demo6.Model.Actions.StealAction {
+- Player targetPlayer
++ <<Create>> StealAction(Player,Player)
++ boolean canPlayerPerform()
++ boolean execute(boolean,boolean)
++ boolean challenge()
++ Player getTargetPlayer()
+}
+
+
+class com.example.demo6.Model.Game {
+- List<Player> playerList
+- Deck deck
+- int currentPlayerIndex
++ <<Create>> Game(Deck)
++ void addPlayer(Player)
++ List<Action> getAvailableActions(Player)
++ Player getOpponent(Player)
++ List<Player> getActivePlayers()
++ Player getCurrentPlayer()
++ List<Player> getPlayers()
++ Deck getDeck()
++ void setDeck(Deck)
++ boolean isGameOver()
++ Player switchTurns()
+}
+
+
+class com.example.demo6.Model.Deck {
+- Stack<Card> contents
++ <<Create>> Deck(Set<CardType>,int)
++ int getSize()
++ boolean isEmpty()
++ Card getCard()
++ void returnCard(Card)
+}
+
+
+enum com.example.demo6.Model.CardType {
++  DUKE
++  ASSASSIN
++  CAPTAIN
++  AMBASSADOR
++  CONTESSA
+- String name
+~ <<Create>> CardType(String)
++ String getName()
+}
+
+
+class com.example.demo6.Model.Deck$CardFactory {
+~ {static} Card createCard(String)
+}
+
+class com.example.demo6.Model.Card {
+- String name
++ <<Create>> Card(String)
++ String getName()
++ String toString()
++ boolean equals(Object)
++ int hashCode()
+}
+
+
+class com.example.demo6.Model.Actions.ForeignAidAction {
++ <<Create>> ForeignAidAction(Player)
++ boolean canPlayerPerform()
++ boolean execute(boolean,boolean)
++ boolean challenge()
+}
+
+class com.example.demo6.Model.Actions.TaxAction {
++ <<Create>> TaxAction(Player)
++ boolean canPlayerPerform()
++ boolean execute(boolean,boolean)
++ boolean challenge()
+}
+
+class com.example.demo6.View.GameView {
+- VBox gameContent
+- Map<String,HBox> playerCardsMap
+- Label cardStackCountLabel
+- int cardStackCount
+- VBox cardStackArea
+- Player currentPlayer
+- GameController controller
++ {static} void main(String[])
++ void start(Stage)
++ void setController(GameController)
++ boolean promptForChallenge(String)
++ boolean promptForBlock(String)
++ List<Card> promptForCardSelection(List<Card>,int)
++ Card promptPlayerForCardToGiveUp(Player)
++ void updatePlayerInfo(List<Player>)
++ void updateCurrentPlayer(Player)
++ void updateAvailableActions(List<Action>)
+- void updateTurnTable()
+- void createTurnTable()
+- void createPlayerArea(Player,List<String>)
++ void createCardStackArea(Deck)
++ void updateDeckInfo(Deck)
++ void displayWinner(Player)
++ void displayMessage(String)
+- String getCardImage(Card)
+}
+
+
+class com.example.demo6.Model.Actions.BlockAction {
+- Action actionToBlock
+- boolean isBlocked
++ <<Create>> BlockAction(Player,Action)
++ boolean canPlayerPerform()
++ boolean execute(boolean,boolean)
++ boolean isBlocked()
++ boolean challenge()
+}
+
+
+class com.example.demo6.Model.Actions.SwapAction {
++ <<Create>> SwapAction(Player)
++ boolean canPlayerPerform()
++ boolean execute(boolean,boolean)
++ boolean challenge()
+}
+
+class com.example.demo6.Model.Actions.CoupAction {
+- Player targetPlayer
++ <<Create>> CoupAction(Player,Player)
++ boolean canPlayerPerform()
++ boolean execute(boolean,boolean)
++ boolean challenge()
+}
+
+
+class com.example.demo6.Model.Actions.AssassinateAction {
+- Player targetPlayer
++ <<Create>> AssassinateAction(Player,Player)
++ boolean canPlayerPerform()
++ boolean execute(boolean,boolean)
++ boolean challenge()
++ Player getTargetPlayer()
+}
+
+
+class com.example.demo6.Model.Player {
+- int NUMBER_OF_CARDS
+- String name
+- int coins
+- List<Card> cards
+- Deck currentDeck
++ <<Create>> Player(String)
++ String getName()
++ void setDeck(Deck)
++ int getCoins()
++ void updateCoins(int)
++ List<Card> getCards()
++ void pickCards()
++ void returnCard(Card)
++ void swapCards(List<Card>,List<Card>)
++ boolean hasCard(Card)
+}
+
+
+class com.example.demo6.Model.Actions.IncomeAction {
++ <<Create>> IncomeAction(Player)
++ boolean canPlayerPerform()
++ boolean execute(boolean,boolean)
++ boolean challenge()
+}
+
+abstract class com.example.demo6.Model.Actions.Action {
+# Player player
+# ActionName nameOfAction
++ <<Create>> Action(Player,ActionName)
++ ActionName getActionName()
++ String getNameOfAction()
++ {abstract}boolean canPlayerPerform()
++ {abstract}boolean execute(boolean,boolean)
++ {abstract}boolean challenge()
++ Player getPlayer()
+}
+
+
+
+
+com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.StealAction
+com.example.demo6.Model.Deck +.. com.example.demo6.Model.Deck$CardFactory
+com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.ForeignAidAction
+com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.TaxAction
+javafx.application.Application <|-- com.example.demo6.View.GameView
+com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.BlockAction
+com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.SwapAction
+com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.CoupAction
+com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.AssassinateAction
+com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.IncomeAction
+@enduml

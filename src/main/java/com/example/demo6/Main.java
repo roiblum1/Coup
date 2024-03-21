@@ -6,7 +6,6 @@ import com.example.demo6.View.GameView;
 import javafx.application.Application;
 
 public class Main {
-    GameController gameController;
     public static void main(String[] args) {
         Application.launch(GameView.class, args);
     }
