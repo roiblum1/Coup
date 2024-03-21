@@ -1,6 +1,5 @@
 package com.example.demo6.Model.Actions;
 
-import com.example.demo6.Model.Card;
 import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
@@ -10,7 +9,7 @@ public class AssassinateAction extends Action {
     public AssassinateAction(Player player, Player targetPlayer) {
         super(player, ActionCode.ASSASSINATE);
         this.targetPlayer = targetPlayer;
-        this.isBlockAble = true;
+        this.canBeBlocked = true;
     }
 
     // Checks if the player can perform the assassination action
@@ -45,8 +44,9 @@ public class AssassinateAction extends Action {
     @Override
     // check if the player is capable of do
     public boolean challenge() {
-        return player.hasCard(new Card(Deck.CardType.ASSASSIN.getName()));
+        return player.hasCard(Deck.CardType.ASSASSIN);
     }
+
 
     // Retrieves the target player of the assassination
     public Player getTargetPlayer() {

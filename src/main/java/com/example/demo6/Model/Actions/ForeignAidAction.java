@@ -1,12 +1,11 @@
 package com.example.demo6.Model.Actions;
 
-import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
 public class ForeignAidAction extends Action {
     public ForeignAidAction(Player player) {
         super(player, ActionCode.FOREIGN_AID);
-        this.isBlockAble = true;
+        this.canBeBlocked = true;
     }
 
     // Checks if the player can perform the foreign aid action

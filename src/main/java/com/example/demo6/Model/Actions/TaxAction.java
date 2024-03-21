@@ -1,13 +1,12 @@
 package com.example.demo6.Model.Actions;
 
-import com.example.demo6.Model.Card;
 import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
 public class TaxAction extends Action {
     public TaxAction(Player player) {
         super(player, ActionCode.TAX);
-        this.isBlockAble = false;
+        this.canBeBlocked = false;
     }
 
     // Checks if the player can perform the tax action
@@ -32,6 +31,6 @@ public class TaxAction extends Action {
 
     // Handles the challenge to the tax action
     public boolean challenge() {
-        return player.hasCard(new Card(Deck.CardType.DUKE.getName()));
+        return player.hasCard(Deck.CardType.DUKE);
     }
 }

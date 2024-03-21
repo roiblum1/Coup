@@ -1,6 +1,5 @@
 package com.example.demo6.Model.Actions;
 
-import com.example.demo6.Model.Card;
 import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
@@ -10,7 +9,7 @@ public class StealAction extends Action {
     public StealAction(Player player, Player targetPlayer) {
         super(player, ActionCode.STEAL);
         this.targetPlayer = targetPlayer;
-        this.isBlockAble = true;
+        this.canBeBlocked = true;
     }
 
     // Checks if the player can perform the steal action
@@ -44,24 +43,10 @@ public class StealAction extends Action {
     }
 
     // Handles the challenge to the steal action
-    //TODO : change has Card to get Cardtype and not Card object
     public boolean challenge() {
-//        return player.hasCard(Deck.CardType.CAPTAIN);
-        return player.hasCard(new Card(Deck.CardType.CAPTAIN.getName()));
+      return player.hasCard(Deck.CardType.CAPTAIN);
     }
 
-
-
-    //TODO : move this function into the Action Class
-
-//    public boolean challenge() {
-////        return player.hasCard( getMyChallengedCard());
-//    }
-
-    //TODO : this card will return the card type that needed to execute the action
-    Deck.CardType getMyChallengedCard(){
-        return Deck.CardType.CAPTAIN;
-    }
 
     // Retrieves the target player of the steal action
     public Player getTargetPlayer() {

@@ -5,7 +5,7 @@ import com.example.demo6.Model.Player;
 public class IncomeAction extends Action {
     public IncomeAction(Player player) {
         super(player, ActionCode.INCOME);
-        this.isBlockAble = false;
+        this.canBeBlocked = false;
     }
 
     // Checks if the player can perform the income action

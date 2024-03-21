@@ -89,9 +89,6 @@ public class Player {
 
 
     //* Checks if the player has a specific card */
-    public boolean hasCard(Card givenCard) {
-        return this.cards.stream().anyMatch(card -> card.equals(givenCard));
-    }
 
     public boolean hasCard(Deck.CardType cardType)
     {

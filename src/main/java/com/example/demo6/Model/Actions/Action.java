@@ -1,16 +1,17 @@
 package com.example.demo6.Model.Actions;
 
+import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
 //TODO : add isBlockable boolean.
 public abstract class Action {
     protected Player player;
     protected ActionCode codeOfAction;
-    protected boolean isBlockAble;
+    protected boolean canBeBlocked;
 
-    public Action(Player player, ActionCode name) {
+    public Action(Player player, ActionCode code) {
         this.player = player;
-        this.codeOfAction = name;
+        this.codeOfAction = code;
     }
 
     // Retrieves the action name
@@ -18,7 +19,6 @@ public abstract class Action {
         return codeOfAction;
     }
 
-    // Retrieves the name of the action
     public String getCodeOfAction() {
         return codeOfAction.toString();
     }
@@ -35,4 +35,6 @@ public abstract class Action {
     public Player getPlayer() {
         return this.player;
     }
+
+
 }

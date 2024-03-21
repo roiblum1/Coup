@@ -1,6 +1,5 @@
 package com.example.demo6.Model.Actions;
 
-import com.example.demo6.Model.Card;
 import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
@@ -12,7 +11,7 @@ public class BlockAction extends Action {
         super(player, ActionCode.BLOCK);
         this.actionToBlock = actionToBlock;
         this.isBlocked = false;
-        this.isBlockAble = false;
+        this.canBeBlocked = false;
     }
 
 
@@ -22,9 +21,7 @@ public class BlockAction extends Action {
     @Override
     public boolean canPlayerPerform() {
         // Logic to determine if the action can be blocked
-        return actionToBlock instanceof ForeignAidAction ||
-                actionToBlock instanceof StealAction ||
-                actionToBlock instanceof AssassinateAction;
+        return actionToBlock.canBeBlocked;
     }
 
     // Executes the blocking action
@@ -63,14 +60,12 @@ public class BlockAction extends Action {
     //TODO : check with switch
     public boolean challenge() {
         // Check if the player has the appropriate card to block the action
-        if (actionToBlock.codeOfAction == (ActionCode.FOREIGN_AID)) {
-            return player.hasCard(new Card(Deck.CardType.DUKE.getName()));
-        } else if (actionToBlock.codeOfAction == (ActionCode.ASSASSINATE)) {
-            return player.hasCard(new Card(Deck.CardType.CONTESSA.getName()));
-        } else if (actionToBlock.getActionCode() == (ActionCode.STEAL)) {
-            return player.hasCard(new Card(Deck.CardType.AMBASSADOR.getName())) || player.hasCard(new Card(Deck.CardType.CAPTAIN.getName()));
-        } else {
-            return false;
-        }
+        return switch (actionToBlock.getActionCode()) {
+            case FOREIGN_AID -> player.hasCard(Deck.CardType.DUKE);
+            case ASSASSINATE -> player.hasCard(Deck.CardType.CONTESSA);
+            case STEAL -> player.hasCard(Deck.CardType.AMBASSADOR) || player.hasCard(Deck.CardType.CAPTAIN);
+            default -> false;
+        };
+
     }
 }
