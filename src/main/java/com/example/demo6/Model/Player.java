@@ -2,6 +2,7 @@ package com.example.demo6.Model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 public class Player {
@@ -94,4 +95,41 @@ public class Player {
     {
         return this.cards.stream().anyMatch(card -> card.getName().equals(cardType.getName()));
     }
+
+    // This function selects a random card from the player's influence and returns it to the deck
+    public void loseRandomInfluence() {
+        Random random = new Random();
+        if (!cards.isEmpty()) {
+            int randomIndex = random.nextInt(cards.size());
+            Card selectedCard = cards.remove(randomIndex);
+            currentDeck.returnCard(selectedCard);
+        }
+    }
+
+    // This function selects 2 random cards from the player's influence and the drawnCards,
+    // and returns the selected cards. The other cards are returned to the deck.
+    public List<Card> selectRandomCardsToKeep(List<Card> drawnCards) {
+        Random random = new Random();
+        List<Card> allCards = new ArrayList<>(cards);
+        allCards.addAll(drawnCards);
+
+        List<Card> selectedCards = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            if (!allCards.isEmpty()) {
+                int randomIndex = random.nextInt(allCards.size());
+                Card selectedCard = allCards.remove(randomIndex);
+                selectedCards.add(selectedCard);
+            }
+        }
+
+        cards.clear();
+        cards.addAll(selectedCards);
+
+        // Return the remaining cards to the deck
+        for (Card card : allCards) {
+            currentDeck.returnCard(card);
+        }
+        return selectedCards;
+    }
+
 }

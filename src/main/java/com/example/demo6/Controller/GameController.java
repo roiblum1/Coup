@@ -1,5 +1,6 @@
 package com.example.demo6.Controller;
 
+import com.example.demo6.AI.MCTS;
 import com.example.demo6.Model.Actions.*;
 import com.example.demo6.Model.Card;
 import com.example.demo6.Model.Deck;
@@ -16,6 +17,8 @@ public class GameController {
     private GameView view;
     private Player currentPlayer;
     private Map<Class<? extends Action>, Consumer<Action>> actionExecutors;
+    private MCTS mcts;
+    private Player aiPlayer;
 
 
     public GameController(GameView view, Game game) {
@@ -23,6 +26,8 @@ public class GameController {
         this.view = view;
         this.view.setController(this);
         initializeActionExecutors();
+        this.mcts = new MCTS(game);
+        this.aiPlayer = game.getPlayers().get(1);
     }
 
     // Initialize game and update view
@@ -70,6 +75,10 @@ public class GameController {
         } else {
             System.err.println("Unsupported action: " + action.getClass().getName());
         }
+
+        // Update the MCTS tree with the executed action
+        mcts.handleAction(action);
+
         if (isGameOver()) {
             endGame();
         } else {
@@ -296,6 +305,14 @@ public class GameController {
     private void endTurn() {
         currentPlayer = game.switchTurns();
         updateView();
+
+        if (currentPlayer == aiPlayer) {
+            // AI player's turn
+            Action bestAction = mcts.bestMove();
+            if (bestAction != null) {
+                executeAction(bestAction);
+            }
+        }
     }
 
     //* Checks if the game has ended */
@@ -314,7 +331,11 @@ public class GameController {
     private void endGame() {
         Player winner = game.getActivePlayers().get(0);
         view.displayWinner(winner);
+
+        // Update the MCTS tree with the game result
+        mcts.handleGameOver(winner);
     }
+
 
     //* Update the view */
     private void updateView() {

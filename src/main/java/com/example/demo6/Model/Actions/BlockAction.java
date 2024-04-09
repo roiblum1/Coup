@@ -17,7 +17,6 @@ public class BlockAction extends Action {
 
 
     // Checks if the player can perform the blocking action
-    //TODO : change instance of to polymorphism
     @Override
     public boolean canPlayerPerform() {
         // Logic to determine if the action can be blocked

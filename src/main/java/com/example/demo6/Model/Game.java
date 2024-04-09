@@ -78,4 +78,15 @@ public class Game {
         currentPlayerIndex = (currentPlayerIndex + 1) % playerList.size();
         return getCurrentPlayer();
     }
+
+    //* Retrieve the winner of the game //
+    public Player getWinner() {
+        if (isGameOver()) {
+            return getActivePlayers().get(0);
+        }
+        else return null;
+    }
+
+
+
 }

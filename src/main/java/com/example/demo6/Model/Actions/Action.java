@@ -3,11 +3,10 @@ package com.example.demo6.Model.Actions;
 import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
-//TODO : add isBlockable boolean.
 public abstract class Action {
     protected Player player;
     protected ActionCode codeOfAction;
-    protected boolean canBeBlocked;
+    public boolean canBeBlocked;
 
     public Action(Player player, ActionCode code) {
         this.player = player;
