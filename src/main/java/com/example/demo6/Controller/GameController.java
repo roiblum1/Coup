@@ -27,7 +27,6 @@ public class GameController {
         this.view.setController(this);
         initializeActionExecutors();
         this.mcts = new MCTS(game);
-        this.aiPlayer = game.getPlayers().get(1);
     }
 
     // Initialize game and update view
@@ -44,6 +43,7 @@ public class GameController {
 
         // The current player is the first player by default
         this.currentPlayer = this.game.getCurrentPlayer();
+        this.aiPlayer = game.getPlayers().get(1);
 
         // Now that the game is initialized, update the view components
         Platform.runLater(() -> {
