@@ -247,8 +247,9 @@ public class MCTS {
     }
 
     private void executeAction(Game game, Action action, boolean isChallenged, boolean isBlocked) {
-        Player currentPlayer = action.getPlayer();
-        Player targetPlayer = game.getOpponent(currentPlayer);
+        Game simulationGame = deepCopy(game);
+        Player currentPlayer = simulationGame.getCurrentPlayer();
+        Player targetPlayer = simulationGame.getOpponent(currentPlayer);
 
         if (isChallenged) {
             if (!action.challenge()) {
