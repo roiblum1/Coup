@@ -18,8 +18,14 @@ public class MCTS {
     public MCTS(Game game) {
         this.rootGame = deepCopy(game);
         this.root = new Node(null);
-        for(Player player : rootGame.getPlayers())
-        {
+        // Debugging statements
+        System.out.println("Original Game Players:");
+        for (Player player : game.getPlayers()) {
+            System.out.println(player.getName());
+        }
+
+        System.out.println("Cloned Game Players:");
+        for (Player player : rootGame.getPlayers()) {
             System.out.println(player.getName());
         }
     }
@@ -199,11 +205,14 @@ public class MCTS {
         while (node != null) {
             node.incrementVisitCount();
             node.incrementReward(reward);
-            System.out.println("Backpropagation: Action = " + node.getAction().getCodeOfAction() + ", Visit Count = " + node.getVisitCount() + ", Reward = " + node.getReward());
+            if (node.getAction() != null) {
+                System.out.println("Backpropagation: Action = " + node.getAction().getCodeOfAction() + ", Visit Count = " + node.getVisitCount() + ", Reward = " + node.getReward());
+            } else {
+                System.out.println("Backpropagation: Action = null, Visit Count = " + node.getVisitCount() + ", Reward = " + node.getReward());
+            }
             node = node.getParent();
         }
     }
-
     public void handleAction(Action action) {
         if (rootGame != null) {
             executeAction(rootGame, action, false, false);
@@ -353,6 +362,7 @@ public class MCTS {
                 clonedPlayer.setCoins(player.getCoins());
                 List<Card> clonedCards = new ArrayList<>(player.getCards());
                 clonedPlayer.setCards(clonedCards);
+                clonedPlayer.setDeck(clonedGame.getDeck()); // Set the cloned game's deck to the player
                 clonedPlayerList.add(clonedPlayer);
             }
             clonedGame.setPlayerList(clonedPlayerList);
@@ -363,7 +373,6 @@ public class MCTS {
             return null;
         }
     }
-
     private static class Node {
         private final Action action;
         private final Node parent;
