@@ -36,7 +36,7 @@ public class MCTS {
         }
 
         // Perform MCTS search
-        search(1000); // Adjust the time limit as needed
+        search(100, 10); // Adjust the time limit as needed
 
         double maxValue = Double.NEGATIVE_INFINITY;
         List<Node> maxNodes = new ArrayList<>();
@@ -64,12 +64,9 @@ public class MCTS {
         return bestChild.getAction();
     }
 
-    public void search(int timeLimit) {
-        long startTime = System.currentTimeMillis();
-
-        int numRollouts = 0;
-        while (System.currentTimeMillis() - startTime < timeLimit) {
-            NodeGamePair nodeGamePair = selectNode();
+    public void search(int numSimulations, int maxDepth) {
+        for (int i = 0; i < numSimulations; i++) {
+            NodeGamePair nodeGamePair = selectNode(maxDepth);
             Node node = nodeGamePair.node;
             Game game = nodeGamePair.game;
 
@@ -87,50 +84,19 @@ public class MCTS {
             }
 
             backPropagate(node, game.getCurrentPlayer(), winner);
-            numRollouts++;
         }
-
-        long runtime = System.currentTimeMillis() - startTime;
-        System.out.println("Runtime: " + runtime + ", numRollouts: " + numRollouts);
     }
 
-
-    private NodeGamePair selectNode() {
+    private NodeGamePair selectNode(int maxDepth) {
         Node node = root;
         Game game = deepCopy(rootGame);
+        int depth = 0;
 
-        while (!node.getChildren().isEmpty()) {
-            double maxValue = Double.NEGATIVE_INFINITY;
-            List<Node> maxNodes = new ArrayList<>();
-
-            for (Node child : node.getChildren().values()) {
-                double childValue = child.getUCTValue();
-                System.out.println("Child action: " + child.getAction().getCodeOfAction() + ", UCT value: " + childValue);
-                if (childValue > maxValue) {
-                    maxValue = childValue;
-                    maxNodes.clear();
-                    maxNodes.add(child);
-                } else if (childValue == maxValue) {
-                    maxNodes.add(child);
-                }
-            }
-
-            node = maxNodes.get(ThreadLocalRandom.current().nextInt(maxNodes.size()));
+        while (!node.isLeaf() && depth < maxDepth) {
+            node = node.selectChild();
             executeAction(game, node.getAction(), false, false);
-
-            if (node.getVisitCount() == 0) {
-                return new NodeGamePair(node, game);
-            }
+            depth++;
         }
-
-        expand(node, game);
-        List<Node> children = new ArrayList<>(node.getChildren().values());
-        if (children.isEmpty()) {
-            // Handle the case when there are no valid child nodes
-            return new NodeGamePair(node, game); // or return a default value or handle accordingly
-        }
-        node = children.get(ThreadLocalRandom.current().nextInt(children.size()));
-        executeAction(game, node.getAction(), false, false);
 
         return new NodeGamePair(node, game);
     }
@@ -142,17 +108,15 @@ public class MCTS {
 
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) {
-            // Handle the case when there are no active players
             return;
         }
 
-        List<Node> children = new ArrayList<>();
-        for (Action action : game.getAvailableActions(currentPlayer)) {
+        List<Action> availableActions = game.getAvailableActions(currentPlayer);
+        for (Action action : availableActions) {
             Node child = new Node(action, parent);
-            children.add(child);
+            parent.addChild(child);
             System.out.println("Created child node for action: " + action.getCodeOfAction());
         }
-        parent.addChildren(children);
     }
 
     private Player rollOut(Game game) {
@@ -200,7 +164,7 @@ public class MCTS {
         return winner;
     }
     private void backPropagate(Node node, Player turn, Player outcome) {
-        int reward = (outcome == turn) ? 1 : 0;
+        int reward = (outcome.equals(turn))? 1 : 0;
 
         while (node != null) {
             node.incrementVisitCount();
@@ -432,9 +396,31 @@ public class MCTS {
             return children;
         }
 
+        public void addChild(Node child) {
+            children.put(child.getAction(), child);
+        }
+        public Node selectChild() {
+            double maxUCT = Double.NEGATIVE_INFINITY;
+            Node selectedChild = null;
+
+            for (Node child : children.values()) {
+                double uct = child.getUCTValue();
+                if (uct > maxUCT) {
+                    maxUCT = uct;
+                    selectedChild = child;
+                }
+            }
+
+            return selectedChild;
+        }
+
+        public boolean isLeaf() {
+            return children.isEmpty();
+        }
         public String getReward() {
             return "" + this.reward;
         }
+
     }
 
     private static class NodeGamePair {
