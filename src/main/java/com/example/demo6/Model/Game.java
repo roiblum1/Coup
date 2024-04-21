@@ -37,7 +37,6 @@ public class Game implements Serializable {
         actions.add(new StealAction(currentPlayer, getOpponent(currentPlayer)));
         actions.add(new SwapAction(currentPlayer));
         List<Action> availableActions = actions.stream().filter(Action::canPlayerPerform).collect(Collectors.toList());
-        System.out.println("Available actions for " + currentPlayer.getName() + ": " + availableActions);
         return availableActions;
     }
 
@@ -60,7 +59,7 @@ public class Game implements Serializable {
             }
             return null; // or throw an appropriate exception
         }
-        return playerList.get(currentPlayerIndex);
+        return getActivePlayers().get(currentPlayerIndex);
     }
 
     //* Retrieves all players */
@@ -87,11 +86,19 @@ public class Game implements Serializable {
     public Player switchTurns() {
         List<Player> activePlayers = getActivePlayers();
         if (activePlayers.isEmpty()) {
-            return null; // No active players left, return null or handle accordingly
+            System.out.println("No active players left");
+            return null;
         }
 
-        int nextPlayerIndex = (activePlayers.indexOf(getCurrentPlayer()) + 1) % activePlayers.size();
-        return activePlayers.get(nextPlayerIndex);
+        System.out.println("Active players are: ");
+        for (Player player : activePlayers) {
+            System.out.println(player.getName());
+        }
+
+        currentPlayerIndex = (currentPlayerIndex + 1) % activePlayers.size();
+
+        System.out.println("Switching turns from " + getCurrentPlayer().getName() + " to " + activePlayers.get(currentPlayerIndex).getName());
+        return activePlayers.get(currentPlayerIndex);
     }
 
     //* Retrieve the winner of the game //
@@ -105,5 +112,32 @@ public class Game implements Serializable {
 
     public void setPlayerList(List<Player> clonedPlayerList) {
         this.playerList = clonedPlayerList;
+    }
+
+
+    public void executeAction(Action action, List<Card> cards) {
+        if (cards != null) {
+            if (action.getActionCode() == ActionCode.COUP) {
+                boolean success = action.execute(false, false);
+                if (success) {
+                    getOpponent(action.getPlayer()).returnCard(cards.get(0));
+                }
+            } else if (action.getActionCode() == ActionCode.ASSASSINATE) {
+                boolean success = action.execute(false, false);
+                if (success) {
+                    getOpponent(action.getPlayer()).updateCoins(-3);
+                    getOpponent(action.getPlayer()).returnCard(cards.get(0));
+                }
+            } else if (action.getActionCode() == ActionCode.SWAP) {
+                Player currentPlayer = action.getPlayer();
+                List<Card> selectedCards = cards.subList(0, 2);
+                List<Card> newCards = cards.subList(2, 4);
+
+                // Call the swapCards method on the current player
+                currentPlayer.swapCards(selectedCards, newCards);
+            }
+        } else {
+            action.execute(false, false);
+        }
     }
 }

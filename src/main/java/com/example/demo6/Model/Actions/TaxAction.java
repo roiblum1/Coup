@@ -7,6 +7,7 @@ public class TaxAction extends Action {
     public TaxAction(Player player) {
         super(player, ActionCode.TAX);
         this.canBeBlocked = false;
+        this.canBeChallenged = true;
     }
 
     // Checks if the player can perform the tax action

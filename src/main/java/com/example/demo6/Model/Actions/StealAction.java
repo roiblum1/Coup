@@ -10,6 +10,7 @@ public class StealAction extends Action {
         super(player, ActionCode.STEAL);
         this.targetPlayer = targetPlayer;
         this.canBeBlocked = true;
+        this.canBeChallenged = true;
     }
 
     // Checks if the player can perform the steal action

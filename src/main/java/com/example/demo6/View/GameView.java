@@ -79,10 +79,6 @@ public class GameView extends Application {
 
     //* This method ask the player if he wants to challenge an action */
     public boolean promptForChallenge(String message) {
-        if (controller.getCurrentPlayer() == controller.getAIPlayer()) {
-            // AI player should make the decision automatically
-            return Math.random() < 0.3; // 30% chance of challenging the action
-        }
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Challenge");
         alert.setHeaderText(null); // No header
@@ -96,10 +92,6 @@ public class GameView extends Application {
 
     //* This method ask the player if he wants to block an action */
     public boolean promptForBlock(String message) {
-        if (controller.getCurrentPlayer() == controller.getAIPlayer()) {
-            // AI player should make the decision automatically
-            return Math.random() < 0.2; // 20% chance of blocking the action
-        }
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Block Action");
         alert.setHeaderText(null); // No header text
@@ -113,10 +105,6 @@ public class GameView extends Application {
 
     //* This method ask the player which cards he wants to keep */
     public List<Card> promptForCardSelection(List<Card> options, int numberOfCardsToSelect) {
-        if (controller.getCurrentPlayer() == controller.getAIPlayer()) {
-            // AI player should make the card selection automatically
-            return options.subList(0, numberOfCardsToSelect); // Select the first numberOfCardsToSelect cards
-        }
         List<String> choices = options.stream().map(Card::toString).collect(Collectors.toList());
         List<Card> selectedCards = new ArrayList<>();
         for (int i = 0; i < numberOfCardsToSelect; i++) {
@@ -142,10 +130,6 @@ public class GameView extends Application {
 
     //* This method ask the player which card he wants to give up */
     public Card promptPlayerForCardToGiveUp(Player player) {
-        if (player == controller.getAIPlayer()) {
-            // AI player should choose the card to give up automatically
-            return player.getCards().get(0); // Select the first card in the player's hand
-        }
         List<String> cardChoices = player.getCards().stream()
                 .map(Card::toString)
                 .collect(Collectors.toList());

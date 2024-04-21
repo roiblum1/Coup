@@ -10,6 +10,7 @@ public class AssassinateAction extends Action {
         super(player, ActionCode.ASSASSINATE);
         this.targetPlayer = targetPlayer;
         this.canBeBlocked = true;
+        this.canBeChallenged = true;
     }
 
     // Checks if the player can perform the assassination action

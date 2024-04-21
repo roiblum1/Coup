@@ -17,15 +17,13 @@ public class GameController {
     private GameView view;
     private Player currentPlayer;
     private Map<Class<? extends Action>, Consumer<Action>> actionExecutors;
-    private MCTS mcts;
-    private Player aiPlayer;
 
 
     public GameController(GameView view, Game game) {
         this.game = game;
         this.view = view;
         this.view.setController(this);
-        initializeActionExecutors();
+
     }
 
     // Initialize game and update view
@@ -42,9 +40,8 @@ public class GameController {
 
         // Set the current player and AI player
         this.currentPlayer = this.game.getCurrentPlayer();
-        this.aiPlayer = aiPlayer;
 
-        this.mcts = new MCTS(game);
+//        this.mcts = new MCTS(game);
         // Now that the game is initialized, update the view components
         Platform.runLater(() -> {
             view.updatePlayerInfo(this.game.getPlayers());
@@ -55,220 +52,107 @@ public class GameController {
     }
 
 
-    private void initializeActionExecutors() {
-        actionExecutors = Map.of(
-                StealAction.class, action -> executeStealAction((StealAction) action),
-                AssassinateAction.class, action -> executeAssassinateAction((AssassinateAction) action),
-                ForeignAidAction.class, action -> executeForeignAidAction((ForeignAidAction) action),
-                TaxAction.class, action -> executeTaxAction((TaxAction) action),
-                IncomeAction.class, action -> executeIncomeAction((IncomeAction) action),
-                CoupAction.class, action -> executeCoupAction((CoupAction) action),
-                SwapAction.class, action -> executeSwapAction((SwapAction) action)
-        );
-    }
-
-    // Handles executing an action
     public void executeAction(Action action) {
-        Consumer<Action> executor = actionExecutors.get(action.getClass());
-        if (executor != null) {
-            executor.accept(action);
+        boolean challengeResponse = false;
+        boolean blockResponse = false;
+        boolean actionExecuted = true;
+
+        // Check if the action can be challenged
+        if (action.canBeChallenged) {
+            // Ask if the player wants to challenge the action
+            challengeResponse = view.promptForChallenge("Do you want to challenge this action?");
+            if (challengeResponse) {
+                // Challenge the action
+                boolean challengeResult = handleChallenge(action);
+                if (!challengeResult) {
+                    // Check if the action can be blocked
+                    if (action.canBeBlocked) {
+                        // Ask if the player wants to block the action
+                        blockResponse = view.promptForBlock("Do you want to block this action?");
+                        if (blockResponse) {
+                            // Challenge the block
+                            boolean challengeBlock = view.promptForChallenge("Do you want to challenge this block?");
+                            if (!challengeBlock) {
+                                // The function cannot be executed
+                                actionExecuted = false;
+                            } else {
+                                // Check if the block is valid and handle the block action
+                                boolean blockSucceed = handleBlockAction(game.getOpponent(action.getPlayer()), action, challengeBlock);
+                                if (blockSucceed) {
+                                    // The function cannot be executed
+                                    actionExecuted = false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         } else {
-            System.err.println("Unsupported action: " + action.getClass().getName());
+            // Check if the action can be blocked
+            if (action.canBeBlocked) {
+                // Ask if the player wants to block the action
+                blockResponse = view.promptForBlock("Do you want to block this action?");
+                if (blockResponse) {
+                    // Challenge the block
+                    boolean challengeBlock = view.promptForChallenge("Do you want to challenge this block?");
+                    if (!challengeBlock) {
+                        // The function cannot be executed
+                        actionExecuted = false;
+                    } else {
+                        // Check if the block is valid and handle the block action
+                        boolean blockSucceed = handleBlockAction(game.getOpponent(action.getPlayer()), action, challengeBlock);
+                        if (blockSucceed) {
+                            // The function cannot be executed
+                            actionExecuted = false;
+                        }
+                    }
+                }
+            }
         }
 
-        // Update the MCTS tree with the executed action
-        mcts.handleAction(action);
+        if (actionExecuted) {
+            List<Card> cards = null;
+            if (action.getActionCode() == ActionCode.SWAP) {
+                List<Card> newCards = new ArrayList<>();
+                for (int i = 0; i < 2; i++) {
+                    newCards.add(game.getDeck().getCard());
+                }
+                List<Card> swapOptions = new ArrayList<>(currentPlayer.getCards());
+                swapOptions.addAll(newCards);
+                List<Card> selectedCards = view.promptForCardSelection(swapOptions, 2);
+                cards = new ArrayList<>();
+                cards.addAll(selectedCards);
+                cards.addAll(newCards);
+            } else if (action.getActionCode() == ActionCode.COUP || (action.getActionCode() == ActionCode.ASSASSINATE)) {
+                Card cardToLose = view.promptPlayerForCardToGiveUp(game.getOpponent(action.getPlayer()));
+                cards = new ArrayList<>();
+                cards.add(cardToLose);
+            }
+            game.executeAction(action, cards);
+        }
+
+        updateView();
 
         if (isGameOver()) {
+            System.out.println("Game over");
             endGame();
         } else {
+            System.out.println("Ending turn");
             endTurn();
         }
     }
 
-    // Handles executing a StealAction
-    private void executeStealAction(StealAction stealAction) {
-        // Challenge Phase
-        boolean isChallenged = view.promptForChallenge(currentPlayer.getName() + " is attempting to steal from " + stealAction.getTargetPlayer().getName());
-        if (isChallenged) {
-            boolean challengeResult = handleChallenge(stealAction);
-            if (!challengeResult) {
-                updateView(); // Update view due to challenge outcome.
-                return; // Stop action if challenge was successful.
-            }
-        }
-        // Block Phase
-        boolean isBlocked = view.promptForBlock(stealAction.getTargetPlayer().getName() + ", do you want to block the steal?");
-        if (isBlocked) {
-            // Challenge the Block
-            boolean isBlockChallenged = view.promptForChallenge(currentPlayer.getName() + ", do you want to challenge the block of " + stealAction.getTargetPlayer().getName() + "?");
-            handleBlockAction(stealAction.getTargetPlayer(), stealAction, isBlockChallenged);
-            // Note: handleBlockAction will decide if action proceeds based on block challenge outcome.
-        } else {
-            // Execute the steal action directly if not blocked.
-            stealAction.execute(false, false);
-            updateView(); // Update view as action concludes successfully.
-        }
-    }
-
-
-    private void executeStealAction2(StealAction stealAction) {
-        stealAction.execute(false, false);
-    }
-
-    // Handles executing an AssassinateAction
-    private void executeAssassinateAction(AssassinateAction assassinateAction) {
-        // Initial challenge phase
-        boolean isChallenged = view.promptForChallenge(currentPlayer.getName() + " is attempting to assassinate " + assassinateAction.getTargetPlayer().getName());
-        if (isChallenged) {
-            boolean challengeResult = handleChallenge(assassinateAction);
-            if (!challengeResult) {
-                return;
-            }
-        }
-        // Block phase only if the action was not successfully challenged or if the assassin proved their role
-        boolean isBlocked = view.promptForBlock(assassinateAction.getTargetPlayer().getName() + ", do you want to block the assassination?");
-        if (isBlocked) {
-            boolean blockChallengeResult = view.promptForChallenge(currentPlayer.getName() + ", do you want to challenge the block?");
-            handleBlockAction(assassinateAction.getTargetPlayer(), assassinateAction, blockChallengeResult);
-            return; // Block handling will take care of action conclusion.
-        }
-        // Proceed with the assassination if not blocked or if the block challenge fails
-        if (assassinateAction.execute(false, false)) {
-            // Assassination successful
-            currentPlayer.updateCoins(-3); // Deduct cost of assassination
-            handleLoseCard(assassinateAction.getTargetPlayer()); // Target loses a card
-        }
-        updateView();
-    }
-
-    private void executeAssassinateAction2(AssassinateAction assassinateAction) {
-        boolean assassinationSuccessful = assassinateAction.execute(false, false);
-        if (assassinationSuccessful)
-        {
-            currentPlayer.updateCoins(-3); // Current player pays 3 coins for successful assassination
-            handleLoseCard(assassinateAction.getTargetPlayer()); // Target player loses a card
-        }
-        updateView();
-    }
-
-    // Handles executing a ForeignAidAction
-    private void executeForeignAidAction(ForeignAidAction foreignAidAction) {
-        boolean isBlocked = view.promptForBlock(currentPlayer.getName() + " is attempting to take foreign aid. Does anyone want to block it?");
-        foreignAidAction.execute(false, isBlocked);
-        if (isBlocked) {
-            boolean isChallenged = view.promptForChallenge(currentPlayer.getName() + " is do you want to challenged the block of " + game.getOpponent(currentPlayer).getName());
-            handleBlockAction(game.getOpponent(currentPlayer), foreignAidAction, isChallenged);
-        } else {
-            updateView();
-        }
-    }
-    private void executeForeignAidAction2(ForeignAidAction foreignAidAction) {
-        foreignAidAction.execute(false, false);
-        updateView();
-    }
-
-    // Handles executing a TaxAction
-    private void executeTaxAction(TaxAction taxAction) {
-        boolean isChallenged = view.promptForChallenge(currentPlayer.getName() + " is attempting to collect tax.");
-        if (isChallenged) {
-            boolean challengeSuccess = handleChallenge(taxAction);
-            if (!challengeSuccess) {
-                view.displayMessage(currentPlayer.getName() + "'s tax collection was stopped due to a successful challenge.");
-                updateView();
-                return;
-            }
-        }
-        boolean success = taxAction.execute(false, false);
-        if (success) {
-            view.displayMessage(currentPlayer.getName() + " successfully collects tax.");
-        } else {
-            view.displayMessage(currentPlayer.getName() + " could not collect tax for some reason.");
-        }
-        updateView();
-    }
-
-    //* Handles executing an IncomeAction */
-    private void executeIncomeAction(IncomeAction incomeAction) {
-        boolean success = incomeAction.execute(false, false);
-        if (!success)
-        {
-            view.displayMessage(currentPlayer.getName() + " could not collect income for some reason.");
-        }
-        updateView();
-    }
-
-    //* Handles executing a CoupAction */
-    private void executeCoupAction(CoupAction coupAction) {
-        boolean success = coupAction.execute(false, false);
-        if (success)
-        {
-            handleLoseCard(game.getOpponent(currentPlayer));
-        }
-        updateView();
-    }
-
-    //* Handles executing a SwapAction */
-    private void executeSwapAction(SwapAction swapAction) {
-        boolean isChallenged = view.promptForChallenge(currentPlayer.getName() + " is attempting to swap influence.");
-        if (isChallenged) {
-            boolean challengeSuccess = handleChallenge(swapAction);
-            if (!challengeSuccess) {
-                return;
-            }
-        }
-        List<Card> newCards = new ArrayList<>();
-        for (int i = 0; i < 2; i++) {
-            newCards.add(game.getDeck().getCard());
-        }
-        List<Card> swapOptions = new ArrayList<>(currentPlayer.getCards());
-        swapOptions.addAll(newCards);
-        List<Card> selectedCards = view.promptForCardSelection(swapOptions, 2);
-        currentPlayer.swapCards(selectedCards, newCards);
-        updateView();
-    }
-
-    //* Handles the outcome of a BlockAction, potentially including a challenge */
-    private void handleBlockAction(Player blocker, Action actionToBlock, boolean isChallenged) {
+    private boolean handleBlockAction(Player blocker, Action actionToBlock, boolean isChallenged) {
         BlockAction blockAction = new BlockAction(blocker, actionToBlock);
         boolean blockSuccessful = blockAction.execute(isChallenged, false);
 
-        if (isChallenged) {
-            if (blockSuccessful) {
-                // Block succeeded and was challenged
-                System.out.println(blocker.getName() + " successfully blocked " + actionToBlock.getCodeOfAction() + " action.");
-                handleLoseCard(actionToBlock.getPlayer());
-            } else {
-                // Block failed and was challenged
-                System.out.println(blocker.getName() + " failed to block " + actionToBlock.getCodeOfAction() + " action.");
-                handleLoseCard(blocker); // Blocker loses a card
-
-                // Execute the original action directly
-                if (actionToBlock instanceof StealAction) {
-                    executeStealAction2((StealAction) actionToBlock);
-                } else if (actionToBlock instanceof AssassinateAction) {
-                    executeAssassinateAction2((AssassinateAction) actionToBlock);
-                } else if (actionToBlock instanceof ForeignAidAction) {
-                    executeForeignAidAction2((ForeignAidAction) actionToBlock);
-                }
-            }
+        if (blockSuccessful) {
+            handleLoseCard(actionToBlock.getPlayer());
         } else {
-            if (blockSuccessful) {
-                // Block succeeded without challenge
-                System.out.println(blocker.getName() + " blocked " + actionToBlock.getCodeOfAction() + " action.");
-            } else {
-                // Block failed without challenge
-                System.out.println(blocker.getName() + " failed to block " + actionToBlock.getCodeOfAction() + " action.");
-                if (actionToBlock instanceof StealAction) {
-                    executeStealAction2((StealAction) actionToBlock);
-                } else if (actionToBlock instanceof AssassinateAction) {
-                    executeAssassinateAction2((AssassinateAction) actionToBlock);
-                } else if (actionToBlock instanceof ForeignAidAction) {
-                    executeForeignAidAction2((ForeignAidAction) actionToBlock);
-                }
-            }
+            handleLoseCard(blocker);
         }
-        updateView();
+
+        return blockSuccessful;
     }
 
     //* Handles resolving a challenge when an action is performed */
@@ -305,23 +189,7 @@ public class GameController {
     private void endTurn() {
         currentPlayer = game.switchTurns();
         updateView();
-
-        if (currentPlayer == aiPlayer) {
-            // AI player's turn
-            Action bestAction = mcts.bestMove();
-            if (bestAction != null) {
-                executeAction(bestAction);
-            } else {
-                // No valid moves available for the AI player
-                // Pass the turn to the next player or handle the situation accordingly
-                if (!game.isGameOver()) {
-                    currentPlayer = game.switchTurns();
-                    updateView();
-                }
-            }
-        }
     }
-
     //* Checks if the game has ended */
     private boolean isGameOver() {
         return game.getActivePlayers().size() == 1;
@@ -340,14 +208,10 @@ public class GameController {
         view.displayWinner(winner);
 
         // Update the MCTS tree with the game result
-        mcts.handleGameOver(winner);
+//        mcts.handleGameOver(winner);
     }
     public Player getCurrentPlayer() {
         return currentPlayer;
-    }
-
-    public Player getAIPlayer() {
-        return aiPlayer;
     }
 
     //* Update the view */

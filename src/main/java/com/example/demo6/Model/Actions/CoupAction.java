@@ -10,6 +10,7 @@ public class CoupAction extends Action {
         super(player, ActionCode.COUP);
         this.targetPlayer = targetPlayer;
         this.canBeBlocked = false;
+        this.canBeChallenged = false;
     }
 
     // Checks if the player can perform the coup action

@@ -7,6 +7,7 @@ public abstract class Action {
     protected Player player;
     protected ActionCode codeOfAction;
     public boolean canBeBlocked;
+    public boolean canBeChallenged;
 
     public Action(Player player, ActionCode code) {
         this.player = player;

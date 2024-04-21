@@ -6,6 +6,7 @@ public class ForeignAidAction extends Action {
     public ForeignAidAction(Player player) {
         super(player, ActionCode.FOREIGN_AID);
         this.canBeBlocked = true;
+        this.canBeChallenged = false;
     }
 
     // Checks if the player can perform the foreign aid action

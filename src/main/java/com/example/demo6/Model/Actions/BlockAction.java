@@ -12,6 +12,7 @@ public class BlockAction extends Action {
         this.actionToBlock = actionToBlock;
         this.isBlocked = false;
         this.canBeBlocked = false;
+        this.canBeChallenged = true;
     }
 
 

@@ -7,6 +7,7 @@ public class SwapAction extends Action {
     public SwapAction(Player player) {
         super(player, ActionCode.SWAP);
         this.canBeBlocked = false;
+        this.canBeChallenged = true;
     }
 
     // Checks if the player can perform the swap action

@@ -6,6 +6,7 @@ public class IncomeAction extends Action {
     public IncomeAction(Player player) {
         super(player, ActionCode.INCOME);
         this.canBeBlocked = false;
+        this.canBeChallenged = false;
     }
 
     // Checks if the player can perform the income action
