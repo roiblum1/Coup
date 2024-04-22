@@ -46,8 +46,8 @@ public class GameController {
     }
 
     public void executeAction(Action action) {
-        boolean challengeResponse = false;
-        boolean blockResponse = false;
+        boolean challengeResponse;
+        boolean blockResponse;
         boolean actionExecuted = true;
         boolean challengeResult = false;
 
@@ -110,7 +110,7 @@ public class GameController {
             game.executeAction(action, cards);
 
             // Update the MCTS tree only if the action is executed successfully
-            mcts.handleAction(action);
+//            mcts.handleAction(action);
         }
 
         updateView();
@@ -150,11 +150,11 @@ public class GameController {
 
     private void endTurn() {
         if (!isGameOver()) {
-            mcts.handleAction(game.getLastExecutedAction());
+//            mcts.handleAction(game.getLastExecutedAction());
             currentPlayer = game.switchTurns();
             updateView();
 
-            if (currentPlayer == aiPlayer) {
+            if (currentPlayer.equals(aiPlayer)) {
                 executeAIPlayerTurn();
             }
         } else {

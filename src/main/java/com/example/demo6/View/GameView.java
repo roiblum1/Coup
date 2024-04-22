@@ -205,13 +205,13 @@ public class GameView extends Application {
                 }
             });
             actionsComboBox.getItems().addAll(availableActions);
-            actionsComboBox.setOnAction(event -> {
-                Action selectedAction = actionsComboBox.getValue();
-                if (selectedAction != null) {
-                    controller.executeAction(selectedAction);
-                    actionsComboBox.setValue(null);
-                }
-            });
+            actionsComboBox.setOnAction(event -> Platform.runLater(() -> {
+            Action selectedAction = actionsComboBox.getValue();
+            if (selectedAction != null) {
+                controller.executeAction(selectedAction);
+                actionsComboBox.setValue(null);
+            }
+            }));
             actionsBox.getChildren().add(actionsComboBox);
             gameContent.getChildren().add(actionsBox);
         });
