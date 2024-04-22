@@ -36,5 +36,7 @@ public abstract class Action {
         return this.player;
     }
 
-
+    public void setPlayer(Player player) {
+        this.player = player;
+    }
 }

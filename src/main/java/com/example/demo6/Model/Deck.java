@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.Stack;
 
 public class Deck implements Serializable {
+
     public enum CardType {
         DUKE("Duke"),
         ASSASSIN("Assassin"),
@@ -48,6 +49,11 @@ public class Deck implements Serializable {
         return contents.isEmpty();
     }
 
+    public Stack<Card> getContents() {
+        Stack<Card> copiedStack = new Stack<>();
+        copiedStack.addAll(contents);
+        return copiedStack;
+    }
     //* Retrieves the top card from the deck, throws an exception if empty */
     public Card getCard() {
         if (isEmpty()) {

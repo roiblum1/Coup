@@ -6,6 +6,7 @@ import com.example.demo6.Model.Card;
 import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Game;
 import com.example.demo6.Model.Player;
+import javafx.animation.*;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -19,6 +20,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
 
 import java.util.*;
@@ -280,6 +282,46 @@ public class GameView extends Application {
         });
     }
 
+    private void animateCardReveal(Player player, ImageView cardView) {
+        TranslateTransition translate = new TranslateTransition(Duration.seconds(0.5), cardView);
+        translate.setFromX(-200);  // Start from left (adjust as needed)
+        translate.setToX(0);       // End at the card's final position
+
+        FadeTransition fade = new FadeTransition(Duration.seconds(0.5), cardView);
+        fade.setFromValue(0);
+        fade.setToValue(1);
+
+        ParallelTransition animation = new ParallelTransition(translate, fade);
+        animation.setOnFinished(event -> {
+            // Update any necessary state or perform further actions after the animation completes
+        });
+        animation.play();
+    }
+    private void animateCoinUpdate(Label coinsLabel, int oldCount, int newCount) {
+        Duration duration = Duration.millis(500);  // Total duration of the animation
+        int steps = Math.abs(newCount - oldCount); // Calculate the number of steps to increment or decrement
+
+        // Use an array to hold the mutable integer
+        final int[] count = {oldCount};
+
+        Timeline timeline = new Timeline();
+        timeline.setCycleCount(steps);
+        timeline.setAutoReverse(false);
+
+        KeyFrame keyFrame = new KeyFrame(duration.divide(steps), event -> {
+            if (newCount > oldCount) {
+                count[0]++;  // Increment coin count
+            } else {
+                count[0]--;  // Decrement coin count
+            }
+            coinsLabel.setText("Coins: " + count[0]);  // Update the label text
+        });
+
+        timeline.getKeyFrames().add(keyFrame);
+        timeline.play();
+    }
+
+
 
     //* Displays the winner in the alert box */
     public void displayWinner(Player winner) {
@@ -300,7 +342,6 @@ public class GameView extends Application {
             alert.setTitle("Game Information");
             alert.setHeaderText(null);
             alert.setContentText(message);
-
             alert.showAndWait();
         });
     }

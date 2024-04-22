@@ -11,6 +11,8 @@ public class Game implements Serializable {
     private List<Player> playerList;
     private Deck deck;
     private int currentPlayerIndex;
+    private Action lastExecutedAction;
+
 
     //* Initializes a game with a specified deck */
     public Game(Deck deck) {
@@ -24,6 +26,14 @@ public class Game implements Serializable {
         player.setDeck(deck);
         playerList.add(player);
         player.pickCards();
+    }
+
+    public int getCurrentPlayerIndex() {
+        return currentPlayerIndex;
+    }
+
+    public void setCurrentPlayerIndex(int currentPlayerIndex) {
+        this.currentPlayerIndex = currentPlayerIndex;
     }
 
     //* Retrieves all the possible actions for the current player */
@@ -90,11 +100,6 @@ public class Game implements Serializable {
             return null;
         }
 
-        System.out.println("Active players are: ");
-        for (Player player : activePlayers) {
-            System.out.println(player.getName());
-        }
-
         currentPlayerIndex = (currentPlayerIndex + 1) % activePlayers.size();
 
         System.out.println("Switching turns from " + getCurrentPlayer().getName() + " to " + activePlayers.get(currentPlayerIndex).getName());
@@ -114,6 +119,13 @@ public class Game implements Serializable {
         this.playerList = clonedPlayerList;
     }
 
+    public void setLastExecutedAction(Action lastExecutedAction) {
+        this.lastExecutedAction = lastExecutedAction;
+    }
+
+    public Action getLastExecutedAction() {
+        return lastExecutedAction;
+    }
 
     public void executeAction(Action action, List<Card> cards) {
         if (cards != null) {
@@ -139,5 +151,8 @@ public class Game implements Serializable {
         } else {
             action.execute(false, false);
         }
+
+        lastExecutedAction = action;
+
     }
 }

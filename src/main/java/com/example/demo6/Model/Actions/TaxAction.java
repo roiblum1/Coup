@@ -19,16 +19,16 @@ public class TaxAction extends Action {
     // Executes the tax action
     @Override
     public boolean execute(boolean isChallenged, boolean isBlocked) {
-        if (isChallenged) {
-            if (!challenge()) {
-                // Player failed the challenge and cannot collect tax
-                return false;
-            }
+        if (isChallenged && !challenge()) {
+            return false; // Challenge failed, do not collect taxes
         }
+        System.out.println("Before TAX action, coins: " + player.getCoins());
+        player.updateCoins(3); // Update coins if no challenge or challenge passed
+        System.out.println("After TAX action, coins: " + player.getCoins());
 
-        player.updateCoins(3);
         return true;
     }
+
 
     // Handles the challenge to the tax action
     public boolean challenge() {

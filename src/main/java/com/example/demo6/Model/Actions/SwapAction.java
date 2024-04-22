@@ -17,13 +17,15 @@ public class SwapAction extends Action {
     }
 
     // Executes the swap action
+    @Override
     public boolean execute(boolean isChallenged, boolean isBlocked) {
-        if (isChallenged) {
-            // Player failed the challenge and cannot swap
-            return challenge();
+        if (isChallenged && !challenge()) {
+            return false; // Correctly handles challenge failure
         }
+        // Perform the swap logic here if necessary
         return true;
     }
+
 
     // Handles the challenge to the swap action
     @Override

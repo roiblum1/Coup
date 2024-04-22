@@ -18,7 +18,6 @@ public class MCTS {
     public MCTS(Game game) {
         this.rootGame = deepCopy(game);
         this.root = new Node(null);
-
     }
 
     public Action bestMove() {
@@ -26,8 +25,7 @@ public class MCTS {
             return null;
         }
 
-        // Perform MCTS search
-        search(100, 10); // Adjust the time limit as needed
+        search(100, 10);
 
         double maxValue = Double.NEGATIVE_INFINITY;
         List<Node> maxNodes = new ArrayList<>();
@@ -67,17 +65,15 @@ public class MCTS {
                 System.out.println("Selected node: null");
             }
 
-            Player winner = rollOut(game, maxDepth, 1000);
+            Player winner = rollOut(game, maxDepth);
             if (winner != null) {
                 System.out.println("Rollout winner: " + winner.getName());
             } else {
                 System.out.println("Rollout ended with no winner.");
             }
 
-            assert winner != null;
             backPropagate(node, game.getCurrentPlayer(), winner);
 
-            // Stop the simulations after finding the best action for the current turn
             if (node.getParent() == root) {
                 break;
             }
@@ -91,12 +87,10 @@ public class MCTS {
 
         while (depth < maxDepth) {
             if (node.isLeaf()) {
-                assert game != null;
                 expand(node, game);
             }
 
             if (node.getChildren().isEmpty()) {
-                // If the node has no children after expansion, we have reached a terminal state
                 break;
             }
 
@@ -107,6 +101,7 @@ public class MCTS {
 
         return new NodeGamePair(node, game);
     }
+
     private void expand(Node parent, Game game) {
         if (game.isGameOver()) {
             return;
@@ -127,43 +122,40 @@ public class MCTS {
         parent.addChildren(childNodes);
     }
 
-    private Player rollOut(Game game, int maxDepth, long timeLimit) {
+    private Player rollOut(Game game, int maxDepth) {
         int depth = 0;
-        long startTime = System.currentTimeMillis();
 
-        while (!game.isGameOver() && depth < maxDepth && System.currentTimeMillis() - startTime < timeLimit) {
+        while (!game.isGameOver() && depth < maxDepth) {
             Player currentPlayer = game.getCurrentPlayer();
             if (currentPlayer == null) {
                 break;
             }
 
-            if (currentPlayer == game.getPlayers().get(1)) { // Assuming the AI player is at index 1
-                List<Action> availableActions = game.getAvailableActions(currentPlayer);
-                if (availableActions.isEmpty()) {
-                    game.switchTurns();
-                    continue;
-                }
-
-                Action action = selectActionHeuristically(availableActions, game);
-                System.out.println("Rollout action: " + action.getCodeOfAction());
-
-                boolean isChallenged = simulateChallenge(game, action);
-                boolean isBlocked = simulateBlock(game, action);
-
-                executeAction(game, action, isChallenged, isBlocked);
-            } else {
-                // Skip the human player's turn or use a simple heuristic to choose an action
+            List<Action> availableActions = game.getAvailableActions(currentPlayer);
+            if (availableActions.isEmpty()) {
                 game.switchTurns();
+                continue;
             }
+
+            Action action;
+            if (currentPlayer == game.getPlayers().get(1)) { // Assuming the AI player is at index 1
+                action = selectActionHeuristically(availableActions, game);
+            } else {
+                // Select a random action for the human player (simulating random play)
+                action = availableActions.get(ThreadLocalRandom.current().nextInt(availableActions.size()));
+            }
+
+            System.out.println("Rollout action: " + action.getCodeOfAction());
+
+            boolean isChallenged = simulateChallenge(game, action);
+            boolean isBlocked = simulateBlock(game, action);
+
+            executeAction(game, action, isChallenged, isBlocked);
 
             depth++;
         }
 
-        Player winner = game.getWinner();
-        if (winner == null) {
-            return evaluateGameState(game);
-        }
-        return winner;
+        return game.getWinner();
     }
 
     private Action selectActionHeuristically(List<Action> availableActions, Game game) {
@@ -174,113 +166,89 @@ public class MCTS {
         int humanPlayerCoins = humanPlayer.getCoins();
         int humanPlayerCardCount = humanPlayer.getCards().size();
 
-        // If the human player has 1 card and Coup is available, prioritize Coup to eliminate them.
-        if (humanPlayerCardCount == 1 && aiPlayerCoins >= 7) {
-            return availableActions.stream()
-                    .filter(action -> action instanceof CoupAction)
-                    .findFirst()
-                    .orElse(null);
+        // Immediate winning moves: If human player has 1 card, prioritize COUP or ASSASSINATE if possible.
+        if (humanPlayerCardCount == 1) {
+            if (aiPlayerCoins >= 7) { // Coup is a guaranteed kill if it can be afforded and not blocked.
+                return availableActions.stream()
+                        .filter(action -> action.getActionCode() == ActionCode.COUP)
+                        .findFirst()
+                        .orElse(null);
+            }
+            if (aiPlayerCoins >= 3 && aiPlayerCards.contains(Deck.CardType.ASSASSIN)) { // Assassinate if possible.
+                return availableActions.stream()
+                        .filter(action -> action.getActionCode() == ActionCode.ASSASSINATE)
+                        .findFirst()
+                        .orElse(null);
+            }
         }
 
-        // If the AI has a Duke, prioritize Tax to accumulate coins.
+        // Use Duke to collect taxes if available to maximize coin gain safely.
         if (aiPlayerCards.contains(Deck.CardType.DUKE)) {
             return availableActions.stream()
-                    .filter(action -> action instanceof TaxAction)
+                    .filter(action -> action.getActionCode() == ActionCode.TAX)
                     .findFirst()
                     .orElse(null);
         }
 
-        // Steal if holding a Captain and the human player has coins.
+        // Use Captain to steal if the human player has coins and the AI has the Captain.
         if (aiPlayerCards.contains(Deck.CardType.CAPTAIN) && humanPlayerCoins > 0) {
             return availableActions.stream()
-                    .filter(action -> action instanceof StealAction)
+                    .filter(action -> action.getActionCode() == ActionCode.STEAL)
                     .findFirst()
                     .orElse(null);
         }
 
-        // If holding an Assassin card, the human player has two cards, and the AI has enough coins, prioritize Assassinate.
-        if (aiPlayerCards.contains(Deck.CardType.ASSASSIN) && humanPlayerCardCount >= 1 && aiPlayerCoins >= 3) {
-            return availableActions.stream()
-                    .filter(action -> action instanceof AssassinateAction)
-                    .findFirst()
-                    .orElse(null);
+        // If the AI has enough coins to coup on the next turn, consider gaining more coins or keeping a low profile.
+        if (aiPlayerCoins >= 5) {
+            if (aiPlayerCoins == 6) {
+                return availableActions.stream()
+                        .filter(action -> action.getActionCode() == ActionCode.FOREIGN_AID || action.getActionCode() == ActionCode.INCOME)
+                        .findFirst()
+                        .orElse(null); // Foreign Aid or Income to get to 7 coins for a Coup next turn.
+            }
+            // Consider swapping if having excess coins and possibly bad cards.
+            if (aiPlayerCoins > 8) {
+                return availableActions.stream()
+                        .filter(action -> action.getActionCode() == ActionCode.SWAP)
+                        .findFirst()
+                        .orElse(null);
+            }
         }
 
-        // Foreign Aid if low on coins.
-        int coinThreshold = 7; // Adjust the threshold based on the game strategy.
-        if (aiPlayerCoins < coinThreshold) {
-            return availableActions.stream()
-                    .filter(action -> action instanceof ForeignAidAction)
-                    .findFirst()
-                    .orElseGet(() -> availableActions.stream()
-                            .filter(action -> action instanceof IncomeAction)
-                            .findFirst()
-                            .orElse(null));
-        }
-
-        // Prioritize Income if the AI player has less than 4 coins.
-        if (aiPlayerCoins < 4) {
-            return availableActions.stream()
-                    .filter(action -> action instanceof IncomeAction)
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        // Swap cards if the AI player has more than 8 coins.
-        if (aiPlayerCoins > 8) {
-            return availableActions.stream()
-                    .filter(action -> action instanceof SwapAction)
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        // Default to Income if none of the above conditions are met.
+        // Default to income if no strategic moves are immediately necessary.
         return availableActions.stream()
-                .filter(action -> action instanceof IncomeAction)
+                .filter(action -> action.getActionCode() == ActionCode.INCOME)
                 .findFirst()
                 .orElse(null);
     }
 
 
-    private Player evaluateGameState(Game game) {
-        List<Player> players = game.getPlayers();
-        int maxScore = Integer.MIN_VALUE;
-        Player bestPlayer = null;
-
-        for (Player player : players) {
-            int score = evaluatePlayerState(player);
-            if (score > maxScore) {
-                maxScore = score;
-                bestPlayer = player;
-            }
-        }
-
-        return bestPlayer;
-    }
-
-    private int evaluatePlayerState(Player player) {
-        int coinWeight = 1; // Adjust the weight of coins in the evaluation
-        int influenceWeight = 2; // Adjust the weight of influence cards in the evaluation
-
-        int coinScore = player.getCoins() * coinWeight;
-        int influenceScore = player.getCards().size() * influenceWeight;
-
-        return coinScore + influenceScore;
-    }
-    private void backPropagate(Node node, Player turn, Player outcome) {
-        int reward = (outcome.equals(turn))? 1 : 0;
-
+    private void backPropagate(Node node, Player turn, Player winner) {
         while (node != null) {
             node.incrementVisitCount();
-            node.incrementReward(reward);
+
+            if (winner != null) {
+                if (winner.equals(turn)) {
+                    node.incrementReward(1);
+                } else {
+                    node.incrementReward(-1);
+                }
+            }
+
+            if (node.getParent() == null) {
+                break;
+            }
+
             if (node.getAction() != null) {
                 System.out.println("Backpropagation: Action = " + node.getAction().getCodeOfAction() + ", Visit Count = " + node.getVisitCount() + ", Reward = " + node.getReward());
             } else {
                 System.out.println("Backpropagation: Action = null, Visit Count = " + node.getVisitCount() + ", Reward = " + node.getReward());
             }
+
             node = node.getParent();
         }
     }
+
     public void handleAction(Action action) {
         if (rootGame != null) {
             executeAction(rootGame, action, false, false);
@@ -294,19 +262,14 @@ public class MCTS {
     }
 
     public void handleGameOver(Player winner) {
-        // Update the reward of the root node based on the winner
         if (winner == rootGame.getPlayers().get(0)) {
-            // Human player won
-            root.incrementReward(-1);
+            root.incrementReward(-1000);
         } else if (winner == rootGame.getPlayers().get(1)) {
-            // AI player won
-            root.incrementReward(1);
+            root.incrementReward(1000);
         } else {
-            // Game ended in a draw
-            root.incrementReward(0);
+            root.incrementReward(1);
         }
 
-        // Backpropagate the result to the root node
         Node node = root;
         while (node != null) {
             node.incrementVisitCount();
@@ -321,7 +284,6 @@ public class MCTS {
 
         if (isChallenged) {
             if (!action.challenge()) {
-                // Action challenged successfully, player loses a card
                 currentPlayer.loseRandomInfluence();
                 return;
             }
@@ -329,119 +291,139 @@ public class MCTS {
 
         if (isBlocked) {
             if (simulateBlockChallenge(simulationGame, action)) {
-                // Block challenged successfully, blocker loses a card
                 if (targetPlayer != null) {
                     targetPlayer.loseRandomInfluence();
                 }
             } else {
-                // Block not challenged or challenge failed, action is blocked
                 return;
             }
         }
 
-        // Execute the action on the 'simulationGame' object
-        switch (action.getActionCode()) {
-            case INCOME:
-                currentPlayer.updateCoins(1);
-                break;
-            case FOREIGN_AID:
-                currentPlayer.updateCoins(2);
-                break;
-            case TAX:
-                currentPlayer.updateCoins(3);
-                break;
-            case STEAL:
-                if (targetPlayer != null) {
-                    int stolenCoins = Math.min(2, targetPlayer.getCoins());
-                    currentPlayer.updateCoins(stolenCoins);
-                    targetPlayer.updateCoins(-stolenCoins);
+        List<Card> cards = null;
+        if (action instanceof SwapAction) {
+            List<Card> newCards = new ArrayList<>();
+            for (int i = 0; i < 2; i++) {
+                if (!simulationGame.getDeck().isEmpty()) {
+                    newCards.add(simulationGame.getDeck().getCard());
                 }
-                break;
-            case ASSASSINATE:
-                if (currentPlayer.getCoins() >= 3) {
-                    currentPlayer.updateCoins(-3);
-                    if (targetPlayer != null) {
-                        targetPlayer.loseRandomInfluence();
-                    }
-                }
-                break;
-            case COUP:
-                if (currentPlayer.getCoins() >= 7) {
-                    currentPlayer.updateCoins(-7);
-                    if (targetPlayer != null) {
-                        targetPlayer.loseRandomInfluence();
-                    }
-                }
-                break;
-            case SWAP:
-                List<Card> drawnCards = new ArrayList<>();
-                for (int i = 0; i < 2; i++) {
-                    if (!simulationGame.getDeck().isEmpty()) {
-                        drawnCards.add(simulationGame.getDeck().getCard());
-                    }
-                }
-                if (!drawnCards.isEmpty()) {
-                    List<Card> selectedCards = currentPlayer.selectRandomCardsToKeep(drawnCards);
-                    currentPlayer.swapCards(selectedCards, drawnCards);
-                }
-                break;
-            default:
-                break;
-        }
-
-        // Switch turns on the 'simulationGame' object
-        simulationGame.switchTurns();
-    }
-
-    private boolean simulateChallenge(Game game, Action action) {
-        // Implement your own logic to decide whether to challenge an action
-        // For example, you can use a random probability or consider game state
-        return Math.random() < 0.3; // 30% chance of challenging the action
-    }
-
-    private boolean simulateBlock(Game game, Action action) {
-        // Implement your own logic to decide whether to block an action
-        // For example, you can use a random probability or consider game state
-        return action.canBeBlocked && Math.random() < 0.2; // 20% chance of blocking the action
-    }
-
-    private boolean simulateBlockChallenge(Game game, Action action) {
-        // Implement your own logic to decide whether to challenge a block
-        // For example, you can use a random probability or consider game state
-        return Math.random() < 0.4; // 40% chance of challenging the block
-    }
-
-    private static <T extends Serializable> T deepCopy(Game object) {
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(object);
-            oos.close();
-
-            ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-            ObjectInputStream ois = new ObjectInputStream(bais);
-            T clonedObject = (T) ois.readObject();
-            ois.close();
-
-            // Manually copy the playerList and its associated objects
-            Game clonedGame = (Game) clonedObject;
-            List<Player> clonedPlayerList = new ArrayList<>();
-            for (Player player : object.getPlayers()) {
-                Player clonedPlayer = new Player(player.getName());
-                clonedPlayer.setCoins(player.getCoins());
-                List<Card> clonedCards = new ArrayList<>(player.getCards());
-                clonedPlayer.setCards(clonedCards);
-                clonedPlayer.setDeck(clonedGame.getDeck()); // Set the cloned game's deck to the player
-                clonedPlayerList.add(clonedPlayer);
             }
-            clonedGame.setPlayerList(clonedPlayerList);
+            List<Card> swapOptions = new ArrayList<>(currentPlayer.getCards());
+            swapOptions.addAll(newCards);
+            List<Card> selectedCards = currentPlayer.selectRandomCardsToKeep(swapOptions);
+            cards = new ArrayList<>();
+            cards.addAll(selectedCards);
+            cards.addAll(newCards);
+        } else if (action instanceof CoupAction || action instanceof AssassinateAction) {
+            if (!targetPlayer.getCards().isEmpty()) {
+                Card cardToLose = targetPlayer.getCards().get(0);
+                cards = new ArrayList<>();
+                cards.add(cardToLose);
+            }
+        }
 
-            return clonedObject;
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
+        simulationGame.executeAction(action, cards);
+        if (currentPlayer == simulationGame.getCurrentPlayer()) {
+            simulationGame.switchTurns();
         }
     }
+
+    public boolean simulateChallenge(Game game, Action action) {
+        Player aiPlayer = game.getCurrentPlayer();
+        Player humanPlayer = game.getOpponent(aiPlayer);
+
+        // If AI has only one card left, avoid challenging unless it's a critical situation
+        if (aiPlayer.getCards().size() == 1 && humanPlayer.getCards().size() > 1) {
+            return false;
+        }
+
+        // Challenge if the human player performs an action that could directly lead to the AI's loss
+        if (action.getActionCode() == ActionCode.ASSASSINATE || action.getActionCode() == ActionCode.COUP) {
+            return aiPlayer.getCards().size() <= humanPlayer.getCards().size();
+        }
+
+        // Simulate challenge based on AI's belief about human player's card holdings
+        // Example: AI may think it's highly unlikely the human player has a Duke
+        if (action.getActionCode() == ActionCode.TAX) {
+            return !aiPlayer.getCards().contains(Deck.CardType.DUKE); // Challenge if AI does not have a Duke, suspecting the same for human
+        }
+        return false;
+    }
+
+    public boolean simulateBlock(Game game, Action action) {
+        Player aiPlayer = game.getCurrentPlayer();
+        Player humanPlayer = game.getOpponent(aiPlayer);
+        // Block foreign aid if AI has a Duke
+        if (action.getActionCode() == ActionCode.FOREIGN_AID && aiPlayer.getCards().contains(Deck.CardType.DUKE)) {
+            return true;
+        }
+        // Block steal if AI has a Captain or Ambassador
+        if (action.getActionCode() == ActionCode.STEAL && (aiPlayer.getCards().contains(Deck.CardType.CAPTAIN) || aiPlayer.getCards().contains(Deck.CardType.AMBASSADOR))) {
+            return true;
+        }
+        // Block assassinate if AI has a Contessa
+        if (action.getActionCode() == ActionCode.ASSASSINATE && aiPlayer.getCards().contains(Deck.CardType.CONTESSA)) {
+            return true;
+        }
+        return false;
+    }
+
+
+
+    public boolean simulateBlockChallenge(Game game, Action action) {
+        Player aiPlayer = game.getCurrentPlayer();
+        Player humanPlayer = game.getOpponent(aiPlayer);
+
+        // Challenge block if AI is about to lose and the block prevents a game-saving move
+        if (action.getActionCode() == ActionCode.COUP && humanPlayer.getCards().size() == 1 && aiPlayer.getCoins() >= 7) {
+            return true;
+        }
+        return false;
+    }
+
+
+    private static Game deepCopy(Game game) {
+        Game copiedGame = new Game(deepCopyDeck(game.getDeck()));
+        copiedGame.setCurrentPlayerIndex(game.getCurrentPlayerIndex());
+        copiedGame.setLastExecutedAction(game.getLastExecutedAction());
+        List<Player> copiedPlayerList = new ArrayList<>();
+        for (Player player : game.getPlayers()) {
+            Player copiedPlayer = new Player(player.getName());
+            copiedPlayer.setCoins(player.getCoins());
+            copiedPlayer.setCards(deepCopyCards(player.getCards()));
+            copiedPlayer.setDeck(copiedGame.getDeck());
+            copiedPlayerList.add(copiedPlayer);
+        }
+        copiedGame.setPlayerList(copiedPlayerList);
+
+        return copiedGame;
+    }
+
+    private static Deck deepCopyDeck(Deck deck) {
+        Set<Deck.CardType> cardTypes = EnumSet.allOf(Deck.CardType.class);
+        if (cardTypes.isEmpty()) {
+            throw new IllegalStateException("Card types cannot be empty.");
+        }
+
+        Deck copiedDeck = new Deck(cardTypes, 2);
+
+        for (Card card : deck.getContents()) {
+            if (card == null) {
+                throw new IllegalStateException("Deck contains a null card.");
+            }
+            copiedDeck.returnCard(new Card(card.getName()));
+        }
+
+        return copiedDeck;
+    }
+
+    private static List<Card> deepCopyCards(List<Card> cards) {
+        List<Card> copiedCards = new ArrayList<>();
+        for (Card card : cards) {
+            copiedCards.add(new Card(card.getName()));
+        }
+        return copiedCards;
+    }
+
     private static class Node {
         private final Action action;
         private final Node parent;
@@ -492,6 +474,7 @@ public class MCTS {
         public void incrementVisitCount() {
             visitCount++;
         }
+
         public void incrementReward(int value) {
             reward += value;
         }
@@ -503,6 +486,7 @@ public class MCTS {
         public void addChild(Node child) {
             children.put(child.getAction(), child);
         }
+
         public Node selectChild() {
             double maxUCT = Double.NEGATIVE_INFINITY;
             Node selectedChild = null;
@@ -521,10 +505,10 @@ public class MCTS {
         public boolean isLeaf() {
             return children.isEmpty();
         }
+
         public String getReward() {
             return "" + this.reward;
         }
-
     }
 
     private static class NodeGamePair {
