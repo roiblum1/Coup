@@ -53,33 +53,36 @@ public class GameController {
 
         Player opponent = game.getOpponent(currentPlayer);
 
+
+        // Handling challenges
         if (action.canBeChallenged) {
             if (opponent == aiPlayer) {
-                challengeResponse = mcts.simulateChallenge(game, action);  // AI decides based on MCTS simulation
+                challengeResponse = mcts.simulateChallenge(game, action);
             } else {
-                challengeResponse = view.promptForChallenge("Do you want to challenge this action?");
+                challengeResponse = view.promptForChallenge("Do you want to challenge " + currentPlayer.getName() + "'s action?");
             }
             if (challengeResponse) {
-                view.displayMessage(currentPlayer.getName() + " challenges " + opponent.getName() + "'s action!");
+                view.displayMessage(opponent.getName() + " challenges " + currentPlayer.getName() + "'s action!");
                 challengeResult = handleChallenge(action);
             }
         }
 
+        // Handling blocks
         if (action.canBeBlocked && !challengeResult) {
             if (opponent == aiPlayer) {
-                blockResponse = mcts.simulateBlock(game, action);  // AI decides whether to block
+                blockResponse = mcts.simulateBlock(game, action);
             } else {
-                blockResponse = view.promptForBlock("Do you want to block this action?");
+                blockResponse = view.promptForBlock("Do you want to block " + currentPlayer.getName() + "'s action?");
             }
             if (blockResponse) {
-                view.displayMessage(currentPlayer.getName() + " blocks " + opponent.getName() + "'s action!");
+                view.displayMessage(opponent.getName() + " blocks " + currentPlayer.getName() + "'s action!");
                 boolean challengeBlock = opponent == aiPlayer ?
-                        mcts.simulateBlockChallenge(game, action) : // Simulate AI's decision to challenge the block
+                        mcts.simulateBlockChallenge(game, action) :
                         view.promptForChallenge("Do you want to challenge this block?");
                 if (!challengeBlock) {
                     actionExecuted = false;
                 } else {
-                    view.displayMessage(opponent.getName() + " challenges the block of" + currentPlayer.getName());
+                    view.displayMessage(opponent.getName() + " challenges the block by " + currentPlayer.getName());
                     boolean blockSucceed = handleBlockAction(opponent, action, challengeBlock);
                     if (blockSucceed) {
                         actionExecuted = false;
@@ -93,24 +96,32 @@ public class GameController {
             List<Card> cards = null;
             if (action.getActionCode() == ActionCode.SWAP) {
                 List<Card> newCards = drawCards(2);
-                List<Card> swapOptions = new ArrayList<>(currentPlayer.getCards());
-                swapOptions.addAll(newCards);
-                List<Card> selectedCards = view.promptForCardSelection(swapOptions, 2);
+                List<Card> selectedCards;
+                if (currentPlayer == aiPlayer) {
+                    selectedCards = mcts.selectCardsToKeep(game, currentPlayer, newCards);
+                } else {
+                    List<Card> swapOptions = new ArrayList<>(currentPlayer.getCards());
+                    swapOptions.addAll(newCards);
+                    selectedCards = view.promptForCardSelection(swapOptions, 2);
+                }
                 cards = new ArrayList<>();
                 cards.addAll(selectedCards);
                 cards.addAll(newCards);
             } else if (action.getActionCode() == ActionCode.COUP || action.getActionCode() == ActionCode.ASSASSINATE) {
                 Player targetPlayer = game.getOpponent(action.getPlayer());
                 if (!targetPlayer.getCards().isEmpty()) {
-                    Card cardToLose = view.promptPlayerForCardToGiveUp(targetPlayer);
+                    Card cardToLose;
+                    if (targetPlayer == aiPlayer) {
+                        cardToLose = mcts.selectCardToGiveUp(game, targetPlayer);
+                    } else {
+                        cardToLose = view.promptPlayerForCardToGiveUp(targetPlayer);
+                    }
                     cards = new ArrayList<>();
                     cards.add(cardToLose);
                 }
             }
             game.executeAction(action, cards);
-
-            // Update the MCTS tree only if the action is executed successfully
-//            mcts.handleAction(action);
+            mcts.handleAction(action);
         }
 
         updateView();
@@ -127,9 +138,19 @@ public class GameController {
         boolean blockSuccessful = blockAction.execute(isChallenged, false);
 
         if (blockSuccessful) {
-            handleLoseCard(actionToBlock.getPlayer());
+            if (actionToBlock.getPlayer() == aiPlayer) {
+                Card cardToLose = mcts.selectCardToGiveUp(game, actionToBlock.getPlayer());
+                actionToBlock.getPlayer().returnCard(cardToLose);
+            } else {
+                handleLoseCard(actionToBlock.getPlayer());
+            }
         } else {
-            handleLoseCard(blocker);
+            if (blocker == aiPlayer) {
+                Card cardToLose = mcts.selectCardToGiveUp(game, blocker);
+                blocker.returnCard(cardToLose);
+            } else {
+                handleLoseCard(blocker);
+            }
         }
 
         return blockSuccessful;
@@ -139,15 +160,26 @@ public class GameController {
         boolean challengeSuccess = action.challenge();
         if (challengeSuccess) {
             Player challenger = game.getOpponent(action.getPlayer());
-            handleLoseCard(challenger);
-            view.displayMessage("Challenge failed. " + challenger.getName() + " loses a card.");
+            if (challenger == aiPlayer) {
+                Card cardToLose = mcts.selectCardToGiveUp(game, challenger);
+                challenger.returnCard(cardToLose);
+                view.displayMessage("Challenge failed. " + challenger.getName() + " loses a card.");
+            } else {
+                handleLoseCard(challenger);
+                view.displayMessage("Challenge failed. " + challenger.getName() + " loses a card.");
+            }
         } else {
-            handleLoseCard(action.getPlayer());
-            view.displayMessage("Challenge successful. " + action.getPlayer().getName() + " loses a card.");
+            if (action.getPlayer() == aiPlayer) {
+                Card cardToLose = mcts.selectCardToGiveUp(game, action.getPlayer());
+                action.getPlayer().returnCard(cardToLose);
+                view.displayMessage("Challenge successful. " + action.getPlayer().getName() + " loses a card.");
+            } else {
+                handleLoseCard(action.getPlayer());
+                view.displayMessage("Challenge successful. " + action.getPlayer().getName() + " loses a card.");
+            }
         }
         return challengeSuccess;
     }
-
     private void endTurn() {
         if (!isGameOver()) {
 //            mcts.handleAction(game.getLastExecutedAction());

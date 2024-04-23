@@ -250,10 +250,6 @@ public class MCTS {
     }
 
     public void handleAction(Action action) {
-        if (rootGame != null) {
-            executeAction(rootGame, action, false, false);
-        }
-
         if (root.getChildren().containsKey(action)) {
             root = root.getChildren().get(action);
         } else {
@@ -380,6 +376,59 @@ public class MCTS {
         return false;
     }
 
+    public List<Card> selectCardsToKeep(Game game, Player player, List<Card> newCards) {
+        List<Card> allCards = new ArrayList<>(player.getCards());
+        allCards.addAll(newCards);
+
+        // Sort the cards based on their value in descending order
+        allCards.sort(Comparator.comparingInt(this::getCardValue).reversed());
+
+        // Return the two most valuable cards
+        return allCards.subList(0, 2);
+    }
+
+    public Card selectCardToGiveUp(Game game, Player player) {
+        List<Card> cards = player.getCards();
+
+        // If the player has only one card, return that card
+        if (cards.size() == 1) {
+            return cards.get(0);
+        }
+
+        // Heuristic: Give up the least valuable card
+        // You can define the value of each card based on your game strategy
+        Card leastValuableCard = null;
+        int minValue = Integer.MAX_VALUE;
+
+        for (Card card : cards) {
+            int cardValue = getCardValue(card);
+            if (cardValue < minValue) {
+                minValue = cardValue;
+                leastValuableCard = card;
+            }
+        }
+
+        return leastValuableCard;
+    }
+
+    private int getCardValue(Card card) {
+        // Assign values to each card based on your game strategy
+        // Higher values indicate more valuable cards
+        switch (card.getName()) {
+            case "Duke":
+                return 5;
+            case "Assassin":
+                return 4;
+            case "Captain":
+                return 3;
+            case "Ambassador":
+                return 2;
+            case "Contessa":
+                return 1;
+            default:
+                return 0;
+        }
+    }
 
     private static Game deepCopy(Game game) {
         Game copiedGame = new Game(deepCopyDeck(game.getDeck()));
