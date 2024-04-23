@@ -327,6 +327,12 @@ public class MCTS {
         Player aiPlayer = game.getCurrentPlayer();
         Player humanPlayer = game.getOpponent(aiPlayer);
 
+        // If AI has only one card left and the human player is performing an Assassinate action,
+        // always challenge to avoid losing the game
+        if (aiPlayer.getCards().size() == 1 && action.getActionCode() == ActionCode.ASSASSINATE) {
+            return true;
+        }
+
         // If AI has only one card left, avoid challenging unless it's a critical situation
         if (aiPlayer.getCards().size() == 1 && humanPlayer.getCards().size() > 1) {
             return false;
@@ -348,6 +354,11 @@ public class MCTS {
     public boolean simulateBlock(Game game, Action action) {
         Player aiPlayer = game.getCurrentPlayer();
         Player humanPlayer = game.getOpponent(aiPlayer);
+        // If AI has only one card left and the human player is performing an Assassinate action,
+        // always block to avoid losing the game
+        if (aiPlayer.getCards().size() == 1 && action.getActionCode() == ActionCode.ASSASSINATE) {
+            return true;
+        }
         // Block foreign aid if AI has a Duke
         if (action.getActionCode() == ActionCode.FOREIGN_AID && aiPlayer.getCards().contains(Deck.CardType.DUKE)) {
             return true;
