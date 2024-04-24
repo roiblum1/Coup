@@ -14,13 +14,23 @@ public class MCTS {
     private Node root;
     private final int numOfSimulations;
     private final int maxDepth;
+    private Player aiPlayer, humanPlayer;
 
 
+    /**
+     * Constructs a new instance of the Monte Carlo Tree Search (MCTS) class.
+     *
+     * @param game The initial game state used to initialize the MCTS tree.
+     * @param numOfSimulations The number of simulations to be performed during the MCTS process.
+     * @param maxDepth The maximum depth of the MCTS tree.
+     */
     public MCTS(Game game, int numOfSimulations, int maxDepth) {
-        this.rootGame = deepCopy(game);
-        this.root = new Node(null);
-        this.numOfSimulations = numOfSimulations;
-        this.maxDepth = maxDepth;
+        this.rootGame = game.deepCopy(); // Creates a deep copy of the initial game state.
+        this.root = new Node(null); // Initializes the root node of the MCTS tree.
+        this.numOfSimulations = numOfSimulations; // Sets the number of simulations to be performed during the MCTS process.
+        this.maxDepth = maxDepth; // Sets the maximum depth of the MCTS tree.
+        this.aiPlayer = game.getPlayers().get(1); // Identifies the AI player in the game.
+        this.humanPlayer = game.getPlayers().get(0); // Identifies the human player in the game.
     }
 
 
@@ -115,7 +125,7 @@ public class MCTS {
      */
     private NodeGamePair selectNode(int maxDepth) {
         Node node = root;
-        Game game = deepCopy(rootGame);
+        Game game = rootGame.deepCopy();
         int depth = 0;
 
         // Loop through the MCTS tree up to the specified maximum depth
@@ -138,7 +148,8 @@ public class MCTS {
             boolean isBlocked = simulateBlock(game, node.getAction());
 
             // Execute the selected action in the game state
-            executeAction(game, node.getAction(), isChallenged, isBlocked);
+            Game simulationGame = game.deepCopy();
+            executeAction(simulationGame, node.getAction(), isChallenged, isBlocked);
             game.switchTurns();
             // Increment the depth counter
             depth++;
@@ -176,59 +187,80 @@ public class MCTS {
     /**
      * This method performs a rollout of the game, simulating the actions of the players and updating the game state accordingly.
      * The rollout is performed by recursively selecting and executing actions for each player, based on the current game state.
-     * The rollout continues until the game is over.
+     * The rollout continues until the game is over or the maximum depth is reached.
      * The method returns the winner of the game, if it reaches a terminal state, or null otherwise.
+     *
      * @param nodeGame the current game state
      * @param maxDepth the maximum depth of the game tree to be explored during the rollout
      * @return the winner of the game, if it reaches a terminal state, or null otherwise
      */
     private Player rollOut(Game nodeGame, int maxDepth) {
         int depth = 0;
-        Game game = deepCopy(nodeGame);
+        Game game = nodeGame.deepCopy();
         while (!game.isGameOver() && depth < maxDepth) {
             Player currentPlayer = game.getCurrentPlayer();
-            if (currentPlayer == null) {
-                break;
-            }
-            List<Action> availableActions = game.getAvailableActions(currentPlayer);
+            if (currentPlayer != null) {
+                List<Action> availableActions = game.getAvailableActions(currentPlayer);
+                if (!availableActions.isEmpty()) {
+                    Action action = selectActionForPlayer(game, currentPlayer, availableActions);
+                    boolean isChallenged = simulateChallenge(game, action);
+                    boolean isBlocked = simulateBlock(game, action);
 
-            if (availableActions.isEmpty()) {
-                continue;
-            }
+                    System.out.println("Rollout action: " + action.getCodeOfAction());
 
-            Action action = selectActionForPlayer(game, currentPlayer, availableActions);
-            boolean isChallenged = simulateChallenge(game, action);
-            boolean isBlocked = simulateBlock(game, action);
-
-            System.out.println("Rollout action: " + action.getCodeOfAction());
-
-            if (handleChallenge(game, action, isChallenged, currentPlayer) && handleBlock(game, action, isBlocked, currentPlayer)) {
-                executeAction(game, action, false, false); // Execute without further blocks or challenges
+                    if (handleChallenge(game, action, isChallenged, currentPlayer) && handleBlock(game, action, isBlocked, currentPlayer)) {
+                        executeAction(game, action, false, false); // Execute without further blocks or challenges
+                    }
+                }
             }
             depth++;
-
             if (shouldTerminateSearch(game)) {
                 return null;
             }
         }
-
         return determineWinner(game);
     }
 
+    /**
+     * Selects an action for a given player based on the player's type (AI or human).
+     * For the AI player, the action is chosen using a heuristic approach that evaluates the best possible move.
+     * For a human player, the action is chosen randomly from the list of available actions to simulate a human's unpredictable gameplay.
+     *
+     * @param game The current state of the game, used to identify the player and context.
+     * @param player The player for whom the action is being selected.
+     * @param availableActions The list of actions that the player can currently execute.
+     * @return The selected action, determined heuristically for the AI and randomly for the human simulation.
+     */
     private Action selectActionForPlayer(Game game, Player player, List<Action> availableActions) {
-        if (player == game.getPlayers().get(1)) { // AI player
+        if (player == game.getPlayers().get(1)) { // If the player is the AI
+            // Select the best action based on a heuristic evaluation
             return selectActionHeuristically(availableActions, game);
-        } else { // Human player simulated randomly
+        } else { // If the player is simulated as a human
+            // Select a random action to simulate unpredictability
             return availableActions.get(ThreadLocalRandom.current().nextInt(availableActions.size()));
         }
     }
+
     private boolean handleChallenge(Game game, Action action, boolean isChallenged, Player currentPlayer) {
-        if (isChallenged) {
+        if (action.canBeChallenged && isChallenged) {
             if (!action.challenge()) {
-                currentPlayer.loseRandomInfluence(); // The challenging player loses influence if the challenge fails
+                if (currentPlayer.getName().equals(game.getPlayers().get(1).getName())) {
+                    Card card = selectCardToGiveUp(game, currentPlayer);
+                    currentPlayer.returnCard(card);
+                }
+                else {
+                    currentPlayer.loseRandomInfluence();
+                }
+                // The challenging player loses influence if the challenge fails
                 return false; // Action fails if the challenge is successful
             } else {
-                game.getOpponent(currentPlayer).loseRandomInfluence();
+                if (currentPlayer.getName().equals(game.getPlayers().get(1).getName())) {
+                    currentPlayer.loseRandomInfluence();
+                }
+                else {
+                    Card card = selectCardToGiveUp(game, currentPlayer);
+                    currentPlayer.returnCard(card);
+                }
             }
         }
         return true; // Continue with the action if no challenge or if challenge failed
@@ -244,25 +276,42 @@ public class MCTS {
         }
         return true; // Continue with the action if no block or if block failed
     }
+    /**
+     * Function to check if the Monte Carlo Tree Search (MCTS) should terminate based on the current game state.
+     * This function evaluates the current game state and determines whether the AI is significantly behind the opponent.
+     * If the AI is significantly behind, the function returns true, indicating that the MCTS should be terminated.
+     * Otherwise, the function returns false, indicating that the MCTS should continue.
+     * @param game The current state of the game, used to access the current players and game context.
+     * @return true if the MCTS should be terminated, false otherwise.
+     */
     private boolean shouldTerminateSearch(Game game) {
         int aiPlayerScore = evaluatePosition(game.getPlayers().get(1));
         int humanPlayerScore = evaluatePosition(game.getPlayers().get(0));
-        return aiPlayerScore < humanPlayerScore - 20; // Stop searching if the AI is significantly behind
+        return aiPlayerScore < humanPlayerScore - 30; // Stop searching if the AI is significantly behind
     }
 
+    /**
+     * Determines the winner of the game based on the current game state.
+     * This method evaluates the game state and determines the player with the highest score as the winner.
+     * If the game is not over, it evaluates the current positions of the players and returns the player with the higher score.
+     * If the game is over and there are no active players left, it returns null.
+     * If the game is over and there are active players left, it returns the first active player as the winner.
+     * @param game The current state of the game, used to access the current players and game context.
+     * @return The winner of the game, or null if there are no active players left.
+     */
     private Player determineWinner(Game game) {
         if (!game.isGameOver()) {
             int aiPlayerScore = evaluatePosition(game.getPlayers().get(1));
             int humanPlayerScore = evaluatePosition(game.getPlayers().get(0));
             return aiPlayerScore > humanPlayerScore ? game.getPlayers().get(1) : game.getPlayers().get(0);
         }
-
         List<Player> activePlayers = game.getActivePlayers();
         if (activePlayers.isEmpty()) {
-            return null; // Return null if there are no active players left
+            // Return null if there are no active players left
+            return null;
         }
-
-        return activePlayers.get(0); // Return the first active player as the winner
+        // Return the first active player as the winner
+        return activePlayers.get(0);
     }
 
 
@@ -331,17 +380,30 @@ public class MCTS {
     }
 
 
+    /**
+     * Backpropagates the results of a game simulation up the MCTS tree, updating nodes with the simulation's outcome.
+     * This method adjusts the visit count and reward of each node based on the outcome of the simulated game.
+     * It increments the visit count for each node as the simulation trace passes through it.
+     * Rewards are updated based on whether the AI won or lost the game, or based on a position evaluation:
+     * - If there's a winner, the reward is adjusted by +10 or -10 depending on whether the turn player is the winner.
+     * - If there's no clear winner, the game state is evaluated, and rewards are adjusted by +1 or -1 based on the AI's relative position.
+     * This feedback loop helps refine future decisions made by the AI during the MCTS.
+     *
+     * @param node the node from which to start backpropagation.
+     * @param turn the player whose turn it was during the simulation.
+     * @param winner the player who won the game, or null if there was no winner.
+     * @param game the game state used for position evaluation when there is no clear winner.
+     */
     private void backPropagate(Node node, Player turn, Player winner, Game game) {
         while (node != null) {
             node.incrementVisitCount();
 
             if (winner != null) {
                 if (winner.getName().equals(turn.getName())) {
-                    node.incrementReward(1);
+                    node.incrementReward(2);
                 } else {
-                    node.incrementReward(-1);
+                    node.incrementReward(-2);
                 }
-                System.out.println("Backpropagating for player: " + turn.getName() + ", Winner: " + winner.getName());
             } else {
                 // Evaluate the position when there is no clear winner
                 int aiPlayerScore = evaluatePosition(game.getPlayers().get(1));
@@ -352,23 +414,34 @@ public class MCTS {
                 } else if (humanPlayerScore > aiPlayerScore) {
                     node.incrementReward(-1);
                 }
-                System.out.println("AI Score: " + aiPlayerScore + ", Human Score: " + humanPlayerScore);
             }
 
-            if (node.getParent() == null) {
-                break;
-            }
 
+            // Log the backpropagation process for debugging and insight into tree development
             if (node.getAction() != null) {
                 System.out.println("Backpropagation: Action = " + node.getAction().getCodeOfAction() + ", Visit Count = " + node.getVisitCount() + ", Reward = " + node.getReward());
             } else {
                 System.out.println("Backpropagation: Action = null, Visit Count = " + node.getVisitCount() + ", Reward = " + node.getReward());
             }
 
+            // Move to the parent node until the root is reached
             node = node.getParent();
+            if (node == root.getParent()) { // effectively acts as if node == null for the root (as root's parent is null)
+                node = null;
+            }
         }
     }
 
+
+
+    /**
+     * Updates the root of the MCTS tree based on the executed action.
+     * - If the root has a child node for the action, it becomes the new root.
+     * - If not, the tree is reset with a new root node.
+     * This adjustment aligns the MCTS tree with the current game state, ensuring the AI's decisions are based on the latest game dynamics.
+     *
+     * @param action The action executed in the game that determines the new root node.
+     */
     public void handleAction(Action action) {
         if (root.getChildren().containsKey(action)) {
             root = root.getChildren().get(action);
@@ -377,6 +450,14 @@ public class MCTS {
         }
     }
 
+
+    /**
+     * Handles the game over event.
+     * This method updates the reward of the root node based on the winner of the game.
+     * It also updates the visit count of all the nodes in the tree.
+     *
+     * @param winner the player who has won the game
+     */
     public void handleGameOver(Player winner) {
         if (winner == rootGame.getPlayers().get(0)) {
             root.incrementReward(-1000);
@@ -394,9 +475,8 @@ public class MCTS {
     }
 
     private void executeAction(Game game, Action action, boolean isChallenged, boolean isBlocked) {
-        Game simulationGame = deepCopy(game);
-        Player currentPlayer = simulationGame.getCurrentPlayer();
-        Player targetPlayer = simulationGame.getOpponent(currentPlayer);
+        Player currentPlayer = game.getCurrentPlayer();
+        Player targetPlayer = game.getOpponent(currentPlayer);
 
         if (isChallenged) {
             if (!action.challenge()) {
@@ -406,7 +486,7 @@ public class MCTS {
         }
 
         if (isBlocked) {
-            if (simulateBlockChallenge(simulationGame, action)) {
+            if (simulateBlockChallenge(game, action)) {
                 if (targetPlayer != null) {
                     targetPlayer.loseRandomInfluence();
                 }
@@ -419,8 +499,8 @@ public class MCTS {
         if (action.getActionCode() == ActionCode.SWAP) {
             List<Card> newCards = new ArrayList<>();
             for (int i = 0; i < 2; i++) {
-                if (!simulationGame.getDeck().isEmpty()) {
-                    newCards.add(simulationGame.getDeck().getCard());
+                if (!game.getDeck().isEmpty()) {
+                    newCards.add(game.getDeck().getCard());
                 }
             }
             List<Card> swapOptions = new ArrayList<>(currentPlayer.getCards());
@@ -438,119 +518,175 @@ public class MCTS {
             }
         }
 
-        simulationGame.executeAction(action, cards);
+        game.executeAction(action, cards);
         System.out.println("The executed action is : " + action.getActionCode() + " the player " +action.getPlayer().getName());
-        simulationGame.switchTurns();
-
+        if(!game.isGameOver()) {
+            game.switchTurns();
+        }
     }
 
+    /**
+     * Simulates the decision to challenge an action during the Monte Carlo Tree Search (MCTS).
+     * This method evaluates whether the AI should challenge an opponent's action based on strategic considerations,
+     * such as the likelihood of the opponent possessing a certain card and the criticality of the situation
+     * regarding the AI's card holdings and the game state.
+     *
+     * @param game The current state of the game, used to access players and their cards.
+     * @param action The action being considered for a challenge by the opponent.
+     * @return true if the action should be challenged, false otherwise.
+     */
     public boolean simulateChallenge(Game game, Action action) {
+        // Check if the current player is the AI player
         if (game.getCurrentPlayer().equals(game.getPlayers().get(1))) {
             Player aiPlayer = game.getCurrentPlayer();
             Player humanPlayer = game.getOpponent(aiPlayer);
-
-            // If AI has only one card left and the human player is performing an Assassinate action,
-            // always challenge to avoid losing the game
+            // Always challenge if the AI has only one card left and the human player is performing an Assassinate action,
+            // and the AI does not have a Contessa to block it. This is to avoid losing the game.
             if (aiPlayer.getCards().size() == 1 && action.getActionCode() == ActionCode.ASSASSINATE && !aiPlayer.hasCard(Deck.CardType.CONTESSA)) {
                 return true;
             }
-
-            // If AI has only one card left, avoid challenging unless it's a critical situation
+            // Avoid challenging if the AI has only one card left unless it's a critical situation,
+            // as losing a challenge could mean losing the game.
             if (aiPlayer.getCards().size() == 1 && humanPlayer.getCards().size() > 1) {
                 return false;
             }
-
-            // Challenge if the human player performs an action that could directly lead to the AI's loss
+            // Challenge actions like Assassinate or Coup if they could directly lead to the AI's loss,
+            // especially if the AI's number of cards is less than or equal to the human player's.
             if (action.getActionCode() == ActionCode.ASSASSINATE || action.getActionCode() == ActionCode.COUP) {
                 return aiPlayer.getCards().size() <= humanPlayer.getCards().size();
             }
-            // Simulate challenge based on AI's belief about human player's card holdings
-            // Example: AI may think it's highly unlikely the human player has a Duke
+            // Challenge a Tax action if the AI suspects the human player might not have a Duke,
+            // especially if the AI itself does not have a Duke.
             if (action.getActionCode() == ActionCode.TAX) {
-                return !aiPlayer.getCards().contains(Deck.CardType.DUKE); // Challenge if AI does not have a Duke, suspecting the same for human
+                return !aiPlayer.getCards().contains(Deck.CardType.DUKE);
             }
+            // If none of the specific conditions are met, do not challenge.
             return false;
-        }
-        else
-        {
+        } else {
+            // For the human player, simulate a random decision to challenge with a 50% probability.
+            // This adds an element of unpredictability to the human player's strategy in the simulation.
             return Math.random() < 0.5;
         }
     }
 
+
+    /**
+     * Simulates the decision to block an action during the Monte Carlo Tree Search (MCTS).
+     * This method determines whether the AI should block an action based on the current state of the game
+     * and the specific action being taken by the opponent.
+     * The decision to block is based on strategic considerations, such as the cards the AI currently holds
+     * and the type of action being attempted by the opponent.
+     *
+     * @param game The current state of the game, used to access the current player and game context.
+     * @param action The action attempted by the opponent, which the AI considers blocking.
+     * @return true if the action should be blocked, false otherwise.
+     */
     public boolean simulateBlock(Game game, Action action) {
-        if (game.getCurrentPlayer().equals(game.getPlayers().get(1))) {
+        // Check if the current player is the AI player
+        if (game.getCurrentPlayer().getName().equals(aiPlayer.getName())) {
             Player aiPlayer = game.getCurrentPlayer();
-            Player humanPlayer = game.getOpponent(aiPlayer);
+
             // If AI has only one card left and the human player is performing an Assassinate action,
-            // always block to avoid losing the game
+            // always block to avoid losing the game, provided the AI has a Contessa.
             if (aiPlayer.getCards().size() == 1 && action.getActionCode() == ActionCode.ASSASSINATE) {
-                return true;
+                return aiPlayer.getCards().contains(Deck.CardType.CONTESSA);
             }
-            // Block foreign aid if AI has a Duke
+
+            // Block Foreign Aid if the AI has a Duke, since a Duke allows blocking Foreign Aid.
             if (action.getActionCode() == ActionCode.FOREIGN_AID && aiPlayer.getCards().contains(Deck.CardType.DUKE)) {
                 return true;
             }
-            // Block steal if AI has a Captain or Ambassador
+
+            // Block Steal if the AI has a Captain or Ambassador, as these characters can block Stealing.
             if (action.getActionCode() == ActionCode.STEAL && (aiPlayer.getCards().contains(Deck.CardType.CAPTAIN) || aiPlayer.getCards().contains(Deck.CardType.AMBASSADOR))) {
                 return true;
             }
-            // Block assassinate if AI has a Contessa
+
+            // Block Assassinate if the AI has a Contessa, which can block an Assassinate action.
             if (action.getActionCode() == ActionCode.ASSASSINATE && aiPlayer.getCards().contains(Deck.CardType.CONTESSA)) {
                 return true;
             }
+
+            // If none of the conditions apply, do not block.
             return false;
-        }
-        else
-        {
+        } else {
+            // For a human player, simulate a random decision to block with a 50% probability.
+            // This randomness reflects uncertainty in human decision-making in the simulation.
             return Math.random() < 0.5;
         }
     }
 
 
 
+    /**
+     * Simulates the decision to challenge a block during the Monte Carlo Tree Search (MCTS).
+     * This method determines whether the AI should challenge a block based on strategic considerations.
+     * The AI challenges a block if it deems the opponent's claim to have the blocking card as unlikely.
+     * This function is particularly cautious if the AI is at risk of losing, making more conservative decisions
+     * when the AI has only one card left.
+     *
+     * @param game The current state of the game, used to access current players and game context.
+     * @param action The action being blocked, which influences the decision process.
+     * @return true if the block should be challenged, false otherwise.
+     */
     public boolean simulateBlockChallenge(Game game, Action action) {
-        if (game.getCurrentPlayer().equals(game.getPlayers().get(1))){
+        // Determine if the current player is the AI player
+        if (game.getCurrentPlayer().getName().equals(aiPlayer.getName())){
             Player aiPlayer = game.getCurrentPlayer();
+            // Avoid challenging if the AI player is at a high risk (only one card left)
             if (aiPlayer.getCards().size() == 1) {
                 return false;
             }
-            // Challenge block if AI is about to lose and the block prevents a game-saving move
+            // Decide whether to challenge the block based on the action being blocked
             switch (action.getActionCode()) {
                 case FOREIGN_AID:
-                    // Challenge if block (Duke) seems unlikely
+                    // Challenge if blocking a FOREIGN AID with a Duke seems unlikely
                     return isSuspiciousBlock(Deck.CardType.DUKE, aiPlayer);
-
                 case ASSASSINATE:
-                    // Challenge if block (Contessa) seems unlikely
+                    // Challenge if blocking an ASSASSINATE with a Contessa seems unlikely
                     return isSuspiciousBlock(Deck.CardType.CONTESSA, aiPlayer);
-
                 case STEAL:
-                    // Challenge if block (Ambassador or Captain) seems unlikely
+                    // Challenge if blocking a STEAL with an Ambassador or Captain seems unlikely
                     boolean ambassadorSuspicious = isSuspiciousBlock(Deck.CardType.AMBASSADOR, aiPlayer);
                     boolean captainSuspicious = isSuspiciousBlock(Deck.CardType.CAPTAIN, aiPlayer);
                     return ambassadorSuspicious || captainSuspicious;
 
                 default:
-                    return false;  // No challenge by default if not one of the specified blockable actions
+                    // Do not challenge by default if the action is not one of the specified blockable actions
+                    return false;
             }
-        }
-        else
-        {
+        } else {
+            // For a human player, simulate a random decision to block with a 50% probability.
+            // This randomness reflects uncertainty in human decision-making in the simulation.
             return Math.random() < 0.5;
         }
     }
 
-    // Function to check if blocking is suspicious based on the rarity of cards
-    boolean isSuspiciousBlock(Deck.CardType requiredCard, Player aiPlayer) {
+
+    /**
+     * Function to check if blocking is suspicious based on the rarity of cards.
+     * This function is used to determine if a block action by the opponent is likely or not.
+     * It returns true if the blocking action seems suspicious, and false otherwise.
+     * @param requiredCard the card that the opponent is suspected of blocking
+     * @param aiPlayer the player whose hand is being analyzed
+     * @return true if the blocking action seems suspicious, false otherwise
+     */
+    public boolean isSuspiciousBlock(Deck.CardType requiredCard, Player aiPlayer) {
         List<Card> aiPlayerCards = aiPlayer.getCards();
         long countInAIHand = aiPlayerCards.stream().filter(card -> card.getName().equals(requiredCard.getName())).count();
         long totalInGame = 2;  // Total copies of each card type in the game
         long totalPossible = totalInGame - countInAIHand;
-
-        // More suspicious if fewer possible cards are available to the opponent
         return totalPossible < 1;  // Less than 1 means the opponent unlikely to have a card
     }
 
+    /**
+     * Selects a card to give up during a swap action.
+     * If the player has only one card, it returns that card directly.
+     * Otherwise, it uses a stream to find the card with the minimum value according to the {@link #getCardValue} method.
+     * @param game the current game state
+     * @param player the player whose card is to be selected
+     * @return the selected card to give up
+     */
     public List<Card> selectCardsToKeep(Game game, Player player, List<Card> newCards) {
         List<Card> allCards = new ArrayList<>(player.getCards());
         allCards.addAll(newCards);
@@ -558,30 +694,31 @@ public class MCTS {
         return allCards.subList(0, 2);
     }
 
+    /**
+     * Selects a card to give up during a swap action.
+     * If the player has only one card, it returns that card directly.
+     * Otherwise, it uses a stream to find the card with the minimum value according to the {@link #getCardValue} method.
+     * @param game the current game state
+     * @param player the player whose card is to be selected
+     * @return the selected card to give up
+     */
     public Card selectCardToGiveUp(Game game, Player player) {
         List<Card> cards = player.getCards();
-
-        // If the player has only one card, return that card
+        // If the player has only one card, return that card directly
         if (cards.size() == 1) {
             return cards.get(0);
         }
-
-        // Heuristic: Give up the least valuable card
-        // You can define the value of each card based on your game strategy
-        Card leastValuableCard = null;
-        int minValue = Integer.MAX_VALUE;
-
-        for (Card card : cards) {
-            int cardValue = getCardValue(card);
-            if (cardValue < minValue) {
-                minValue = cardValue;
-                leastValuableCard = card;
-            }
-        }
-
-        return leastValuableCard;
+        // Use stream to find the card with the minimum value according to the getCardValue method
+        return cards.stream().min(Comparator.comparingInt(this::getCardValue)).orElse(null);
     }
 
+
+    /**
+     * Evaluates the current position of a player in the game.
+     * The evaluation is based on the number of cards, coins, and the value of the cards held by the player.
+     * @param player the player whose position is to be evaluated
+     * @return the score of the player's current position
+     */
     private int evaluatePosition(Player player) {
         int score = 0;
         // Add points for each card held by the player
@@ -595,9 +732,14 @@ public class MCTS {
         return score;
     }
 
+    /**
+     * Assigns values to each card based on the game strategy.
+     * Higher values indicate more valuable cards.
+     *
+     * @param card the card to evaluate
+     * @return the value of the card
+     */
     private int getCardValue(Card card) {
-        // Assign values to each card based on your game strategy
-        // Higher values indicate more valuable cards
         switch (card.getName()) {
             case "Duke":
                 return 5;
@@ -613,49 +755,4 @@ public class MCTS {
                 return 0;
         }
     }
-
-    private static Game deepCopy(Game game) {
-        Game copiedGame = new Game(deepCopyDeck(game.getDeck()));
-        copiedGame.setCurrentPlayerIndex(game.getCurrentPlayerIndex());
-        copiedGame.setLastExecutedAction(game.getLastExecutedAction());
-        List<Player> copiedPlayerList = new ArrayList<>();
-        for (Player player : game.getPlayers()) {
-            Player copiedPlayer = new Player(player.getName());
-            copiedPlayer.setCoins(player.getCoins());
-            copiedPlayer.setCards(deepCopyCards(player.getCards()));
-            copiedPlayer.setDeck(copiedGame.getDeck());
-            copiedPlayerList.add(copiedPlayer);
-        }
-        copiedGame.setPlayerList(copiedPlayerList);
-
-        return copiedGame;
-    }
-
-    private static Deck deepCopyDeck(Deck deck) {
-        Set<Deck.CardType> cardTypes = EnumSet.allOf(Deck.CardType.class);
-        if (cardTypes.isEmpty()) {
-            throw new IllegalStateException("Card types cannot be empty.");
-        }
-
-        Deck copiedDeck = new Deck(cardTypes, 2);
-
-        for (Card card : deck.getContents()) {
-            if (card == null) {
-                throw new IllegalStateException("Deck contains a null card.");
-            }
-            copiedDeck.returnCard(new Card(card.getName()));
-        }
-
-        return copiedDeck;
-    }
-
-    private static List<Card> deepCopyCards(List<Card> cards) {
-        List<Card> copiedCards = new ArrayList<>();
-        for (Card card : cards) {
-            copiedCards.add(new Card(card.getName()));
-        }
-        return copiedCards;
-    }
-
-
 }

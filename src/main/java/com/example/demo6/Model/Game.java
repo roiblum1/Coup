@@ -147,6 +147,26 @@ public class Game implements Serializable {
         return lastExecutedAction;
     }
 
+    /**
+     * Creates a deep copy of this game instance.
+     * @return a deep copy of the game.
+     */
+    public Game deepCopy() {
+        Game copiedGame = new Game(this.deck.deepCopy());
+        copiedGame.setCurrentPlayerIndex(this.currentPlayerIndex);
+        copiedGame.setLastExecutedAction(this.lastExecutedAction);
+        List<Player> copiedPlayerList = new ArrayList<>();
+        for (Player player : this.playerList) {
+            Player copiedPlayer = new Player(player.getName());
+            copiedPlayer.setCoins(player.getCoins());
+            copiedPlayer.setCards(player.deepCopyCards());
+            copiedPlayer.setDeck(copiedGame.getDeck());
+            copiedPlayerList.add(copiedPlayer);
+        }
+        copiedGame.setPlayerList(copiedPlayerList);
+        return copiedGame;
+    }
+
     public void executeAction(Action action, List<Card> cards) {
         if (cards != null) {
             if (action.getActionCode() == ActionCode.COUP) {
@@ -171,8 +191,6 @@ public class Game implements Serializable {
         } else {
             action.execute(false, false);
         }
-
         lastExecutedAction = action;
-
     }
 }

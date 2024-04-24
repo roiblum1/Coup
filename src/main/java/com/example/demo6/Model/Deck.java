@@ -72,29 +72,24 @@ public class Deck implements Serializable {
         }
     }
 
-    private static Deck deepCopyDeck(Deck deck) {
+
+    /**
+     * Creates a deep copy of this deck.
+     * @return a deep copy of the deck.
+     */
+    public Deck deepCopy() {
         Set<Deck.CardType> cardTypes = EnumSet.allOf(Deck.CardType.class);
         if (cardTypes.isEmpty()) {
             throw new IllegalStateException("Card types cannot be empty.");
         }
 
         Deck copiedDeck = new Deck(cardTypes, 2);
-
-        for (Card card : deck.getContents()) {
+        for (Card card : this.getContents()) {
             if (card == null) {
                 throw new IllegalStateException("Deck contains a null card.");
             }
             copiedDeck.returnCard(new Card(card.getName()));
         }
-
         return copiedDeck;
-    }
-
-    private static List<Card> deepCopyCards(List<Card> cards) {
-        List<Card> copiedCards = new ArrayList<>();
-        for (Card card : cards) {
-            copiedCards.add(new Card(card.getName()));
-        }
-        return copiedCards;
     }
 }

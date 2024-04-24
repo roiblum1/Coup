@@ -4,49 +4,90 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 public class Player implements Serializable {
     private final int NUMBER_OF_CARDS = 2;
+    public final int NUMBER_OF_COINS = 3;
     private final String name;
     private int coins;
     private List<Card> cards;
     private Deck currentDeck;
 
-    //* Initializes a player with a name */
+    /**
+     * Initializes a player with a name.
+     * @param name the name of the player
+     */
     public Player(String name) {
         this.name = name;
-        this.coins = 3; //the base number of coins that each player start with
+        this.coins = NUMBER_OF_COINS; //the base number of coins that each player start with
         this.cards = new ArrayList<>();
     }
 
-    //* Retrieves the name of the player */
+    /**
+     * Retrieves the name of the player.
+     * @return the name of the player
+     */
     public String getName() {
         return this.name;
     }
 
-    //* Sets the deck for the player */
-    public void setDeck(Deck currentDeck) {
-        this.currentDeck = currentDeck;
-    }
-
-    //* Retrieves the number of coins the player has */
+    /**
+     * Retrieves the number of coins the player currently has.
+     * @return The current coin count of the player.
+     */
     public int getCoins() {
         return this.coins;
     }
 
-    //* Updates the number of coins the player has */
+    /**
+     * Retrieves the list of cards currently held by the player.
+     * @return A list of cards the player currently holds.
+     */
+    public List<Card> getCards() {
+        return this.cards;
+    }
+
+    /**
+     * Sets the deck for the player.
+     * @param currentDeck the Deck object that will be the new deck for the player
+     */
+    public void setDeck(Deck currentDeck) {
+        this.currentDeck = currentDeck;
+    }
+
+    /**
+     * Sets the number of coins the player has.
+     * @param coins The new number of coins the player has.
+     */
+    public void setCoins(int coins) {
+        this.coins = coins;
+    }
+
+    /**
+     * Sets the player's cards to a new list of cloned cards.
+     * @param clonedCards The new list of cloned cards to be set for the player.
+     */
+    public void setCards(List<Card> clonedCards) {
+        if (clonedCards != null) {
+            this.cards.clear();
+            this.cards.addAll(clonedCards);
+        } else {
+            System.out.println("Error: Input list of cards is null");
+        }
+    }
+
+    /**
+     * Updates the number of coins the player has by a specified amount. Ensures coin count does not go below zero.
+     * @param coins The amount to update the coin count by. Can be negative or positive.
+     */
     public void updateCoins(int coins) {
         this.coins += coins;
         if (this.coins < 0) this.coins = 0;
     }
 
-    //* Retrieves the cards held by the player */
-    public List<Card> getCards() {
-        return this.cards;
-    }
-
-    //* Picks cards from the deck */
+    /**
+     * Draws a specified number of cards from the deck and adds them to the player's hand.
+     */
     public void pickCards() {
         for (int i = 0; i < NUMBER_OF_CARDS; i++) {
             Card card = this.currentDeck.getCard();
@@ -58,46 +99,36 @@ public class Player implements Serializable {
         }
     }
 
-    //* Returns a card to the deck */
+    /**
+     * Returns a specified card to the deck.
+     * @param card The card to return to the deck.
+     */
     public void returnCard(Card card) {
         this.cards.remove(card);
         this.currentDeck.returnCard(card);
     }
 
     /**
-     * Swaps the player's selected cards with the deck, returning any unselected cards to the deck.
-     *
-     * @param selectedCards The cards to keep in the player's hand.
-     * @param newCards The new cards drawn from the deck.
+     * Swaps selected cards from the player's hand with new cards drawn from the deck,
+     * returning any unselected cards to the deck.
+     * @param selectedCards The cards to keep.
+     * @param newCards New cards drawn from the deck.
      */
     public void swapCards(List<Card> selectedCards, List<Card> newCards) {
-        // Combine the current cards and new cards to form the total pool of cards to choose from.
         List<Card> totalCards = new ArrayList<>(this.cards);
         totalCards.addAll(newCards);
-
-        // Determine which cards need to be returned to the deck.
-        // These are the cards in the total pool that are not in the selected cards.
         List<Card> toReturn = totalCards.stream()
                 .filter(card -> !selectedCards.contains(card))
                 .toList();
 
-        // Return the unselected cards to the deck.
         toReturn.forEach(this.currentDeck::returnCard);
-
-        // Clear the current cards and add the selected cards to the player's hand.
         this.cards.clear();
         this.cards.addAll(selectedCards);
     }
 
-
-    //* Checks if the player has a specific card */
-
-    public boolean hasCard(Deck.CardType cardType)
-    {
-        return this.cards.stream().anyMatch(card -> card.getName().equals(cardType.getName()));
-    }
-
-    // This function selects a random card from the player's influence and returns it to the deck
+    /**
+     * Removes a random card from the player's hand and returns it to the deck.
+     */
     public void loseRandomInfluence() {
         Random random = new Random();
         if (!cards.isEmpty()) {
@@ -107,13 +138,16 @@ public class Player implements Serializable {
         }
     }
 
-    // This function selects 2 random cards from the player's influence and the drawnCards,
-    // and returns the selected cards. The other cards are returned to the deck.
+    /**
+     * Selects 2 random cards from the player's hand and a set of drawn cards, returns these selected cards,
+     * and returns the unselected cards to the deck.
+     * @param drawnCards Additional cards drawn from the deck to be considered for selection.
+     * @return A list of two randomly selected cards to be kept by the player.
+     */
     public List<Card> selectRandomCardsToKeep(List<Card> drawnCards) {
         Random random = new Random();
         List<Card> allCards = new ArrayList<>(cards);
         allCards.addAll(drawnCards);
-
         List<Card> selectedCards = new ArrayList<>();
         for (int i = 0; i < 2; i++) {
             if (!allCards.isEmpty()) {
@@ -122,22 +156,30 @@ public class Player implements Serializable {
                 selectedCards.add(selectedCard);
             }
         }
-
         cards.clear();
         cards.addAll(selectedCards);
-
-        // Return the remaining cards to the deck
-        for (Card card : allCards) {
-            currentDeck.returnCard(card);
-        }
+        allCards.forEach(this.currentDeck::returnCard);
         return selectedCards;
     }
 
-    public void setCoins(int coins) {
-        this.coins = coins;
+    /**
+     * Checks if the player has a card of a specific type.
+     * @param cardType The type of card to check for.
+     * @return true if the player has the card, false otherwise.
+     */
+    public boolean hasCard(Deck.CardType cardType) {
+        return this.cards.stream().anyMatch(card -> card.getName().equals(cardType.getName()));
     }
 
-    public void setCards(List<Card> clonedCards) {
-        this.cards = clonedCards;
+    /**
+     * Creates a deep copy of the player's cards.
+     * @return a deep copy of the card list.
+     */
+    public List<Card> deepCopyCards() {
+        List<Card> copiedCards = new ArrayList<>();
+        for (Card card : this.getCards()) {
+            copiedCards.add(new Card(card.getName()));
+        }
+        return copiedCards;
     }
 }

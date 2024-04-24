@@ -36,7 +36,7 @@ public class GameController {
         this.game.addPlayer(aiPlayer);
 
         this.currentPlayer = this.game.getCurrentPlayer();
-        this.mcts = new MCTS(game, 1000, 100);
+        this.mcts = new MCTS(game, 3000, 100);
 
         Platform.runLater(() -> {
             view.updatePlayerInfo(this.game.getPlayers());
