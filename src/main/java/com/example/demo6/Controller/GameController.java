@@ -8,6 +8,7 @@ import com.example.demo6.Model.Game;
 import com.example.demo6.Model.Player;
 import com.example.demo6.View.GameView;
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 
 import java.util.*;
 
@@ -35,7 +36,7 @@ public class GameController {
         this.game.addPlayer(aiPlayer);
 
         this.currentPlayer = this.game.getCurrentPlayer();
-        this.mcts = new MCTS(game);
+        this.mcts = new MCTS(game, 1000, 100);
 
         Platform.runLater(() -> {
             view.updatePlayerInfo(this.game.getPlayers());
@@ -46,11 +47,15 @@ public class GameController {
     }
 
     public void executeAction(Action action) {
+        //another validation that the action is legal to be performed
+        if (!action.canPlayerPerform()) {
+            view.displayMessage("Action cannot be performed due to game rules.");
+            return;
+        }
         boolean challengeResponse;
         boolean blockResponse;
         boolean actionExecuted = true;
         boolean challengeResult = false;
-
         Player opponent = game.getOpponent(currentPlayer);
 
 
@@ -68,6 +73,7 @@ public class GameController {
         }
 
         // Handling blocks
+// Handling blocks
         if (action.canBeBlocked && !challengeResult) {
             if (opponent == aiPlayer) {
                 blockResponse = mcts.simulateBlock(game, action);
@@ -76,13 +82,11 @@ public class GameController {
             }
             if (blockResponse) {
                 view.displayMessage(opponent.getName() + " blocks " + currentPlayer.getName() + "'s action!");
-                boolean challengeBlock = opponent == aiPlayer ?
-                        mcts.simulateBlockChallenge(game, action) :
-                        view.promptForChallenge("Do you want to challenge this block?");
+                boolean challengeBlock = currentPlayer == aiPlayer ? mcts.simulateBlockChallenge(game, action) : view.promptForChallenge("Do you want to challenge this block?");
                 if (!challengeBlock) {
                     actionExecuted = false;
                 } else {
-                    view.displayMessage(opponent.getName() + " challenges the block by " + currentPlayer.getName());
+                    view.displayMessage(currentPlayer.getName() + " challenges the block by " + opponent.getName());
                     boolean blockSucceed = handleBlockAction(opponent, action, challengeBlock);
                     if (blockSucceed) {
                         actionExecuted = false;
@@ -235,6 +239,8 @@ public class GameController {
         });
     }
 
+
+    //TODO : move this function to the game class
     private List<Card> drawCards(int count) {
         List<Card> cards = new ArrayList<>();
         for (int i = 0; i < count; i++) {

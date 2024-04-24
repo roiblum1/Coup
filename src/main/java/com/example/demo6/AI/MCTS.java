@@ -6,26 +6,39 @@ import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Game;
 import com.example.demo6.Model.Player;
 
-import java.io.*;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MCTS {
-    private static final double EXPLORATION = Math.sqrt(2);
     private final Game rootGame;
     private Node root;
+    private final int numOfSimulations;
+    private final int maxDepth;
 
-    public MCTS(Game game) {
+
+    public MCTS(Game game, int numOfSimulations, int maxDepth) {
         this.rootGame = deepCopy(game);
         this.root = new Node(null);
+        this.numOfSimulations = numOfSimulations;
+        this.maxDepth = maxDepth;
     }
 
+
+
+    /**
+     * This method returns the best action for the AI to take in the game.
+     * It uses a Monte Carlo Tree Search (MCTS) algorithm to simulate and evaluate the game tree.
+     * The best action is determined by selecting the action with the highest visit count and reward value.
+     * If there are multiple actions with the same highest value, the algorithm selects one of them randomly.
+     * If no valid moves are available, the method returns null.
+     * @return the best action for the AI to take in the game
+     */
     public Action bestMove() {
         if (rootGame.isGameOver()) {
             return null;
         }
 
-        search(100, 10);
+        search(numOfSimulations, maxDepth);
 
         double maxValue = Double.NEGATIVE_INFINITY;
         List<Node> maxNodes = new ArrayList<>();
@@ -53,6 +66,14 @@ public class MCTS {
         return bestChild.getAction();
     }
 
+    /**
+     * This method performs a Monte Carlo Tree Search (MCTS) algorithm to simulate and evaluate the game tree.
+     * The algorithm starts at the root node and traverses the game tree to a leaf node.
+     * It then selects the action with the highest visit count and reward value.
+     * If there are multiple actions with the same highest value, the algorithm selects one of them randomly.
+     * @param numSimulations the number of simulations to run
+     * @param maxDepth the maximum depth of the game tree to search
+     **/
     public void search(int numSimulations, int maxDepth) {
         for (int i = 0; i < numSimulations; i++) {
             NodeGamePair nodeGamePair = selectNode(maxDepth);
@@ -72,46 +93,69 @@ public class MCTS {
                 System.out.println("Rollout ended with no winner.");
             }
 
-            backPropagate(node, game.getCurrentPlayer(), winner);
+            System.out.println(game.getCurrentPlayer().getName() + "'s turn.");
+            backPropagate(node, game.getCurrentPlayer(), winner, game);
 
             if (node.getParent() == root) {
-                break;
+                return;
             }
         }
     }
 
+    /**
+     * Selects a node and game state from the MCTS tree.
+     * @param maxDepth the maximum depth to search in the MCTS tree
+     * @return a pair containing the selected node and the corresponding game state
+     */
     private NodeGamePair selectNode(int maxDepth) {
         Node node = root;
         Game game = deepCopy(rootGame);
         int depth = 0;
 
+        // Loop through the MCTS tree up to the specified maximum depth
         while (depth < maxDepth) {
+            // If the current node is a leaf node, expand it by simulating rollouts
             if (node.isLeaf()) {
                 expand(node, game);
             }
 
+            // If the current node has no children, break the loop
             if (node.getChildren().isEmpty()) {
                 break;
             }
 
+            // Select a child node for further exploration
             node = node.selectChild();
-            executeAction(game, node.getAction(), false, false);
+
+            // Simulate the AI's decision-making process based on the current game state
+            boolean isChallenged = simulateChallenge(game, node.getAction());
+            boolean isBlocked = simulateBlock(game, node.getAction());
+
+            // Execute the selected action in the game state
+            executeAction(game, node.getAction(), isChallenged, isBlocked);
+            game.switchTurns();
+            // Increment the depth counter
             depth++;
         }
-
+        // Return a pair containing the selected node and the corresponding game state
         return new NodeGamePair(node, game);
     }
 
+    /**
+     * Expands the MCTS tree by creating new nodes based on the current game state.
+     * @param parent The parent node of the new nodes.
+     * @param game The current game state.
+     */
     private void expand(Node parent, Game game) {
+        //Checks if the game is over. If it is, do not expand the tree.
         if (game.isGameOver()) {
             return;
         }
-
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) {
             return;
         }
-
+        //Creating a node for every action in the game
         List<Action> availableActions = game.getAvailableActions(currentPlayer);
         List<Node> childNodes = new ArrayList<>();
         for (Action action : availableActions) {
@@ -153,8 +197,27 @@ public class MCTS {
             executeAction(game, action, isChallenged, isBlocked);
 
             depth++;
-        }
 
+            // Evaluate the current position of the AI player
+            int aiPlayerScore = evaluatePosition(game.getPlayers().get(1));
+
+            // If the AI player's score is significantly lower than the human player's score,
+            // stop searching this branch and return null (indicating a losing node)
+            if (aiPlayerScore < evaluatePosition(game.getPlayers().get(0)) - 20) {
+                return null;
+            }
+        }
+        // If the game reaches a non-terminal state, evaluate the position to determine the winner
+        if (!game.isGameOver()) {
+            int aiPlayerScore = evaluatePosition(game.getPlayers().get(1));
+            int humanPlayerScore = evaluatePosition(game.getPlayers().get(0));
+
+            if (aiPlayerScore > humanPlayerScore) {
+                return game.getPlayers().get(1);
+            } else if (humanPlayerScore > aiPlayerScore) {
+                return game.getPlayers().get(0);
+            }
+        }
         return game.getWinner();
     }
 
@@ -223,16 +286,28 @@ public class MCTS {
     }
 
 
-    private void backPropagate(Node node, Player turn, Player winner) {
+    private void backPropagate(Node node, Player turn, Player winner, Game game) {
         while (node != null) {
             node.incrementVisitCount();
 
             if (winner != null) {
-                if (winner.equals(turn)) {
+                if (winner.getName().equals(turn.getName())) {
                     node.incrementReward(1);
                 } else {
                     node.incrementReward(-1);
                 }
+                System.out.println("Backpropagating for player: " + turn.getName() + ", Winner: " + winner.getName());
+            } else {
+                // Evaluate the position when there is no clear winner
+                int aiPlayerScore = evaluatePosition(game.getPlayers().get(1));
+                int humanPlayerScore = evaluatePosition(game.getPlayers().get(0));
+
+                if (aiPlayerScore > humanPlayerScore) {
+                    node.incrementReward(1);
+                } else if (humanPlayerScore > aiPlayerScore) {
+                    node.incrementReward(-1);
+                }
+                System.out.println("AI Score: " + aiPlayerScore + ", Human Score: " + humanPlayerScore);
             }
 
             if (node.getParent() == null) {
@@ -318,9 +393,9 @@ public class MCTS {
         }
 
         simulationGame.executeAction(action, cards);
-        if (currentPlayer == simulationGame.getCurrentPlayer()) {
-            simulationGame.switchTurns();
-        }
+        System.out.println("The executed action is : " + action.getActionCode() + " the player " +action.getPlayer().getName());
+        simulationGame.switchTurns();
+
     }
 
     public boolean simulateChallenge(Game game, Action action) {
@@ -329,7 +404,7 @@ public class MCTS {
 
         // If AI has only one card left and the human player is performing an Assassinate action,
         // always challenge to avoid losing the game
-        if (aiPlayer.getCards().size() == 1 && action.getActionCode() == ActionCode.ASSASSINATE) {
+        if (aiPlayer.getCards().size() == 1 && action.getActionCode() == ActionCode.ASSASSINATE && !aiPlayer.hasCard(Deck.CardType.CONTESSA)) {
             return true;
         }
 
@@ -378,23 +453,45 @@ public class MCTS {
 
     public boolean simulateBlockChallenge(Game game, Action action) {
         Player aiPlayer = game.getCurrentPlayer();
-        Player humanPlayer = game.getOpponent(aiPlayer);
-
-        // Challenge block if AI is about to lose and the block prevents a game-saving move
-        if (action.getActionCode() == ActionCode.COUP && humanPlayer.getCards().size() == 1 && aiPlayer.getCoins() >= 7) {
-            return true;
+        if (aiPlayer.getCards().size() == 1) {
+            return false;
         }
-        return false;
+        // Challenge block if AI is about to lose and the block prevents a game-saving move
+        switch (action.getActionCode()) {
+            case FOREIGN_AID:
+                // Challenge if block (Duke) seems unlikely
+                return isSuspiciousBlock(Deck.CardType.DUKE, aiPlayer);
+
+            case ASSASSINATE:
+                // Challenge if block (Contessa) seems unlikely
+                return isSuspiciousBlock(Deck.CardType.CONTESSA, aiPlayer);
+
+            case STEAL:
+                // Challenge if block (Ambassador or Captain) seems unlikely
+                boolean ambassadorSuspicious = isSuspiciousBlock(Deck.CardType.AMBASSADOR, aiPlayer);
+                boolean captainSuspicious = isSuspiciousBlock(Deck.CardType.CAPTAIN, aiPlayer);
+                return ambassadorSuspicious || captainSuspicious;
+
+            default:
+                return false;  // No challenge by default if not one of the specified blockable actions
+        }
+    }
+
+    // Function to check if blocking is suspicious based on the rarity of cards
+    boolean isSuspiciousBlock(Deck.CardType requiredCard, Player aiPlayer) {
+        List<Card> aiPlayerCards = aiPlayer.getCards();
+        long countInAIHand = aiPlayerCards.stream().filter(card -> card.getName().equals(requiredCard.getName())).count();
+        long totalInGame = 2;  // Total copies of each card type in the game
+        long totalPossible = totalInGame - countInAIHand;
+
+        // More suspicious if fewer possible cards are available to the opponent
+        return totalPossible < 1;  // Less than 1 means the opponent unlikely to have a card
     }
 
     public List<Card> selectCardsToKeep(Game game, Player player, List<Card> newCards) {
         List<Card> allCards = new ArrayList<>(player.getCards());
         allCards.addAll(newCards);
-
-        // Sort the cards based on their value in descending order
         allCards.sort(Comparator.comparingInt(this::getCardValue).reversed());
-
-        // Return the two most valuable cards
         return allCards.subList(0, 2);
     }
 
@@ -420,6 +517,19 @@ public class MCTS {
         }
 
         return leastValuableCard;
+    }
+
+    private int evaluatePosition(Player player) {
+        int score = 0;
+        // Add points for each card held by the player
+        score += player.getCards().size() * 10;
+        // Add points for each coin possessed by the player
+        score += player.getCoins();
+        // Add bonus points for valuable cards based on their value
+        for (Card card : player.getCards()) {
+            score += getCardValue(card);
+        }
+        return score;
     }
 
     private int getCardValue(Card card) {
@@ -484,100 +594,5 @@ public class MCTS {
         return copiedCards;
     }
 
-    private static class Node {
-        private final Action action;
-        private final Node parent;
-        private int visitCount;
-        private int reward;
-        private final Map<Action, Node> children;
 
-        public Node(Action action) {
-            this(action, null);
-        }
-
-        public Node(Action action, Node parent) {
-            this.action = action;
-            this.parent = parent;
-            this.visitCount = 0;
-            this.reward = 0;
-            this.children = new HashMap<>();
-        }
-
-        public void addChildren(List<Node> children) {
-            for (Node child : children) {
-                this.children.put(child.getAction(), child);
-            }
-        }
-
-        public double getUCTValue() {
-            if (visitCount == 0) {
-                return Double.POSITIVE_INFINITY;
-            }
-
-            double exploitation = (double) reward / visitCount;
-            double exploration = EXPLORATION * Math.sqrt(Math.log(parent.getVisitCount()) / visitCount);
-            return exploitation + exploration;
-        }
-
-        public Action getAction() {
-            return action;
-        }
-
-        public Node getParent() {
-            return parent;
-        }
-
-        public int getVisitCount() {
-            return visitCount;
-        }
-
-        public void incrementVisitCount() {
-            visitCount++;
-        }
-
-        public void incrementReward(int value) {
-            reward += value;
-        }
-
-        public Map<Action, Node> getChildren() {
-            return children;
-        }
-
-        public void addChild(Node child) {
-            children.put(child.getAction(), child);
-        }
-
-        public Node selectChild() {
-            double maxUCT = Double.NEGATIVE_INFINITY;
-            Node selectedChild = null;
-
-            for (Node child : children.values()) {
-                double uct = child.getUCTValue();
-                if (uct > maxUCT) {
-                    maxUCT = uct;
-                    selectedChild = child;
-                }
-            }
-
-            return selectedChild;
-        }
-
-        public boolean isLeaf() {
-            return children.isEmpty();
-        }
-
-        public String getReward() {
-            return "" + this.reward;
-        }
-    }
-
-    private static class NodeGamePair {
-        private final Node node;
-        private final Game game;
-
-        public NodeGamePair(Node node, Game game) {
-            this.node = node;
-            this.game = game;
-        }
-    }
 }

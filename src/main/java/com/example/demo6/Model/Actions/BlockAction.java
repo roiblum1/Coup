@@ -66,6 +66,5 @@ public class BlockAction extends Action {
             case STEAL -> player.hasCard(Deck.CardType.AMBASSADOR) || player.hasCard(Deck.CardType.CAPTAIN);
             default -> false;
         };
-
     }
 }

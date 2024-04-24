@@ -5,6 +5,7 @@ import com.example.demo6.Model.Player;
 
 public abstract class Action {
     protected Player player;
+    protected Player opponent;
     protected ActionCode codeOfAction;
     public boolean canBeBlocked;
     public boolean canBeChallenged;

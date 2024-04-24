@@ -99,11 +99,22 @@ public class Game implements Serializable {
             System.out.println("No active players left");
             return null;
         }
+        // Toggle the current player between the two active players
+        Player currentPlayer = getCurrentPlayer();
+        Player nextPlayer = activePlayers.stream()
+                .filter(p -> !p.equals(currentPlayer))
+                .findFirst()
+                .orElse(null);
 
-        currentPlayerIndex = (currentPlayerIndex + 1) % activePlayers.size();
+        if (nextPlayer == null) {
+            System.out.println("No opponent found");
+            return null;
+        }
 
-        System.out.println("Switching turns from " + getCurrentPlayer().getName() + " to " + activePlayers.get(currentPlayerIndex).getName());
-        return activePlayers.get(currentPlayerIndex);
+        // Update the current player index to the index of the next player
+        currentPlayerIndex = activePlayers.indexOf(nextPlayer);
+        System.out.println("Switching turns from " + currentPlayer.getName() + " to " + nextPlayer.getName());
+        return nextPlayer;
     }
 
     //* Retrieve the winner of the game //
