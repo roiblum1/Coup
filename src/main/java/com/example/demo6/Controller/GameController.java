@@ -99,7 +99,7 @@ public class GameController {
         if (actionExecuted) {
             List<Card> cards = null;
             if (action.getActionCode() == ActionCode.SWAP) {
-                List<Card> newCards = drawCards(2);
+                List<Card> newCards = this.game.drawCards(2);
                 List<Card> selectedCards;
                 if (currentPlayer == aiPlayer) {
                     selectedCards = mcts.selectCardsToKeep(game, currentPlayer, newCards);
@@ -237,17 +237,5 @@ public class GameController {
             view.updateAvailableActions(game.getAvailableActions(currentPlayer));
             view.updateDeckInfo(game.getDeck());
         });
-    }
-
-
-    //TODO : move this function to the game class
-    private List<Card> drawCards(int count) {
-        List<Card> cards = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            if (!game.getDeck().isEmpty()) {
-                cards.add(game.getDeck().getCard());
-            }
-        }
-        return cards;
     }
 }

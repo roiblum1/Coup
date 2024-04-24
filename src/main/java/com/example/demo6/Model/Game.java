@@ -89,7 +89,7 @@ public class Game implements Serializable {
 
     //* Checks if the game is over */
     public boolean isGameOver() {
-        return getActivePlayers().size() == 1;
+        return getActivePlayers().size() <= 1;
     }
 
     //* Switches turns to the next player */
@@ -125,6 +125,15 @@ public class Game implements Serializable {
         else return null;
     }
 
+    public List<Card> drawCards(int count) {
+        List<Card> cards = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            if (!this.getDeck().isEmpty()) {
+                cards.add(this.getDeck().getCard());
+            }
+        }
+        return cards;
+    }
 
     public void setPlayerList(List<Player> clonedPlayerList) {
         this.playerList = clonedPlayerList;

@@ -89,7 +89,12 @@ public class Node {
         return children.isEmpty();
     }
 
-    public String getReward() {
+    public double getReward() {
+        return this.reward;
+    }
+
+    public String getRewardToString()
+    {
         return "" + this.reward;
     }
 }

@@ -1,10 +1,7 @@
 package com.example.demo6.Model;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
 public class Deck implements Serializable {
 
@@ -68,9 +65,36 @@ public class Deck implements Serializable {
         Collections.shuffle(contents);
     }
 
+
     static class CardFactory {
         static Card createCard(String name) {
             return new Card(name);
         }
+    }
+
+    private static Deck deepCopyDeck(Deck deck) {
+        Set<Deck.CardType> cardTypes = EnumSet.allOf(Deck.CardType.class);
+        if (cardTypes.isEmpty()) {
+            throw new IllegalStateException("Card types cannot be empty.");
+        }
+
+        Deck copiedDeck = new Deck(cardTypes, 2);
+
+        for (Card card : deck.getContents()) {
+            if (card == null) {
+                throw new IllegalStateException("Deck contains a null card.");
+            }
+            copiedDeck.returnCard(new Card(card.getName()));
+        }
+
+        return copiedDeck;
+    }
+
+    private static List<Card> deepCopyCards(List<Card> cards) {
+        List<Card> copiedCards = new ArrayList<>();
+        for (Card card : cards) {
+            copiedCards.add(new Card(card.getName()));
+        }
+        return copiedCards;
     }
 }
