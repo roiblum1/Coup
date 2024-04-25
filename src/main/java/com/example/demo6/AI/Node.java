@@ -6,6 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Represents a node in the Monte Carlo Tree Search algorithm.
+ * Each node corresponds to a game state, represented by an action taken from the parent node.
+ */
 public class Node {
     private static final double EXPLORATION = Math.sqrt(2);
     private final Action action;
@@ -14,10 +18,19 @@ public class Node {
     private int reward;
     private final Map<Action, Node> children;
 
+    /**
+     * Constructs a root node with a specified action.
+     * @param action The action corresponding to this node.
+     */
     public Node(Action action) {
         this(action, null);
     }
 
+    /**
+     * Constructs a node with a specified action and parent.
+     * @param action The action corresponding to this node.
+     * @param parent The parent node of this node.
+     */
     public Node(Action action, Node parent) {
         this.action = action;
         this.parent = parent;
@@ -26,54 +39,91 @@ public class Node {
         this.children = new HashMap<>();
     }
 
+    /**
+     * Adds a list of child nodes to this node.
+     * @param children The list of child nodes to be added.
+     */
     public void addChildren(List<Node> children) {
         for (Node child : children) {
             this.children.put(child.getAction(), child);
         }
     }
 
+    /**
+     * Calculates and returns the Upper Confidence Bound applied to trees (UCT) value for this node.
+     * @return The UCT value for this node.
+     */
     public double getUCTValue() {
         if (visitCount == 0) {
             return Double.POSITIVE_INFINITY;
         }
-
         double exploitation = (double) reward / visitCount;
         double exploration = EXPLORATION * Math.sqrt(Math.log(parent.getVisitCount()) / visitCount);
         return exploitation + exploration;
     }
 
+    /**
+     * Returns the action associated with this node.
+     * @return The action.
+     */
     public Action getAction() {
         return action;
     }
 
+    /**
+     * Returns the parent of this node.
+     * @return The parent node.
+     */
     public Node getParent() {
         return parent;
     }
 
+    /**
+     * Returns the visit count of this node.
+     * @return The number of times this node has been visited.
+     */
     public int getVisitCount() {
         return visitCount;
     }
 
+    /**
+     * Increments the visit count by one.
+     */
     public void incrementVisitCount() {
         visitCount++;
     }
 
+    /**
+     * Increments the reward of this node by a specified value.
+     * @param value The value to add to the node's reward.
+     */
     public void incrementReward(int value) {
         reward += value;
     }
 
+    /**
+     * Returns the map of children nodes.
+     * @return The children of this node.
+     */
     public Map<Action, Node> getChildren() {
         return children;
     }
 
+    /**
+     * Adds a single child node to this node.
+     * @param child The child node to add.
+     */
     public void addChild(Node child) {
         children.put(child.getAction(), child);
     }
 
+    /**
+     * Selects and returns the child node with the highest UCT value.
+     * @return The child node with the highest UCT value.
+     */
     public Node selectChild() {
         double maxUCT = Double.NEGATIVE_INFINITY;
         Node selectedChild = null;
-
         for (Node child : children.values()) {
             double uct = child.getUCTValue();
             if (uct > maxUCT) {
@@ -81,20 +131,30 @@ public class Node {
                 selectedChild = child;
             }
         }
-
         return selectedChild;
     }
 
+    /**
+     * Checks if this node is a leaf node (i.e., has no children).
+     * @return true if this node is a leaf, false otherwise.
+     */
     public boolean isLeaf() {
         return children.isEmpty();
     }
 
+    /**
+     * Returns the reward of this node.
+     * @return The reward.
+     */
     public double getReward() {
         return this.reward;
     }
 
-    public String getRewardToString()
-    {
+    /**
+     * Returns the reward as a string.
+     * @return The reward in string format.
+     */
+    public String getRewardToString() {
         return "" + this.reward;
     }
 }

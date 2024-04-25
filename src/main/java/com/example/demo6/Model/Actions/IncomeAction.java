@@ -3,8 +3,8 @@ package com.example.demo6.Model.Actions;
 import com.example.demo6.Model.Player;
 
 public class IncomeAction extends Action {
-    public IncomeAction(Player player) {
-        super(player, ActionCode.INCOME);
+    public IncomeAction(Player player, Player opponent) {
+        super(player, opponent, ActionCode.INCOME);
         this.canBeBlocked = false;
         this.canBeChallenged = false;
     }

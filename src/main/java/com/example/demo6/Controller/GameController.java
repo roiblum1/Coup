@@ -8,10 +8,13 @@ import com.example.demo6.Model.Game;
 import com.example.demo6.Model.Player;
 import com.example.demo6.View.GameView;
 import javafx.application.Platform;
-import javafx.collections.ObservableList;
 
 import java.util.*;
 
+/**
+ * The GameController class is responsible for managing the game logic and communication between the game model and the game view.
+ * It handles user interactions, executes actions, manages game state transitions, and integrates with the AI component.
+ */
 public class GameController {
     private Game game;
     private GameView view;
@@ -19,13 +22,20 @@ public class GameController {
     private Player aiPlayer;
     private MCTS mcts;
 
+    /**
+     * Constructor for GameController.
+     * @param view The game view to interact with the user.
+     * @param game The game model containing game data.
+     */
     public GameController(GameView view, Game game) {
         this.game = game;
         this.view = view;
         this.view.setController(this);
     }
 
-    // Initialize game and update view
+    /**
+     * Initializes the game and updates the view.
+     */
     public void initializeGame() {
         Set<Deck.CardType> allCardTypes = EnumSet.allOf(Deck.CardType.class);
         this.game = new Game(new Deck(allCardTypes, 2));
@@ -36,7 +46,7 @@ public class GameController {
         this.game.addPlayer(aiPlayer);
 
         this.currentPlayer = this.game.getCurrentPlayer();
-        this.mcts = new MCTS(game, 3000, 100);
+        this.mcts = new MCTS(game, 2500, 100);
 
         Platform.runLater(() -> {
             view.updatePlayerInfo(this.game.getPlayers());
@@ -46,6 +56,14 @@ public class GameController {
         });
     }
 
+    /**
+     * Executes a given action within the game context. This method first validates if the action can be legally performed
+     * by the current player. It then handles potential challenges and blocks by opponents, and if unchallenged or
+     * successfully challenged, executes the action. This method also updates the game state and view after the action
+     * is processed, and manages transitions between game states like ending a turn or concluding the game.
+     *
+     * @param action The action to be executed, derived from the current player's available actions.
+     */
     public void executeAction(Action action) {
         //another validation that the action is legal to be performed
         if (!action.canPlayerPerform()) {
@@ -57,7 +75,6 @@ public class GameController {
         boolean actionExecuted = true;
         boolean challengeResult = false;
         Player opponent = game.getOpponent(currentPlayer);
-
 
         // Handling challenges
         if (action.canBeChallenged) {
@@ -73,7 +90,6 @@ public class GameController {
         }
 
         // Handling blocks
-// Handling blocks
         if (action.canBeBlocked && !challengeResult) {
             if (opponent == aiPlayer) {
                 blockResponse = mcts.simulateBlock(game, action);
@@ -94,7 +110,6 @@ public class GameController {
                 }
             }
         }
-
 
         if (actionExecuted) {
             List<Card> cards = null;
@@ -137,8 +152,17 @@ public class GameController {
         }
     }
 
+    /**
+     * Handles the execution of a block action in the game. This method is responsible for determining the outcome of a block
+     * action, which may involve the loss of a card by the player who attempted the block.
+     *
+     * @param blocker The player who is attempting to block the action.
+     * @param actionToBlock The action that is being blocked.
+     * @param isChallenged A boolean value indicating whether the block action is being challenged.
+     * @return A boolean value indicating whether the block action was successful.
+     */
     private boolean handleBlockAction(Player blocker, Action actionToBlock, boolean isChallenged) {
-        BlockAction blockAction = new BlockAction(blocker, actionToBlock);
+        BlockAction blockAction = new BlockAction(blocker, game.getOpponent(blocker), actionToBlock);
         boolean blockSuccessful = blockAction.execute(isChallenged, false);
 
         if (blockSuccessful) {
@@ -160,8 +184,19 @@ public class GameController {
         return blockSuccessful;
     }
 
+    /**
+     * Handles the challenge of an action performed by a player. This method determines if the challenge is successful
+     * and manages the outcome of losing a card based on the result of the challenge. If the challenge is successful,
+     * the player who performed the action loses a card. If the challenge fails, the challenger loses a card instead.
+     *
+     * @param action The action being challenged.
+     * @return true if the challenge was successful, false if it failed.
+     */
     private boolean handleChallenge(Action action) {
+        // Determine the outcome of the challenge
         boolean challengeSuccess = action.challenge();
+
+        // If the challenge succeeds, the player who performed the action loses a card
         if (challengeSuccess) {
             Player challenger = game.getOpponent(action.getPlayer());
             if (challenger == aiPlayer) {
@@ -173,6 +208,7 @@ public class GameController {
                 view.displayMessage("Challenge failed. " + challenger.getName() + " loses a card.");
             }
         } else {
+            // If the challenge fails, the challenger loses a card
             if (action.getPlayer() == aiPlayer) {
                 Card cardToLose = mcts.selectCardToGiveUp(game, action.getPlayer());
                 action.getPlayer().returnCard(cardToLose);
@@ -184,9 +220,14 @@ public class GameController {
         }
         return challengeSuccess;
     }
+
+    /**
+     * Ends the current player's turn and transitions to the next player's turn. If the game is not over, it updates
+     * the game view and potentially executes the AI player's turn. If the game is over, it calls the method to end
+     * the game.
+     */
     private void endTurn() {
         if (!isGameOver()) {
-//            mcts.handleAction(game.getLastExecutedAction());
             currentPlayer = game.switchTurns();
             updateView();
 
@@ -198,20 +239,37 @@ public class GameController {
         }
     }
 
+    /**
+     * Executes the turn for the AI player. Determines the best move using the MCTS algorithm and performs it.
+     * Displays which action the AI decided to execute in the view.
+     */
     private void executeAIPlayerTurn() {
         Action bestAction = mcts.bestMove();
         if (bestAction != null) {
             bestAction.setPlayer(aiPlayer);
+            bestAction.setOpponent(game.getOpponent(aiPlayer));
             System.out.println("The best action is : " + bestAction.getCodeOfAction() + " " + bestAction.getPlayer().getName());
-            view.displayMessage("AI decides to execute the action: " + bestAction.getCodeOfAction() );
+            view.displayMessage("AI decides to execute the action: " + bestAction.getCodeOfAction());
             executeAction(bestAction);
         }
     }
 
+    /**
+     * Checks if the game is over. The game is considered over when only one active player remains.
+     *
+     * @return true if the game is over, otherwise false.
+     */
     private boolean isGameOver() {
         return game.getActivePlayers().size() == 1;
     }
 
+    /**
+     * Handles the event when a player must lose a card. This could occur as a result of a challenge, coup, or
+     * assassination. The method prompts the player to choose a card to lose, removes the chosen card from the player's
+     * hand, and updates the view accordingly.
+     *
+     * @param player The player who is required to lose a card.
+     */
     public void handleLoseCard(Player player) {
         if (!player.getCards().isEmpty()) {
             Card cardToLose = view.promptPlayerForCardToGiveUp(player);
@@ -220,22 +278,36 @@ public class GameController {
         }
     }
 
+    /**
+     * Ends the game and displays the winner. Also, notifies the MCTS algorithm about the game's end.
+     */
     private void endGame() {
         Player winner = game.getActivePlayers().get(0);
         view.displayWinner(winner);
         mcts.handleGameOver(winner);
     }
 
+    /**
+     * Retrieves the current player of the game.
+     *
+     * @return The player who is currently taking their turn.
+     */
     public Player getCurrentPlayer() {
-        return currentPlayer;
+        return currentPlayer;  // Returns the reference to the current player
     }
 
+    /**
+     * Updates the game view with the latest game state information. This method is responsible for synchronizing the
+     * graphical user interface with the current state of the game model. It updates player information, the current player's
+     * state, available actions, and the state of the deck. This method runs its updates on the JavaFX Application Thread to
+     * ensure thread safety with UI components.
+     */
     private void updateView() {
-        Platform.runLater(() -> {
-            view.updatePlayerInfo(game.getPlayers());
-            view.updateCurrentPlayer(currentPlayer);
-            view.updateAvailableActions(game.getAvailableActions(currentPlayer));
-            view.updateDeckInfo(game.getDeck());
+        Platform.runLater(() -> {  // Ensures updates are performed on the JavaFX application thread
+            view.updatePlayerInfo(game.getPlayers());          // Updates UI with current player list
+            view.updateCurrentPlayer(currentPlayer);           // Updates UI to show the current player
+            view.updateAvailableActions(game.getAvailableActions(currentPlayer));  // Updates UI with actions available to the current player
+            view.updateDeckInfo(game.getDeck());               // Updates UI with the current state of the deck
         });
     }
 }

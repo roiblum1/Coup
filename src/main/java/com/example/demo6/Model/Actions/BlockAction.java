@@ -7,8 +7,8 @@ public class BlockAction extends Action {
     private Action actionToBlock;
     private boolean isBlocked;
 
-    public BlockAction(Player player, Action actionToBlock) {
-        super(player, ActionCode.BLOCK);
+    public BlockAction(Player player, Player opponent, Action actionToBlock) {
+        super(player, opponent, ActionCode.BLOCK);
         this.actionToBlock = actionToBlock;
         this.isBlocked = false;
         this.canBeBlocked = false;

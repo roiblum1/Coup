@@ -3,11 +3,10 @@ package com.example.demo6.Model.Actions;
 import com.example.demo6.Model.Player;
 
 public class CoupAction extends Action {
-    private Player targetPlayer;
 
-    public CoupAction(Player player, Player targetPlayer) {
-        super(player, ActionCode.COUP);
-        this.targetPlayer = targetPlayer;
+
+    public CoupAction(Player player, Player opponent) {
+        super(player ,opponent ,ActionCode.COUP);
         this.canBeBlocked = false;
         this.canBeChallenged = false;
     }

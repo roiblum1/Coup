@@ -14,57 +14,83 @@ public class Game implements Serializable {
     private Action lastExecutedAction;
 
 
-    //* Initializes a game with a specified deck */
+    /**
+     * Initializes a game with a specified deck.
+     * @param deck The initial deck to be used in the game.
+     */
     public Game(Deck deck) {
         currentPlayerIndex = 0;
         this.playerList = new ArrayList<>();
         this.deck = deck;
     }
 
-    //* Adds a new player to the game */
+    /**
+     * Adds a new player to the game and assigns them an initial hand of cards.
+     * @param player The player to be added to the game.
+     */
     public void addPlayer(Player player) {
         player.setDeck(deck);
         playerList.add(player);
         player.pickCards();
     }
 
+    /**
+     * Gets the index of the current player in the turn order.
+     * @return The index of the current player.
+     */
     public int getCurrentPlayerIndex() {
         return currentPlayerIndex;
     }
 
+    /**
+     * Sets the index of the current player in the turn order.
+     * @param currentPlayerIndex The new index for the current player.
+     */
     public void setCurrentPlayerIndex(int currentPlayerIndex) {
         this.currentPlayerIndex = currentPlayerIndex;
     }
-
-    //* Retrieves all the possible actions for the current player */
+    /**
+     * Retrieves all the possible actions for the current player.
+     * @param currentPlayer The player whose actions are to be determined.
+     * @return A list of possible actions for the player.
+     */
     public List<Action> getAvailableActions(Player currentPlayer) {
         List<Action> actions = new ArrayList<>();
-        actions.add(new IncomeAction(currentPlayer));
-        actions.add(new ForeignAidAction(currentPlayer));
+        actions.add(new IncomeAction(currentPlayer, getOpponent(currentPlayer)));
+        actions.add(new ForeignAidAction(currentPlayer, getOpponent(currentPlayer)));
         actions.add(new CoupAction(currentPlayer, getOpponent(currentPlayer)));
-        actions.add(new TaxAction(currentPlayer));
+        actions.add(new TaxAction(currentPlayer, getOpponent(currentPlayer)));
         actions.add(new AssassinateAction(currentPlayer, getOpponent(currentPlayer)));
         actions.add(new StealAction(currentPlayer, getOpponent(currentPlayer)));
-        actions.add(new SwapAction(currentPlayer));
-        List<Action> availableActions = actions.stream().filter(Action::canPlayerPerform).collect(Collectors.toList());
-        return availableActions;
+        actions.add(new SwapAction(currentPlayer, getOpponent(currentPlayer)));
+        return actions.stream().filter(Action::canPlayerPerform).collect(Collectors.toList());
     }
 
-    //* Retrieves the opponent of the specified player */
+
+    /**
+     * Retrieves the opponent of the specified player.
+     * @param player The player whose opponent is to be identified.
+     * @return The opponent player if available, null if no opponent exists.
+     */
     public Player getOpponent(Player player) {
         return playerList.stream().filter(p -> !p.equals(player)).findFirst().orElse(null);
     }
 
-    //* Retrieves the active players */
+    /**
+     * Retrieves all active players (players with cards left).
+     * @return A list of active players.
+     */
     public List<Player> getActivePlayers() {
         return playerList.stream().filter(player -> !player.getCards().isEmpty()).collect(Collectors.toList());
     }
 
-    //* Retrieves the current player */
+    /**
+     * Retrieves the current player based on the currentPlayerIndex.
+     * @return The current player.
+     */
     public Player getCurrentPlayer() {
         if (playerList.isEmpty()) {
-            if (isGameOver())
-            {
+            if (isGameOver()) {
                 System.out.println("Game Over");
             }
             return null; // or throw an appropriate exception
@@ -72,27 +98,44 @@ public class Game implements Serializable {
         return getActivePlayers().get(currentPlayerIndex);
     }
 
-    //* Retrieves all players */
+    /**
+     * Retrieves the full list of players in the game.
+     * @return The list of players.
+     */
     public List<Player> getPlayers() {
         return this.playerList;
     }
 
-    //* Retrieves the deck */
+    /**
+     * Retrieves the deck used in the game.
+     * @return The game deck.
+     */
     public Deck getDeck() {
         return this.deck;
     }
 
-    //* Sets the deck */
+    /**
+     * Sets the deck for the game.
+     * @param deck The new deck to be used.
+     */
     public void setDeck(Deck deck) {
         this.deck = deck;
     }
 
-    //* Checks if the game is over */
+    /**
+     * Checks if the game is over (only one active player remains).
+     * @return true if the game is over, otherwise false.
+     */
     public boolean isGameOver() {
         return getActivePlayers().size() <= 1;
     }
 
-    //* Switches turns to the next player */
+
+    /**
+     * Switches turns to the next player.
+     *
+     * @return the next player to take their turn.
+     */
     public Player switchTurns() {
         List<Player> activePlayers = getActivePlayers();
         if (activePlayers.isEmpty()) {
@@ -117,14 +160,11 @@ public class Game implements Serializable {
         return nextPlayer;
     }
 
-    //* Retrieve the winner of the game //
-    public Player getWinner() {
-        if (isGameOver()) {
-            return getActivePlayers().get(0);
-        }
-        else return null;
-    }
-
+    /**
+     * Draws a specified number of cards from the deck.
+     * @param count The number of cards to draw.
+     * @return A list of cards drawn from the deck.
+     */
     public List<Card> drawCards(int count) {
         List<Card> cards = new ArrayList<>();
         for (int i = 0; i < count; i++) {
@@ -135,17 +175,30 @@ public class Game implements Serializable {
         return cards;
     }
 
+    /**
+     * Sets the list of players in the game.
+     * @param clonedPlayerList The new list of players.
+     */
     public void setPlayerList(List<Player> clonedPlayerList) {
         this.playerList = clonedPlayerList;
     }
 
+    /**
+     * Sets the last action executed in the game.
+     * @param lastExecutedAction The last action to set.
+     */
     public void setLastExecutedAction(Action lastExecutedAction) {
         this.lastExecutedAction = lastExecutedAction;
     }
 
+    /**
+     * Gets the last action executed in the game.
+     * @return The last executed action.
+     */
     public Action getLastExecutedAction() {
         return lastExecutedAction;
     }
+
 
     /**
      * Creates a deep copy of this game instance.
@@ -167,6 +220,12 @@ public class Game implements Serializable {
         return copiedGame;
     }
 
+    /**
+     * Executes the specified action on the game.
+     *
+     * @param action  The action to be executed.
+     * @param cards    The list of cards to be used in the execution of the action.
+     */
     public void executeAction(Action action, List<Card> cards) {
         if (cards != null) {
             if (action.getActionCode() == ActionCode.COUP) {

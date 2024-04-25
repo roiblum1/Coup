@@ -331,12 +331,13 @@ public class MCTS {
                         .findFirst()
                         .orElse(null);
             }
-            if (aiPlayerCoins >= 3 && aiPlayerCards.contains(Deck.CardType.ASSASSIN)) { // Assassinate if possible.
-                return availableActions.stream()
-                        .filter(action -> action.getActionCode() == ActionCode.ASSASSINATE)
-                        .findFirst()
-                        .orElse(null);
-            }
+        }
+
+        if (aiPlayerCoins >= 3 && aiPlayerCards.contains(Deck.CardType.ASSASSIN)) { // Assassinate if possible.
+            return availableActions.stream()
+                    .filter(action -> action.getActionCode() == ActionCode.ASSASSINATE)
+                    .findFirst()
+                    .orElse(null);
         }
 
         // Use Duke to collect taxes if available to maximize coin gain safely.
@@ -399,21 +400,16 @@ public class MCTS {
             node.incrementVisitCount();
 
             if (winner != null) {
-                if (winner.getName().equals(turn.getName())) {
-                    node.incrementReward(2);
+                if (winner.getName().equals(game.getPlayers().get(1).getName())) {
+                    node.incrementReward(200);
                 } else {
-                    node.incrementReward(-2);
+                    node.incrementReward(-200);
                 }
             } else {
                 // Evaluate the position when there is no clear winner
                 int aiPlayerScore = evaluatePosition(game.getPlayers().get(1));
                 int humanPlayerScore = evaluatePosition(game.getPlayers().get(0));
-
-                if (aiPlayerScore > humanPlayerScore) {
-                    node.incrementReward(1);
-                } else if (humanPlayerScore > aiPlayerScore) {
-                    node.incrementReward(-1);
-                }
+                node.incrementReward(aiPlayerScore-humanPlayerScore);
             }
 
 
@@ -463,8 +459,6 @@ public class MCTS {
             root.incrementReward(-1000);
         } else if (winner == rootGame.getPlayers().get(1)) {
             root.incrementReward(1000);
-        } else {
-            root.incrementReward(1);
         }
 
         Node node = root;
@@ -722,7 +716,7 @@ public class MCTS {
     private int evaluatePosition(Player player) {
         int score = 0;
         // Add points for each card held by the player
-        score += player.getCards().size() * 10;
+        score += player.getCards().size() * 5;
         // Add points for each coin possessed by the player
         score += player.getCoins();
         // Add bonus points for valuable cards based on their value
@@ -740,16 +734,16 @@ public class MCTS {
      * @return the value of the card
      */
     private int getCardValue(Card card) {
-        switch (card.getName()) {
-            case "Duke":
+        switch (Deck.CardType.getTypeCard(card)) {
+            case DUKE:
                 return 5;
-            case "Assassin":
+            case ASSASSIN:
                 return 4;
-            case "Captain":
+            case CAPTAIN:
                 return 3;
-            case "Ambassador":
+            case AMBASSADOR:
                 return 2;
-            case "Contessa":
+            case CONTESSA:
                 return 1;
             default:
                 return 0;

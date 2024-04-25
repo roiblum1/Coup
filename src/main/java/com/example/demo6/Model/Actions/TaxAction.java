@@ -4,8 +4,8 @@ import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
 public class TaxAction extends Action {
-    public TaxAction(Player player) {
-        super(player, ActionCode.TAX);
+    public TaxAction(Player player, Player opponent) {
+        super(player, opponent, ActionCode.TAX);
         this.canBeBlocked = false;
         this.canBeChallenged = true;
     }

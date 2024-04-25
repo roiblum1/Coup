@@ -4,8 +4,8 @@ import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
 public class SwapAction extends Action {
-    public SwapAction(Player player) {
-        super(player, ActionCode.SWAP);
+    public SwapAction(Player player, Player opponent) {
+        super(player, opponent, ActionCode.SWAP);
         this.canBeBlocked = false;
         this.canBeChallenged = true;
     }

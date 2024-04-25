@@ -4,11 +4,9 @@ import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
 public class StealAction extends Action {
-    private Player targetPlayer;
 
-    public StealAction(Player player, Player targetPlayer) {
-        super(player, ActionCode.STEAL);
-        this.targetPlayer = targetPlayer;
+    public StealAction(Player player, Player opponent) {
+        super(player, opponent, ActionCode.STEAL);
         this.canBeBlocked = true;
         this.canBeChallenged = true;
     }
@@ -35,10 +33,10 @@ public class StealAction extends Action {
             return false;
         } else {
             // Perform the steal action
-            System.out.println("The player is " + player.getName() + " and the Target player is " + targetPlayer.getName() + ".");
-            int stolenCoins = Math.min(2, targetPlayer.getCoins());
+            System.out.println("The player is " + player.getName() + " and the Target player is " + opponent.getName() + ".");
+            int stolenCoins = Math.min(2, opponent.getCoins());
             player.updateCoins(stolenCoins);
-            targetPlayer.updateCoins(-stolenCoins);
+            opponent.updateCoins(-stolenCoins);
             // The steal action was successful
             return true;
         }
@@ -52,6 +50,6 @@ public class StealAction extends Action {
 
     // Retrieves the target player of the steal action
     public Player getTargetPlayer() {
-        return targetPlayer;
+        return opponent;
     }
 }

@@ -4,11 +4,10 @@ import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
 public class AssassinateAction extends Action {
-    private Player targetPlayer;
 
-    public AssassinateAction(Player player, Player targetPlayer) {
-        super(player, ActionCode.ASSASSINATE);
-        this.targetPlayer = targetPlayer;
+
+    public AssassinateAction(Player player, Player opponent) {
+        super(player ,opponent, ActionCode.ASSASSINATE);
         this.canBeBlocked = true;
         this.canBeChallenged = true;
     }
@@ -32,12 +31,10 @@ public class AssassinateAction extends Action {
                 return false;
             }
         }
-
         if (isBlocked) {
             // Assassination attempt is blocked
             return false;
         }
-
         // If the method reaches this point, the assassination attempt is neither blocked nor failed
         return true;
     }
@@ -48,9 +45,4 @@ public class AssassinateAction extends Action {
         return player.hasCard(Deck.CardType.ASSASSIN);
     }
 
-
-    // Retrieves the target player of the assassination
-    public Player getTargetPlayer() {
-        return targetPlayer;
-    }
 }

@@ -10,9 +10,10 @@ public abstract class Action {
     public boolean canBeBlocked;
     public boolean canBeChallenged;
 
-    public Action(Player player, ActionCode code) {
+    public Action(Player player, Player opponent, ActionCode code) {
         this.player = player;
         this.codeOfAction = code;
+        this.opponent = opponent;
     }
 
     // Retrieves the action name
@@ -39,5 +40,9 @@ public abstract class Action {
 
     public void setPlayer(Player player) {
         this.player = player;
+    }
+
+    public void setOpponent(Player opponent) {
+        this.opponent = opponent;
     }
 }

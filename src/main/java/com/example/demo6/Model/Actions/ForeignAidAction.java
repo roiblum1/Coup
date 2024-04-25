@@ -3,8 +3,8 @@ package com.example.demo6.Model.Actions;
 import com.example.demo6.Model.Player;
 
 public class ForeignAidAction extends Action {
-    public ForeignAidAction(Player player) {
-        super(player, ActionCode.FOREIGN_AID);
+    public ForeignAidAction(Player player, Player opponent) {
+        super(player, opponent, ActionCode.FOREIGN_AID);
         this.canBeBlocked = true;
         this.canBeChallenged = false;
     }
