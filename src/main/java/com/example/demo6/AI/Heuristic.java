@@ -16,7 +16,7 @@ import static com.example.demo6.Model.Deck.CardType.*;
 public class Heuristic {
 
 
-    private static Action selectActionHeuristically(List<Action> availableActions, Game game) {
+    static Action selectActionHeuristically(List<Action> availableActions, Game game) {
         Player aiPlayer = game.getCurrentPlayer();
         Player humanPlayer = game.getOpponent(aiPlayer);
         List<Card> aiPlayerCards = aiPlayer.getCards();

@@ -237,7 +237,7 @@ public class MCTS {
     private Action selectActionForPlayer(Game game, Player player, List<Action> availableActions) {
         if (player == game.getPlayers().get(1)) { // If the player is the AI
             // Select the best action based on a heuristic evaluation
-            return selectActionHeuristically(availableActions, game);
+            return Heuristic.selectActionHeuristically(availableActions, game);
         } else { // If the player is simulated as a human
             // Select a random action to simulate unpredictability
             return availableActions.get(ThreadLocalRandom.current().nextInt(availableActions.size()));
@@ -317,71 +317,6 @@ public class MCTS {
         return activePlayers.get(0);
     }
 
-
-    private Action selectActionHeuristically(List<Action> availableActions, Game game) {
-        Player aiPlayer = game.getCurrentPlayer();
-        Player humanPlayer = game.getOpponent(aiPlayer);
-        List<Card> aiPlayerCards = aiPlayer.getCards();
-        int aiPlayerCoins = aiPlayer.getCoins();
-        int humanPlayerCoins = humanPlayer.getCoins();
-        int humanPlayerCardCount = humanPlayer.getCards().size();
-
-        // Immediate winning moves: If human player has 1 card, prioritize COUP or ASSASSINATE if possible.
-        if (humanPlayerCardCount == 1) {
-            if (aiPlayerCoins >= 7) { // Coup is a guaranteed kill if it can be afforded and not blocked.
-                return availableActions.stream()
-                        .filter(action -> action.getActionCode() == ActionCode.COUP)
-                        .findFirst()
-                        .orElse(null);
-            }
-        }
-
-        if (aiPlayerCoins >= 3 && aiPlayerCards.contains(ASSASSIN)) { // Assassinate if possible.
-            return availableActions.stream()
-                    .filter(action -> action.getActionCode() == ActionCode.ASSASSINATE)
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        // Use Duke to collect taxes if available to maximize coin gain safely.
-        if (aiPlayerCards.contains(DUKE)) {
-            return availableActions.stream()
-                    .filter(action -> action.getActionCode() == ActionCode.TAX)
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        // Use Captain to steal if the human player has coins and the AI has the Captain.
-        if (aiPlayerCards.contains(CAPTAIN) && humanPlayerCoins > 0) {
-            return availableActions.stream()
-                    .filter(action -> action.getActionCode() == ActionCode.STEAL)
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        // If the AI has enough coins to coup on the next turn, consider gaining more coins or keeping a low profile.
-        if (aiPlayerCoins >= 5) {
-            if (aiPlayerCoins == 6) {
-                return availableActions.stream()
-                        .filter(action -> action.getActionCode() == ActionCode.FOREIGN_AID || action.getActionCode() == ActionCode.INCOME)
-                        .findFirst()
-                        .orElse(null); // Foreign Aid or Income to get to 7 coins for a Coup next turn.
-            }
-            // Consider swapping if having excess coins and possibly bad cards.
-            if (aiPlayerCoins > 8) {
-                return availableActions.stream()
-                        .filter(action -> action.getActionCode() == ActionCode.SWAP)
-                        .findFirst()
-                        .orElse(null);
-            }
-        }
-
-        // Default to income if no strategic moves are immediately necessary.
-        return availableActions.stream()
-                .filter(action -> action.getActionCode() == ActionCode.INCOME)
-                .findFirst()
-                .orElse(null);
-    }
 
 
     /**
