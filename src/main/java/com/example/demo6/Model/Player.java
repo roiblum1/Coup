@@ -168,7 +168,7 @@ public class Player implements Serializable {
      * @return true if the player has the card, false otherwise.
      */
     public boolean hasCard(Deck.CardType cardType) {
-        return this.cards.stream().anyMatch(card -> card.getName().equals(cardType.getName()));
+        return this.cards.stream().anyMatch(card -> card.getType() == cardType);
     }
 
     /**
@@ -178,7 +178,7 @@ public class Player implements Serializable {
     public List<Card> deepCopyCards() {
         List<Card> copiedCards = new ArrayList<>();
         for (Card card : this.getCards()) {
-            copiedCards.add(new Card(card.getName()));
+            copiedCards.add(new Card(card.getType()));
         }
         return copiedCards;
     }

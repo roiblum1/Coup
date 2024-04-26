@@ -230,7 +230,6 @@ public class GameController {
         if (!isGameOver()) {
             currentPlayer = game.switchTurns();
             updateView();
-
             if (currentPlayer.equals(aiPlayer)) {
                 executeAIPlayerTurn();
             }

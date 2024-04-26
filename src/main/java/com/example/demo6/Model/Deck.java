@@ -6,40 +6,10 @@ import java.util.*;
 public class Deck implements Serializable {
 
     /**
-     * Enum representing different card types with unique names.
+     * Enum representing different card types.
      */
     public enum CardType {
-        DUKE("Duke"),
-        ASSASSIN("Assassin"),
-        CAPTAIN("Captain"),
-        AMBASSADOR("Ambassador"),
-        CONTESSA("Contessa");
-
-        private final String name;
-
-        CardType(String name) {
-            this.name = name;
-        }
-
-        /**
-         * Gets the name of the card type.
-         * @return The name of the card type.
-         */
-        public String getName() {
-            return name;
-        }
-
-        /**
-         * Returns the CardType corresponding to the provided card's name.
-         * @param card The card whose type is to be determined.
-         * @return CardType if found, null otherwise.
-         */
-        public static CardType getTypeCard(Card card) {
-            return Arrays.stream(CardType.values())
-                    .filter(cardType -> cardType.getName().equals(card.getName()))
-                    .findFirst()
-                    .orElse(null);
-        }
+        DUKE, ASSASSIN, CAPTAIN, AMBASSADOR, CONTESSA
     }
 
     private Stack<Card> contents;
@@ -53,7 +23,7 @@ public class Deck implements Serializable {
         this.contents = new Stack<>();
         for (CardType cardType : cardTypes) {
             for (int i = 0; i < copies; i++) {
-                contents.add(CardFactory.createCard(cardType.getName()));
+                contents.add(new Card(cardType));
             }
         }
         Collections.shuffle(contents);
@@ -107,26 +77,12 @@ public class Deck implements Serializable {
     }
 
     /**
-     * Static inner class to handle card creation.
-     */
-    static class CardFactory {
-        /**
-         * Factory method to create a card with a specified name.
-         * @param name The name of the card to create.
-         * @return A new Card instance.
-         */
-        static Card createCard(String name) {
-            return new Card(name);
-        }
-    }
-
-    /**
      * Creates a deep copy of this deck.
      * @return a deep copy of the deck.
      * @throws IllegalStateException if the deck contains a null card or if card types are empty.
      */
     public Deck deepCopy() {
-        Set<Deck.CardType> cardTypes = EnumSet.allOf(Deck.CardType.class);
+        Set<CardType> cardTypes = EnumSet.allOf(CardType.class);
         if (cardTypes.isEmpty()) {
             throw new IllegalStateException("Card types cannot be empty.");
         }
@@ -136,7 +92,7 @@ public class Deck implements Serializable {
             if (card == null) {
                 throw new IllegalStateException("Deck contains a null card.");
             }
-            copiedDeck.returnCard(new Card(card.getName()));
+            copiedDeck.returnCard(new Card(card.getType()));
         }
         return copiedDeck;
     }

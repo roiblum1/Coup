@@ -1,5 +1,60 @@
 @startuml
 class com.example.demo6.AI.MCTS {
+    - private Game rootGame
+    - private Node root
+    - private int numOfSimulations
+    - private int maxDepth
+    - private Player aiPlayer
+    - private Player humanPlayer
+    + MCTS(Game, int, int)
+    + Action bestMove()
+    + void search(int, int)
+    + NodeGamePair selectNode(int)
+    + void expand(Node, Game)
+    + Player rollOut(Game, int)
+    + Action selectActionForPlayer(Game, Player, List<Action>)
+    + void backPropagate(Node, Player, Player, Game)
+    + void handleAction(Action)
+    + void handleGameOver(Player)
+    + void executeAction(Game, Action, boolean, boolean)
+    + boolean simulateChallenge(Game, Action)
+    + boolean simulateBlock(Game, Action)
+    + boolean simulateBlockChallenge(Game, Action)
+    + boolean isSuspiciousBlock(Deck.CardType, Player)
+    + List<Card> selectCardsToKeep(Game, Player, List<Card>)
+    + Card selectCardToGiveUp(Game, Player)
+    + int evaluatePosition(Player)
+    + int getCardValue(Card)
+}
+
+class com.example.demo6.AI.Node {
+    - static final double EXPLORATION
+    - final Action action
+    - final Node parent
+    - int visitCount
+    - int reward
+    - final Map<Action, Node> children
+    + Node(Action)
+    + Node(Action, Node)
+    + void addChildren(List<Node>)
+    + double getUCTValue()
+    + Action getAction()
+    + Node getParent()
+    + int getVisitCount()
+    + void incrementVisitCount()
+    + void incrementReward(int)
+    + Map<Action, Node> getChildren()
+    + void addChild(Node)
+    + Node selectChild()
+    + boolean isLeaf()
+    + double getReward()
+    + String getRewardToString()
+}
+
+class com.example.demo6.AI.NodeGamePair {
+    + final Node node
+    + final Game game
+    + NodeGamePair(Node, Game)
 }
 enum com.example.demo6.Model.Actions.ActionName {
 +  INCOME
@@ -13,31 +68,23 @@ enum com.example.demo6.Model.Actions.ActionName {
 }
 
 class com.example.demo6.Controller.GameController {
-- Game game
-- GameView view
-- Player currentPlayer
-- Map<Class<? extends Action>,Consumer<Action>> actionExecutors
-+ <<Create>> GameController(GameView,Game)
-+ void initializeGame()
-- void initializeActionExecutors()
-+ void executeAction(Action)
-- void executeStealAction(StealAction)
-- void executeStealAction2(StealAction)
-- void executeAssassinateAction(AssassinateAction)
-- void executeAssassinateAction2(AssassinateAction)
-- void executeForeignAidAction(ForeignAidAction)
-- void executeForeignAidAction2(ForeignAidAction)
-- void executeTaxAction(TaxAction)
-- void executeIncomeAction(IncomeAction)
-- void executeCoupAction(CoupAction)
-- void executeSwapAction(SwapAction)
-- void handleBlockAction(Player,Action,boolean)
-- boolean handleChallenge(Action)
-- void endTurn()
-- boolean isGameOver()
-+ void handleLoseCard(Player)
-- void endGame()
-- void updateView()
+    - Game game
+    - GameView view
+    - Player currentPlayer
+    - Player aiPlayer
+    - MCTS mcts
+    + GameController(GameView, Game)
+    + void initializeGame()
+    + void executeAction(Action)
+    - boolean handleBlockAction(Player, Action, boolean)
+    - boolean handleChallenge(Action)
+    - void endTurn()
+    - void executeAIPlayerTurn()
+    - boolean isGameOver()
+    + void handleLoseCard(Player)
+    - void endGame()
+    + Player getCurrentPlayer()
+    - void updateView()
 }
 
 
@@ -52,20 +99,29 @@ class com.example.demo6.Model.Actions.StealAction {
 
 
 class com.example.demo6.Model.Game {
-- List<Player> playerList
-- Deck deck
-- int currentPlayerIndex
-+ <<Create>> Game(Deck)
-+ void addPlayer(Player)
-+ List<Action> getAvailableActions(Player)
-+ Player getOpponent(Player)
-+ List<Player> getActivePlayers()
-+ Player getCurrentPlayer()
-+ List<Player> getPlayers()
-+ Deck getDeck()
-+ void setDeck(Deck)
-+ boolean isGameOver()
-+ Player switchTurns()
+    - List<Player> playerList
+    - Deck deck
+    - int currentPlayerIndex
+    - Action lastExecutedAction
+    + Game(Deck)
+    + void addPlayer(Player)
+    + int getCurrentPlayerIndex()
+    + void setCurrentPlayerIndex(int)
+    + List<Action> getAvailableActions(Player)
+    + Player getOpponent(Player)
+    + List<Player> getActivePlayers()
+    + Player getCurrentPlayer()
+    + List<Player> getPlayers()
+    + Deck getDeck()
+    + void setDeck(Deck)
+    + boolean isGameOver()
+    + Player switchTurns()
+    + List<Card> drawCards(int)
+    + void setPlayerList(List<Player>)
+    + void setLastExecutedAction(Action)
+    + Action getLastExecutedAction()
+    + Game deepCopy()
+    + void executeAction(Action, List<Card>)
 }
 
 
@@ -113,7 +169,7 @@ class com.example.demo6.Model.Actions.ForeignAidAction {
 }
 
 class com.example.demo6.Model.Actions.TaxAction {
-+ <<Create>> TaxAction(Player)
++ <<Create>> TaxAction(Player,Player)
 + boolean canPlayerPerform()
 + boolean execute(boolean,boolean)
 + boolean challenge()
@@ -151,7 +207,7 @@ class com.example.demo6.View.GameView {
 class com.example.demo6.Model.Actions.BlockAction {
 - Action actionToBlock
 - boolean isBlocked
-+ <<Create>> BlockAction(Player,Action)
++ <<Create>> BlockAction(Player,Player,Action)
 + boolean canPlayerPerform()
 + boolean execute(boolean,boolean)
 + boolean isBlocked()
@@ -160,7 +216,7 @@ class com.example.demo6.Model.Actions.BlockAction {
 
 
 class com.example.demo6.Model.Actions.SwapAction {
-+ <<Create>> SwapAction(Player)
++ <<Create>> SwapAction(Player,Player)
 + boolean canPlayerPerform()
 + boolean execute(boolean,boolean)
 + boolean challenge()
@@ -205,22 +261,27 @@ class com.example.demo6.Model.Player {
 
 
 class com.example.demo6.Model.Actions.IncomeAction {
-+ <<Create>> IncomeAction(Player)
++ <<Create>> IncomeAction(Player,Player)
 + boolean canPlayerPerform()
 + boolean execute(boolean,boolean)
 + boolean challenge()
 }
 
 abstract class com.example.demo6.Model.Actions.Action {
-# Player player
-# ActionName nameOfAction
-+ <<Create>> Action(Player,ActionName)
-+ ActionName getActionName()
-+ String getNameOfAction()
-+ {abstract}boolean canPlayerPerform()
-+ {abstract}boolean execute(boolean,boolean)
-+ {abstract}boolean challenge()
-+ Player getPlayer()
+    # Player player
+    # Player opponent
+    # ActionCode codeOfAction
+    # boolean canBeBlocked
+    # boolean canBeChallenged
+    + Action(Player, Player, ActionCode)
+    + ActionCode getActionCode()
+    + String getCodeOfAction()
+    + abstract boolean canPlayerPerform()
+    + abstract boolean execute(boolean, boolean)
+    + abstract boolean challenge()
+    + Player getPlayer()
+    + void setPlayer(Player)
+    + void setOpponent(Player)
 }
 
 

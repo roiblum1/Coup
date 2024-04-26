@@ -9,6 +9,8 @@ import com.example.demo6.Model.Player;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static com.example.demo6.Model.Deck.CardType.*;
+
 public class MCTS {
     private final Game rootGame;
     private Node root;
@@ -333,7 +335,7 @@ public class MCTS {
             }
         }
 
-        if (aiPlayerCoins >= 3 && aiPlayerCards.contains(Deck.CardType.ASSASSIN)) { // Assassinate if possible.
+        if (aiPlayerCoins >= 3 && aiPlayerCards.contains(ASSASSIN)) { // Assassinate if possible.
             return availableActions.stream()
                     .filter(action -> action.getActionCode() == ActionCode.ASSASSINATE)
                     .findFirst()
@@ -341,7 +343,7 @@ public class MCTS {
         }
 
         // Use Duke to collect taxes if available to maximize coin gain safely.
-        if (aiPlayerCards.contains(Deck.CardType.DUKE)) {
+        if (aiPlayerCards.contains(DUKE)) {
             return availableActions.stream()
                     .filter(action -> action.getActionCode() == ActionCode.TAX)
                     .findFirst()
@@ -349,7 +351,7 @@ public class MCTS {
         }
 
         // Use Captain to steal if the human player has coins and the AI has the Captain.
-        if (aiPlayerCards.contains(Deck.CardType.CAPTAIN) && humanPlayerCoins > 0) {
+        if (aiPlayerCards.contains(CAPTAIN) && humanPlayerCoins > 0) {
             return availableActions.stream()
                     .filter(action -> action.getActionCode() == ActionCode.STEAL)
                     .findFirst()
@@ -552,7 +554,7 @@ public class MCTS {
             // Challenge a Tax action if the AI suspects the human player might not have a Duke,
             // especially if the AI itself does not have a Duke.
             if (action.getActionCode() == ActionCode.TAX) {
-                return !aiPlayer.getCards().contains(Deck.CardType.DUKE);
+                return !aiPlayer.getCards().contains(DUKE);
             }
             // If none of the specific conditions are met, do not challenge.
             return false;
@@ -587,12 +589,12 @@ public class MCTS {
             }
 
             // Block Foreign Aid if the AI has a Duke, since a Duke allows blocking Foreign Aid.
-            if (action.getActionCode() == ActionCode.FOREIGN_AID && aiPlayer.getCards().contains(Deck.CardType.DUKE)) {
+            if (action.getActionCode() == ActionCode.FOREIGN_AID && aiPlayer.getCards().contains(DUKE)) {
                 return true;
             }
 
             // Block Steal if the AI has a Captain or Ambassador, as these characters can block Stealing.
-            if (action.getActionCode() == ActionCode.STEAL && (aiPlayer.getCards().contains(Deck.CardType.CAPTAIN) || aiPlayer.getCards().contains(Deck.CardType.AMBASSADOR))) {
+            if (action.getActionCode() == ActionCode.STEAL && (aiPlayer.getCards().contains(CAPTAIN) || aiPlayer.getCards().contains(Deck.CardType.AMBASSADOR))) {
                 return true;
             }
 
@@ -635,14 +637,14 @@ public class MCTS {
             switch (action.getActionCode()) {
                 case FOREIGN_AID:
                     // Challenge if blocking a FOREIGN AID with a Duke seems unlikely
-                    return isSuspiciousBlock(Deck.CardType.DUKE, aiPlayer);
+                    return isSuspiciousBlock(DUKE, aiPlayer);
                 case ASSASSINATE:
                     // Challenge if blocking an ASSASSINATE with a Contessa seems unlikely
                     return isSuspiciousBlock(Deck.CardType.CONTESSA, aiPlayer);
                 case STEAL:
                     // Challenge if blocking a STEAL with an Ambassador or Captain seems unlikely
                     boolean ambassadorSuspicious = isSuspiciousBlock(Deck.CardType.AMBASSADOR, aiPlayer);
-                    boolean captainSuspicious = isSuspiciousBlock(Deck.CardType.CAPTAIN, aiPlayer);
+                    boolean captainSuspicious = isSuspiciousBlock(CAPTAIN, aiPlayer);
                     return ambassadorSuspicious || captainSuspicious;
 
                 default:
@@ -667,7 +669,7 @@ public class MCTS {
      */
     public boolean isSuspiciousBlock(Deck.CardType requiredCard, Player aiPlayer) {
         List<Card> aiPlayerCards = aiPlayer.getCards();
-        long countInAIHand = aiPlayerCards.stream().filter(card -> card.getName().equals(requiredCard.getName())).count();
+        long countInAIHand = aiPlayerCards.stream().filter(card -> card.getType() == requiredCard).count();
         long totalInGame = 2;  // Total copies of each card type in the game
         long totalPossible = totalInGame - countInAIHand;
         return totalPossible < 1;  // Less than 1 means the opponent unlikely to have a card
@@ -734,7 +736,7 @@ public class MCTS {
      * @return the value of the card
      */
     private int getCardValue(Card card) {
-        switch (Deck.CardType.getTypeCard(card)) {
+        switch (card.getType()) {
             case DUKE:
                 return 5;
             case ASSASSIN:

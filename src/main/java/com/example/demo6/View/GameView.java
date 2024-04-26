@@ -349,12 +349,12 @@ public class GameView extends Application {
 
     //* Returns the name of the image file to be used for the specified card. */
     private String getCardImage(Card card) {
-        Map<String, String> cardImageMap = new HashMap<>();
-        cardImageMap.put("Duke", "duke.png");
-        cardImageMap.put("Assassin", "assassin.png");
-        cardImageMap.put("Captain", "captain.png");
-        cardImageMap.put("Ambassador", "ambassador.png");
-        cardImageMap.put("Contessa", "contessa.png");
-        return cardImageMap.getOrDefault(card.getName(), "screen_.png");
+        Map<Deck.CardType, String> cardImageMap = new HashMap<>();
+        cardImageMap.put(Deck.CardType.DUKE, "duke.png");
+        cardImageMap.put(Deck.CardType.ASSASSIN, "assassin.png");
+        cardImageMap.put(Deck.CardType.CAPTAIN, "captain.png");
+        cardImageMap.put(Deck.CardType.AMBASSADOR, "ambassador.png");
+        cardImageMap.put(Deck.CardType.CONTESSA, "contessa.png");
+        return cardImageMap.getOrDefault(card.getType(), "screen_.png");
     }
 }
