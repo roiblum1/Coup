@@ -75,7 +75,7 @@ public class GameController {
         boolean challengeResponse;
         boolean blockResponse;
         boolean actionExecuted = true;
-        boolean challengeResult = false;
+        boolean challengeResult;
         Player opponent = game.getOpponent(currentPlayer);
 
         // Handling challenges
@@ -88,11 +88,14 @@ public class GameController {
             if (challengeResponse) {
                 view.displayMessage(opponent.getName() + " challenges " + currentPlayer.getName() + "'s action!");
                 challengeResult = handleChallenge(action);
+                if (!challengeResult) {
+                    actionExecuted = false;
+                }
             }
         }
 
         // Handling blocks
-        if (action.canBeBlocked && !challengeResult) {
+        if (action.canBeBlocked && actionExecuted) {
             if (opponent == aiPlayer) {
                 blockResponse = simulateBlock(game, action);
             } else {
@@ -286,15 +289,6 @@ public class GameController {
         Player winner = game.getActivePlayers().get(0);
         view.displayWinner(winner);
         mcts.handleGameOver(winner);
-    }
-
-    /**
-     * Retrieves the current player of the game.
-     *
-     * @return The player who is currently taking their turn.
-     */
-    public Player getCurrentPlayer() {
-        return currentPlayer;  // Returns the reference to the current player
     }
 
     /**
