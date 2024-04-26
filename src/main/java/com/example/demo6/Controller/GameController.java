@@ -11,6 +11,8 @@ import javafx.application.Platform;
 
 import java.util.*;
 
+import static com.example.demo6.AI.Heuristic.*;
+
 /**
  * The GameController class is responsible for managing the game logic and communication between the game model and the game view.
  * It handles user interactions, executes actions, manages game state transitions, and integrates with the AI component.
@@ -79,7 +81,7 @@ public class GameController {
         // Handling challenges
         if (action.canBeChallenged) {
             if (opponent == aiPlayer) {
-                challengeResponse = mcts.simulateChallenge(game, action);
+                challengeResponse = simulateChallenge(game, action);
             } else {
                 challengeResponse = view.promptForChallenge("Do you want to challenge " + currentPlayer.getName() + "'s action?");
             }
@@ -92,13 +94,13 @@ public class GameController {
         // Handling blocks
         if (action.canBeBlocked && !challengeResult) {
             if (opponent == aiPlayer) {
-                blockResponse = mcts.simulateBlock(game, action);
+                blockResponse = simulateBlock(game, action);
             } else {
                 blockResponse = view.promptForBlock("Do you want to block " + currentPlayer.getName() + "'s action?");
             }
             if (blockResponse) {
                 view.displayMessage(opponent.getName() + " blocks " + currentPlayer.getName() + "'s action!");
-                boolean challengeBlock = currentPlayer == aiPlayer ? mcts.simulateBlockChallenge(game, action) : view.promptForChallenge("Do you want to challenge this block?");
+                boolean challengeBlock = currentPlayer == aiPlayer ? simulateBlockChallenge(game, action) : view.promptForChallenge("Do you want to challenge this block?");
                 if (!challengeBlock) {
                     actionExecuted = false;
                 } else {
@@ -117,7 +119,7 @@ public class GameController {
                 List<Card> newCards = this.game.drawCards(2);
                 List<Card> selectedCards;
                 if (currentPlayer == aiPlayer) {
-                    selectedCards = mcts.selectCardsToKeep(game, currentPlayer, newCards);
+                    selectedCards = selectCardsToKeep(game, currentPlayer, newCards);
                 } else {
                     List<Card> swapOptions = new ArrayList<>(currentPlayer.getCards());
                     swapOptions.addAll(newCards);
@@ -131,7 +133,7 @@ public class GameController {
                 if (!targetPlayer.getCards().isEmpty()) {
                     Card cardToLose;
                     if (targetPlayer == aiPlayer) {
-                        cardToLose = mcts.selectCardToGiveUp(game, targetPlayer);
+                        cardToLose = selectCardToGiveUp(game, targetPlayer);
                     } else {
                         cardToLose = view.promptPlayerForCardToGiveUp(targetPlayer);
                     }
@@ -167,14 +169,14 @@ public class GameController {
 
         if (blockSuccessful) {
             if (actionToBlock.getPlayer() == aiPlayer) {
-                Card cardToLose = mcts.selectCardToGiveUp(game, actionToBlock.getPlayer());
+                Card cardToLose = selectCardToGiveUp(game, actionToBlock.getPlayer());
                 actionToBlock.getPlayer().returnCard(cardToLose);
             } else {
                 handleLoseCard(actionToBlock.getPlayer());
             }
         } else {
             if (blocker == aiPlayer) {
-                Card cardToLose = mcts.selectCardToGiveUp(game, blocker);
+                Card cardToLose = selectCardToGiveUp(game, blocker);
                 blocker.returnCard(cardToLose);
             } else {
                 handleLoseCard(blocker);
@@ -200,7 +202,7 @@ public class GameController {
         if (challengeSuccess) {
             Player challenger = game.getOpponent(action.getPlayer());
             if (challenger == aiPlayer) {
-                Card cardToLose = mcts.selectCardToGiveUp(game, challenger);
+                Card cardToLose = selectCardToGiveUp(game, challenger);
                 challenger.returnCard(cardToLose);
                 view.displayMessage("Challenge failed. " + challenger.getName() + " loses a card.");
             } else {
@@ -210,7 +212,7 @@ public class GameController {
         } else {
             // If the challenge fails, the challenger loses a card
             if (action.getPlayer() == aiPlayer) {
-                Card cardToLose = mcts.selectCardToGiveUp(game, action.getPlayer());
+                Card cardToLose = selectCardToGiveUp(game, action.getPlayer());
                 action.getPlayer().returnCard(cardToLose);
                 view.displayMessage("Challenge successful. " + action.getPlayer().getName() + " loses a card.");
             } else {
