@@ -49,7 +49,7 @@ public class Deck implements Serializable {
      * Provides a copy of the contents of the deck.
      * @return A stack containing all cards currently in the deck.
      */
-    public Stack<Card> getContents() {
+    public Stack<Card> copyContents() {
         Stack<Card> copiedStack = new Stack<>();
         copiedStack.addAll(contents);
         return copiedStack;
@@ -88,7 +88,7 @@ public class Deck implements Serializable {
         }
 
         Deck copiedDeck = new Deck(cardTypes, 2);  // Assuming default number of copies is 2
-        for (Card card : this.getContents()) {
+        for (Card card : this.copyContents()) {
             if (card == null) {
                 throw new IllegalStateException("Deck contains a null card.");
             }
