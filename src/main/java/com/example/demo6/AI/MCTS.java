@@ -2,7 +2,6 @@ package com.example.demo6.AI;
 
 import com.example.demo6.Model.Actions.*;
 import com.example.demo6.Model.Card;
-import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Game;
 import com.example.demo6.Model.Player;
 
@@ -10,7 +9,6 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static com.example.demo6.AI.Heuristic.*;
-import static com.example.demo6.Model.Deck.CardType.*;
 
 public class MCTS {
     private final Game rootGame;
@@ -62,7 +60,7 @@ public class MCTS {
             if (child.getVisitCount() > 0) {
                 double averageReward = child.getReward() / (double) child.getVisitCount();
                 double ucb1 = averageReward + Math.sqrt(2 * Math.log(root.getVisitCount()) / child.getVisitCount());
-                System.out.println(child.getAction().getCodeOfAction() + ": Visit Count = " + child.getVisitCount()
+                System.out.println(child.getAction().actionCodeToString() + ": Visit Count = " + child.getVisitCount()
                         + ", Reward = " + child.getReward() + ", Average Reward = " + averageReward
                         + ", UCB1 = " + ucb1);
                 if (ucb1 > maxUCB1) {
@@ -81,7 +79,7 @@ public class MCTS {
         }
 
         Node bestChild = maxNodes.get(ThreadLocalRandom.current().nextInt(maxNodes.size()));
-        System.out.println("Selected best action: " + bestChild.getAction().getCodeOfAction());
+        System.out.println("Selected best action: " + bestChild.getAction().actionCodeToString());
         return bestChild.getAction();
     }
 
@@ -100,7 +98,7 @@ public class MCTS {
             Game game = nodeGamePair.game;
 
             if (node.getAction() != null) {
-                System.out.println("Selected node: " + node.getAction().getCodeOfAction());
+                System.out.println("Selected node: " + node.getAction().actionCodeToString());
             } else {
                 System.out.println("Selected node: null");
             }
@@ -181,7 +179,7 @@ public class MCTS {
         for (Action action : availableActions) {
             Node child = new Node(action, parent);
             childNodes.add(child);
-            System.out.println("Created child node for action: " + action.getCodeOfAction());
+            System.out.println("Created child node for action: " + action.actionCodeToString());
         }
         parent.addChildren(childNodes);
     }
@@ -209,7 +207,7 @@ public class MCTS {
                     boolean isChallenged = simulateChallenge(game, action);
                     boolean isBlocked = simulateBlock(game, action);
 
-                    System.out.println("Rollout action: " + action.getCodeOfAction());
+                    System.out.println("Rollout action: " + action.actionCodeToString());
 
                     if (handleChallenge(game, action, isChallenged, currentPlayer) && handleBlock(game, action, isBlocked, currentPlayer)) {
                         executeAction(game, action, false, false); // Execute without further blocks or challenges
@@ -353,7 +351,7 @@ public class MCTS {
 
             // Log the backpropagation process for debugging and insight into tree development
             if (node.getAction() != null) {
-                System.out.println("Backpropagation: Action = " + node.getAction().getCodeOfAction() + ", Visit Count = " + node.getVisitCount() + ", Reward = " + node.getReward());
+                System.out.println("Backpropagation: Action = " + node.getAction().actionCodeToString() + ", Visit Count = " + node.getVisitCount() + ", Reward = " + node.getReward());
             } else {
                 System.out.println("Backpropagation: Action = null, Visit Count = " + node.getVisitCount() + ", Reward = " + node.getReward());
             }

@@ -1,6 +1,8 @@
 package com.example.demo6.Model;
 
 import com.example.demo6.Model.Actions.*;
+import javafx.collections.ObservableArray;
+import javafx.collections.ObservableList;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -228,22 +230,16 @@ public class Game implements Serializable {
      */
     public void executeAction(Action action, List<Card> cards) {
         if (cards != null) {
-            if (action.getActionCode() == ActionCode.COUP) {
+            if (action.getActionCode() == ActionCode.COUP || action.getActionCode() == ActionCode.ASSASSINATE) {
                 boolean success = action.execute(false, false);
                 if (success) {
                     getOpponent(action.getPlayer()).returnCard(cards.get(0));
                 }
-            } else if (action.getActionCode() == ActionCode.ASSASSINATE) {
-                boolean success = action.execute(false, false);
-                if (success) {
-                    getOpponent(action.getPlayer()).updateCoins(-3);
-                    getOpponent(action.getPlayer()).returnCard(cards.get(0));
-                }
-            } else if (action.getActionCode() == ActionCode.SWAP) {
+            }
+            else if (action.getActionCode() == ActionCode.SWAP) {
                 Player currentPlayer = action.getPlayer();
                 List<Card> selectedCards = cards.subList(0, 2);
                 List<Card> newCards = cards.subList(2, 4);
-
                 // Call the swapCards method on the current player
                 currentPlayer.swapCards(selectedCards, newCards);
             }
@@ -252,4 +248,5 @@ public class Game implements Serializable {
         }
         lastExecutedAction = action;
     }
+
 }

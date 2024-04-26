@@ -36,6 +36,7 @@ public class AssassinateAction extends Action {
             return false;
         }
         // If the method reaches this point, the assassination attempt is neither blocked nor failed
+        player.updateCoins(-3);
         return true;
     }
 

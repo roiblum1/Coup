@@ -1,6 +1,5 @@
 package com.example.demo6.Model.Actions;
 
-import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Player;
 
 public abstract class Action {
@@ -21,7 +20,7 @@ public abstract class Action {
         return codeOfAction;
     }
 
-    public String getCodeOfAction() {
+    public String actionCodeToString() {
         return codeOfAction.toString();
     }
 

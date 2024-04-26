@@ -183,20 +183,20 @@ public class GameView extends Application {
                 @Override
                 protected void updateItem(Action action, boolean empty) {
                     super.updateItem(action, empty);
-                    setText(empty ? null : action.getCodeOfAction());
+                    setText(empty ? null : action.actionCodeToString());
                 }
             });
             actionsComboBox.setButtonCell(new ListCell<>() {
                 @Override
                 protected void updateItem(Action action, boolean empty) {
                     super.updateItem(action, empty);
-                    setText(empty ? null : action.getCodeOfAction());
+                    setText(empty ? null : action.actionCodeToString());
                 }
             });
             actionsComboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(Action action) {
-                    return action == null ? null : action.getCodeOfAction();
+                    return action == null ? null : action.actionCodeToString();
                 }
 
                 @Override

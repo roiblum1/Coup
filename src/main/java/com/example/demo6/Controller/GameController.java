@@ -249,8 +249,8 @@ public class GameController {
         if (bestAction != null) {
             bestAction.setPlayer(aiPlayer);
             bestAction.setOpponent(game.getOpponent(aiPlayer));
-            System.out.println("The best action is : " + bestAction.getCodeOfAction() + " " + bestAction.getPlayer().getName());
-            view.displayMessage("AI decides to execute the action: " + bestAction.getCodeOfAction());
+            System.out.println("The best action is : " + bestAction.actionCodeToString() + " " + bestAction.getPlayer().getName());
+            view.displayMessage("AI decides to execute the action: " + bestAction.actionCodeToString());
             executeAction(bestAction);
         }
     }
