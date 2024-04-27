@@ -2,6 +2,7 @@ package com.example.demo6.AI;
 
 import com.example.demo6.Model.Actions.Action;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,17 +123,11 @@ public class Node {
      * @return The child node with the highest UCT value.
      */
     public Node selectChild() {
-        double maxUCT = Double.NEGATIVE_INFINITY;
-        Node selectedChild = null;
-        for (Node child : children.values()) {
-            double uct = child.getUCTValue();
-            if (uct > maxUCT) {
-                maxUCT = uct;
-                selectedChild = child;
-            }
-        }
-        return selectedChild;
+        return children.values().stream()
+                .max(Comparator.comparingDouble(Node::getUCTValue))
+                .orElse(null);
     }
+
 
     /**
      * Checks if this node is a leaf node (i.e., has no children).

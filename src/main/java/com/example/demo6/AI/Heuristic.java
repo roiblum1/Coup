@@ -297,7 +297,6 @@ public class Heuristic {
             case CAPTAIN -> 3;
             case AMBASSADOR -> 2;
             case CONTESSA -> 1;
-            default -> 0;
         };
     }
 }

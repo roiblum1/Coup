@@ -167,6 +167,7 @@ public class Game implements Serializable {
      * @param count The number of cards to draw.
      * @return A list of cards drawn from the deck.
      */
+    //TODO : move to Deck
     public List<Card> drawCards(int count) {
         List<Card> cards = new ArrayList<>();
         for (int i = 0; i < count; i++) {

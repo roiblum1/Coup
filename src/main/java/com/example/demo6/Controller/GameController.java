@@ -228,7 +228,7 @@ public class GameController {
      * Displays which action the AI decided to execute in the view.
      */
     private void executeAIPlayerTurn() {
-        Action bestAction = mcts.bestMove();
+        Action bestAction = mcts.bestMove(this.game);
         if (bestAction != null) {
             bestAction.setPlayer(aiPlayer);
             bestAction.setOpponent(game.getOpponent(aiPlayer));

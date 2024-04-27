@@ -38,6 +38,12 @@ public class GameView extends Application {
         launch(args);
     }
 
+    /**
+     * Initializes the game view and sets up the initial game state.
+     *
+     * @param primaryStage the primary stage for this application,
+     *                         used to display the application's user interface.
+     */
     @Override
     public void start(Stage primaryStage) {
         // Main horizontal box that will contain everything
@@ -50,6 +56,8 @@ public class GameView extends Application {
         gameContent.setAlignment(Pos.CENTER);
 
         createTurnTable();
+        createNewGameButton();
+
         // VBox for the card stack area
         cardStackArea = new VBox(10);
         cardStackArea.setAlignment(Pos.CENTER_RIGHT);
@@ -74,12 +82,21 @@ public class GameView extends Application {
         Platform.runLater(() -> controller.initializeGame());
     }
 
-    //* This method set the controller for the game */
+    /**
+     * Sets the controller for the game.
+     *
+     * @param controller the controller to be set
+     */
     public void setController(GameController controller) {
         this.controller = controller;
     }
 
-    //* This method ask the player if he wants to challenge an action */
+    /**
+     * This method ask the player if he wants to challenge an action.
+     *
+     * @param message the message to be displayed in the confirmation dialog
+     * @return true if the player chooses to challenge, false otherwise
+     */
     public boolean promptForChallenge(String message) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Challenge");
@@ -92,7 +109,12 @@ public class GameView extends Application {
         return result.isPresent() && result.get() == buttonTypeYes;
     }
 
-    //* This method ask the player if he wants to block an action */
+    /**
+     * This method ask the player if he wants to block an action.
+     *
+     * @param message the message to be displayed in the confirmation dialog
+     * @return true if the player chooses to block, false otherwise
+     */
     public boolean promptForBlock(String message) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Block Action");
@@ -105,7 +127,13 @@ public class GameView extends Application {
         return result.isPresent() && result.get() == buttonTypeYes;
     }
 
-    //* This method ask the player which cards he wants to keep */
+    /**
+     * This method ask the player which cards he wants to keep.
+     *
+     * @param options the list of available cards
+     * @param numberOfCardsToSelect the number of cards the player can select
+     * @return a list of selected cards
+     */
     public List<Card> promptForCardSelection(List<Card> options, int numberOfCardsToSelect) {
         List<String> choices = options.stream().map(Card::toString).collect(Collectors.toList());
         List<Card> selectedCards = new ArrayList<>();
@@ -130,7 +158,12 @@ public class GameView extends Application {
     }
 
 
-    //* This method ask the player which card he wants to give up */
+    /**
+     * This method ask the player which card he wants to give up.
+     *
+     * @param player the player whose card will be selected
+     * @return the selected card, or null if the player cancels the operation
+     */
     public Card promptPlayerForCardToGiveUp(Player player) {
         List<String> cardChoices = player.getCards().stream()
                 .map(Card::toString)
@@ -150,27 +183,49 @@ public class GameView extends Application {
         return null;
     }
 
-    //This method update the player info in the view.
-    //This update the coins and the cards in the view.
+    /**
+     * This method updates the player info in the view.
+     * It updates the coins and the cards in the view.
+     *
+     * @param players the list of players whose information will be updated in the view
+     */
     public void updatePlayerInfo(List<Player> players) {
         Platform.runLater(() -> {
             gameContent.getChildren().removeIf(node -> node instanceof VBox && node.getStyleClass().contains("player-area"));
-            for (Player player : players) {
-                List<String> cardImages = player.getCards().stream()
-                        .map(this::getCardImage)
-                        .collect(Collectors.toList());
+            players.forEach(player -> {
+                List<String> cardImages;
+                if (players.indexOf(player) == 1) { // Assuming index 1 is always the opponent
+                    cardImages = player.getCards().stream()
+                            .map(card -> "Screenshot_15.png") // Use the back image for all cards of the opponent
+                            .collect(Collectors.toList());
+                } else {
+                    cardImages = player.getCards().stream()
+                            .map(this::getCardImage)
+                            .collect(Collectors.toList());
+                }
                 createPlayerArea(player, cardImages);
-            }
+            });
         });
     }
-    //* This method update the current player and call the updateTurnTable */
+
+
+    /**
+     * Updates the current player and calls the updateTurnTable method.
+     *
+     * @param currentPlayer the new current player
+     */
     public void updateCurrentPlayer(Player currentPlayer) {
         Platform.runLater(() -> {
             this.currentPlayer = currentPlayer;
             updateTurnTable();
         });
     }
-    //* This method update the available actions in the view. */
+
+    /**
+     * Updates the available actions in the view.
+     *
+     * @param availableActions the list of available actions
+     */
     public void updateAvailableActions(List<Action> availableActions) {
         Platform.runLater(() -> {
             gameContent.getChildren().removeIf(node -> node instanceof HBox && node.getStyleClass().contains("actions-box"));
@@ -217,7 +272,9 @@ public class GameView extends Application {
         });
     }
 
-    //* This method update the turn label in the view. */
+    /**
+     * Updates the turn label in the view.
+     */
     private void updateTurnTable() {
         Platform.runLater(() -> {
             Label turnLabel = (Label) gameContent.lookup(".turn-label");
@@ -227,7 +284,9 @@ public class GameView extends Application {
         });
     }
 
-    //* This method create the turn label in the view. */
+    /**
+     * This method create the turn label in the view.
+     */
     private void createTurnTable() {
         Label turnLabel = new Label("Turn: ");
         turnLabel.setFont(new Font("Arial", 24));
@@ -282,6 +341,20 @@ public class GameView extends Application {
         });
     }
 
+    private void createNewGameButton() {
+        Button newGameButton = new Button("New Game");
+        newGameButton.setFont(new Font("Arial", 16));
+        newGameButton.setOnAction(event -> {
+            // Reset the game state and initialize a new game
+            controller = new GameController(this, new Game(new Deck(EnumSet.allOf(Deck.CardType.class), 2)));
+            Platform.runLater(() -> {
+                controller.initializeGame();
+            });
+        });
+
+        gameContent.getChildren().add(newGameButton);
+    }
+
     private void animateCardReveal(Player player, ImageView cardView) {
         TranslateTransition translate = new TranslateTransition(Duration.seconds(0.5), cardView);
         translate.setFromX(-200);  // Start from left (adjust as needed)
@@ -323,7 +396,11 @@ public class GameView extends Application {
 
 
 
-    //* Displays the winner in the alert box */
+    /**
+     * Displays the winner in the alert box.
+     *
+     * @param winner the winner of the game
+     */
     public void displayWinner(Player winner) {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -335,7 +412,11 @@ public class GameView extends Application {
         });
     }
 
-    //* display message in alert box */
+    /**
+     * Displays a message in an alert box.
+     *
+     * @param message the message to be displayed
+     */
     public void displayMessage(String message) {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);

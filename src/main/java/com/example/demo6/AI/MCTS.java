@@ -11,11 +11,10 @@ import java.util.concurrent.ThreadLocalRandom;
 import static com.example.demo6.AI.Heuristic.*;
 
 public class MCTS {
-    private final Game rootGame;
+    private Game rootGame;
     private Node root;
     private final int numOfSimulations;
     private final int maxDepth;
-    private Player aiPlayer, humanPlayer;
 
 
     /**
@@ -30,8 +29,6 @@ public class MCTS {
         this.root = new Node(null); // Initializes the root node of the MCTS tree.
         this.numOfSimulations = numOfSimulations; // Sets the number of simulations to be performed during the MCTS process.
         this.maxDepth = maxDepth; // Sets the maximum depth of the MCTS tree.
-        this.aiPlayer = game.getPlayers().get(1); // Identifies the AI player in the game.
-        this.humanPlayer = game.getPlayers().get(0); // Identifies the human player in the game.
     }
 
 
@@ -45,7 +42,8 @@ public class MCTS {
      * If no valid moves are available, the method returns null.
      * @return the best action for the AI to take in the game, or null if no valid actions are available.
      */
-    public Action bestMove() {
+    public Action bestMove(Game game) {
+        this.rootGame =  game.deepCopy();
         if (rootGame.isGameOver()) {
             return null;
         }
@@ -348,7 +346,6 @@ public class MCTS {
                 node.incrementReward(aiPlayerScore-humanPlayerScore);
             }
 
-
             // Log the backpropagation process for debugging and insight into tree development
             if (node.getAction() != null) {
                 System.out.println("Backpropagation: Action = " + node.getAction().actionCodeToString() + ", Visit Count = " + node.getVisitCount() + ", Reward = " + node.getReward());
@@ -452,6 +449,10 @@ public class MCTS {
         System.out.println("The executed action is : " + action.getActionCode() + " the player " +action.getPlayer().getName());
         if(!game.isGameOver()) {
             game.switchTurns();
+        }
+        else
+        {
+            handleGameOver(game.getPlayers().get(0));
         }
     }
 }
