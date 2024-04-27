@@ -239,22 +239,13 @@ public class GameController {
     }
 
     /**
-     * Checks if the game is over. The game is considered over when only one active player remains.
-     *
-     * @return true if the game is over, otherwise false.
-     */
-    private boolean isGameOver() {
-        return game.getActivePlayers().size() == 1;
-    }
-
-    /**
      * Handles the loss of a card for a given player. This method determines which card the player should lose,
      * either through AI selection or player input, and then performs the necessary actions to update the game state.
      *
      * @param player The player who is losing a card.
      */
     public void handleLoseCard(Player player) {
-        Card cardToLose = null;
+        Card cardToLose;
         if (player == aiPlayer) {
             cardToLose = selectCardToGiveUp(game, player);
         } else {
