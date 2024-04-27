@@ -1,5 +1,6 @@
 package com.example.demo6.Controller;
 
+import com.example.demo6.AI.Heuristic;
 import com.example.demo6.AI.MCTS;
 import com.example.demo6.Model.Actions.*;
 import com.example.demo6.Model.Card;
@@ -170,22 +171,15 @@ public class GameController {
         BlockAction blockAction = new BlockAction(blocker, game.getOpponent(blocker), actionToBlock);
         boolean blockSuccessful = blockAction.execute(isChallenged, false);
 
-        if (blockSuccessful) {
-            if (actionToBlock.getPlayer() == aiPlayer) {
-                Card cardToLose = selectCardToGiveUp(game, actionToBlock.getPlayer());
-                actionToBlock.getPlayer().returnCard(cardToLose);
-            } else {
-                handleLoseCard(actionToBlock.getPlayer());
-            }
-        } else {
-            if (blocker == aiPlayer) {
-                Card cardToLose = selectCardToGiveUp(game, blocker);
-                blocker.returnCard(cardToLose);
-            } else {
-                handleLoseCard(blocker);
-            }
+        if (!isChallenged)
+        {
+            return blockSuccessful;
         }
-
+        if (blockSuccessful) {
+            handleLoseCard(actionToBlock.getPlayer());
+        } else {
+            handleLoseCard(blocker);
+        }
         return blockSuccessful;
     }
 
@@ -198,33 +192,19 @@ public class GameController {
      * @return true if the challenge was successful, false if it failed.
      */
     private boolean handleChallenge(Action action) {
-        // Determine the outcome of the challenge
         boolean challengeSuccess = action.challenge();
 
-        // If the challenge succeeds, the player who performed the action loses a card
         if (challengeSuccess) {
-            Player challenger = game.getOpponent(action.getPlayer());
-            if (challenger == aiPlayer) {
-                Card cardToLose = selectCardToGiveUp(game, challenger);
-                challenger.returnCard(cardToLose);
-                view.displayMessage("Challenge failed. " + challenger.getName() + " loses a card.");
-            } else {
-                handleLoseCard(challenger);
-                view.displayMessage("Challenge failed. " + challenger.getName() + " loses a card.");
-            }
+            handleLoseCard(game.getOpponent(action.getPlayer()));
+            view.displayMessage("Challenge failed. " + game.getOpponent(action.getPlayer()).getName() + " loses a card.");
         } else {
-            // If the challenge fails, the challenger loses a card
-            if (action.getPlayer() == aiPlayer) {
-                Card cardToLose = selectCardToGiveUp(game, action.getPlayer());
-                action.getPlayer().returnCard(cardToLose);
-                view.displayMessage("Challenge successful. " + action.getPlayer().getName() + " loses a card.");
-            } else {
-                handleLoseCard(action.getPlayer());
-                view.displayMessage("Challenge successful. " + action.getPlayer().getName() + " loses a card.");
-            }
+            handleLoseCard(action.getPlayer());
+            view.displayMessage("Challenge successful. " + action.getPlayer().getName() + " loses a card.");
         }
+
         return challengeSuccess;
     }
+
 
     /**
      * Ends the current player's turn and transitions to the next player's turn. If the game is not over, it updates
@@ -275,11 +255,14 @@ public class GameController {
      * @param player The player who is required to lose a card.
      */
     public void handleLoseCard(Player player) {
-        if (!player.getCards().isEmpty()) {
-            Card cardToLose = view.promptPlayerForCardToGiveUp(player);
-            player.returnCard(cardToLose);
-            updateView();
+        Card cardToLose = null;
+        if (player == aiPlayer) {
+            cardToLose = selectCardToGiveUp(game, player);
+        } else {
+            cardToLose = view.promptPlayerForCardToGiveUp(player);
         }
+        player.returnCard(cardToLose);
+        updateView();
     }
 
     /**
