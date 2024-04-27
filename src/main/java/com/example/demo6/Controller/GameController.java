@@ -151,7 +151,7 @@ public class GameController {
 
         updateView();
 
-        if (isGameOver()) {
+        if (game.isGameOver()) {
             endGame();
         } else {
             endTurn();
@@ -212,7 +212,7 @@ public class GameController {
      * the game.
      */
     private void endTurn() {
-        if (!isGameOver()) {
+        if (!(game.isGameOver())) {
             currentPlayer = game.switchTurns();
             updateView();
             if (currentPlayer.equals(aiPlayer)) {
@@ -248,11 +248,10 @@ public class GameController {
     }
 
     /**
-     * Handles the event when a player must lose a card. This could occur as a result of a challenge, coup, or
-     * assassination. The method prompts the player to choose a card to lose, removes the chosen card from the player's
-     * hand, and updates the view accordingly.
+     * Handles the loss of a card for a given player. This method determines which card the player should lose,
+     * either through AI selection or player input, and then performs the necessary actions to update the game state.
      *
-     * @param player The player who is required to lose a card.
+     * @param player The player who is losing a card.
      */
     public void handleLoseCard(Player player) {
         Card cardToLose = null;
