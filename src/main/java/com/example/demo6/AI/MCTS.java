@@ -251,45 +251,59 @@ public class MCTS {
     private boolean handleChallenge(Game game, Action action, boolean isChallenged, Player currentPlayer) {
         if (action.canBeChallenged && isChallenged) {
             if (!action.challenge()) {
-                if (currentPlayer.getName().equals(game.getPlayers().get(1).getName())) {
-                    Card card = selectCardToGiveUp(game, currentPlayer);
-                    currentPlayer.returnCard(card);
-                }
-                else {
-                    currentPlayer.loseRandomInfluence();
-                }
+                handleLoseCard(currentPlayer, game);
                 // The challenging player loses influence if the challenge fails
                 return false; // Action fails if the challenge is successful
             } else {
-                if (currentPlayer.getName().equals(game.getPlayers().get(1).getName())) {
-                    currentPlayer.loseRandomInfluence();
-                }
-                else {
-                    Card card = selectCardToGiveUp(game, currentPlayer);
-                    currentPlayer.returnCard(card);
-                }
+                handleLoseCard(game.getOpponent(currentPlayer), game);
             }
         }
         return true; // Continue with the action if no challenge or if challenge failed
     }
+
+    /**
+     * Handles the block event during the game simulation.
+     * This method evaluates the block outcome and updates the game state accordingly.
+     * If the action can be blocked and the block is successful, the action does not proceed.
+     * If the action can be blocked and the block is challenged successfully, the blocking player loses influence.
+     * If the action can be blocked and the block is challenged unsuccessfully, the challenging player loses influence.
+     * If the action cannot be blocked, the method returns true, indicating that the action can proceed.
+     * @param game The current state of the game, used to access the current players and game context.
+     * @param action The action being blocked.
+     * @param isBlocked A boolean value indicating whether the action is being blocked.
+     * @param currentPlayer The player whose turn it is during the simulation.
+     * @return true if the action can proceed, false otherwise.
+     */
     private boolean handleBlock(Game game, Action action, boolean isBlocked, Player currentPlayer) {
         if (action.canBeBlocked && isBlocked) {
-            if (!simulateBlockChallenge(game, action)) {
-                currentPlayer.loseRandomInfluence(); // The blocking player loses influence if the block challenge fails
-                return false; // Action does not proceed if block is successful
+            if (simulateBlockChallenge(game, action)) {
+                // If the block is challenged successfully, the blocking player loses influence
+                handleLoseCard(game.getOpponent(currentPlayer), game);
+                return true; // Action proceeds if the block challenge is successful
             } else {
-                game.getOpponent(currentPlayer).loseRandomInfluence();
+                // If the block is not challenged or the challenge fails, the action does not proceed
+                return false; // Action does not proceed if the block is successful
             }
         }
-        return true; // Continue with the action if no block or if block failed
+        return true; // Continue with the action if no block
     }
 
+    /**
+     * Handles the lose card event during the game simulation.
+     * This method evaluates the game state and determines whether the AI should lose a card.
+     * If the AI is the player whose turn it is during the simulation, the method selects a card to lose and returns it.
+     * If the AI is not the player whose turn it is during the simulation, the method loses a random influence point for the AI.
+     * @param game The current state of the game, used to access the current players and game context.
+     * @param player The player whose turn it is during the simulation.
+     */
     public void handleLoseCard(Player player, Game game) {
         Card cardToLose;
         if (player.getName().equals(game.getPlayers().get(1).getName())) {
+            // If the AI is the player whose turn it is during the simulation, the method selects a card to lose and returns it.
             cardToLose = selectCardToGiveUp(game, player);
             player.returnCard(cardToLose);
         } else {
+            // If the AI is not the player whose turn it is during the simulation, the method loses a random influence point for the AI.
             player.loseRandomInfluence();
         }
     }
