@@ -7,6 +7,7 @@ import com.example.demo6.Model.Player;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 import static com.example.demo6.AI.Heuristic.*;
 
@@ -55,36 +56,35 @@ public class MCTS {
         search(numOfSimulations, maxDepth);
 
         double maxUCB1 = Double.NEGATIVE_INFINITY;
-        List<Node> maxNodes = new ArrayList<>();
         List<Action> aiAvailableActions = game.getAvailableActions(game.getAIPlayer());
+        List<Node> maxNodes = root.getChildren().values().stream()
+                .filter(child -> child.getVisitCount() > 0)
+                .collect(Collectors.toList());
+
+        maxNodes = maxNodes.stream()
+                .filter(child -> aiAvailableActions.stream()
+                        .anyMatch(action -> action.getActionCode() == child.getAction().getActionCode()))
+                .collect(Collectors.toList());
+
+        maxNodes.sort(Comparator.comparingDouble(Node::getUCB1Value).reversed());
+
         System.out.println("Available actions:");
-        for (Node child : root.getChildren().values()) {
-            if (child.getVisitCount() > 0) {
-                if (aiAvailableActions.stream().anyMatch(action -> action.getActionCode() == child.getAction().getActionCode())) {
-                    double averageReward = child.getReward() / (double) child.getVisitCount();
-                    double ucb1 = averageReward + Math.sqrt(2 * Math.log(root.getVisitCount()) / child.getVisitCount());
-                    System.out.println(child.getAction().actionCodeToString() + ": Visit Count = " + child.getVisitCount()
-                            + ", Reward = " + child.getReward() + ", Average Reward = " + averageReward
-                            + ", UCB1 = " + ucb1);
-                    if (ucb1 > maxUCB1) {
-                        maxUCB1 = ucb1;
-                        maxNodes.clear();
-                        maxNodes.add(child);
-                    } else if (ucb1 == maxUCB1) {
-                        maxNodes.add(child);
-                    }
-                }
-            }
-        }
+        maxNodes.forEach(child -> {
+            double averageReward = child.getReward() / (double) child.getVisitCount();
+            double ucb1 = child.getUCB1Value();
+            System.out.println(child.getAction().actionCodeToString() + ": Visit Count = " + child.getVisitCount()
+                    + ", Reward = " + child.getReward() + ", Average Reward = " + averageReward
+                    + ", UCB1 = " + ucb1);
+        });
 
         if (maxNodes.isEmpty()) {
             System.out.println("No valid moves available.");
             return null;
+        } else {
+            Node bestNode = maxNodes.get(0);
+            System.out.println("Selected best action: " + bestNode.getAction().actionCodeToString());
+            return bestNode.getAction();
         }
-
-        Node bestChild = maxNodes.get(ThreadLocalRandom.current().nextInt(maxNodes.size()));
-        System.out.println("Selected best action: " + bestChild.getAction().actionCodeToString());
-        return bestChild.getAction();
     }
 
     /**

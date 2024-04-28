@@ -51,16 +51,16 @@ public class Node {
     }
 
     /**
-     * Calculates and returns the Upper Confidence Bound applied to trees (UCT) value for this node.
-     * @return The UCT value for this node.
+     * Calculates and returns the Upper Confidence Bound 1 (UCB1) value for this node.
+     * @return The UCB1 value for this node.
      */
-    public double getUCTValue() {
+    public double getUCB1Value() {
         if (visitCount == 0) {
             return Double.POSITIVE_INFINITY;
         }
-        double exploitation = (double) reward / visitCount;
-        double exploration = EXPLORATION * Math.sqrt(Math.log(parent.getVisitCount()) / visitCount);
-        return exploitation + exploration;
+        double averageReward = (double) reward / visitCount;
+        double explorationFactor = Math.sqrt(2 * Math.log(parent.getVisitCount()) / visitCount);
+        return averageReward + explorationFactor;
     }
 
     /**
@@ -124,7 +124,7 @@ public class Node {
      */
     public Node selectChild() {
         return children.values().stream()
-                .max(Comparator.comparingDouble(Node::getUCTValue))
+                .max(Comparator.comparingDouble(Node::getUCB1Value))
                 .orElse(null);
     }
 

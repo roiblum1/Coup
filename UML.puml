@@ -7,16 +7,17 @@ class com.example.demo6.Model.Actions.StealAction {
 + boolean canPlayerPerform()
 + boolean execute(boolean,boolean)
 + boolean challenge()
-+ Player getTargetPlayer()
 }
 
 class com.example.demo6.Model.Deck {
++ {static} int NUMBER_OF_COPIES
 - Stack<Card> contents
 + int getSize()
 + boolean isEmpty()
-+ Stack<Card> getContents()
++ Stack<Card> copyContents()
 + Card getCard()
 + void returnCard(Card)
++ List<Card> drawCards(int)
 + Deck deepCopy()
 }
 
@@ -36,7 +37,7 @@ abstract class com.example.demo6.Model.Actions.Action {
 + boolean canBeBlocked
 + boolean canBeChallenged
 + ActionCode getActionCode()
-+ String getCodeOfAction()
++ String actionCodeToString()
 + {abstract}boolean canPlayerPerform()
 + {abstract}boolean execute(boolean,boolean)
 + {abstract}boolean challenge()
@@ -70,7 +71,7 @@ class com.example.demo6.Model.Actions.SwapAction {
 }
 
 class com.example.demo6.AI.Heuristic {
-- {static} Action selectActionHeuristically(List<Action>,Game)
+~ {static} Action selectActionHeuristically(List<Action>,Game)
 + {static} boolean simulateChallenge(Game,Action)
 + {static} boolean simulateBlock(Game,Action)
 + {static} boolean simulateBlockChallenge(Game,Action)
@@ -99,16 +100,20 @@ class com.example.demo6.Controller.GameController {
 - Player currentPlayer
 - Player aiPlayer
 - MCTS mcts
+- String HUMANN_PLAYER_NAME
+- String AI_PLAYER_NAME
 + void initializeGame()
++ Game getGame()
 + void executeAction(Action)
+- List<Card> getCardsForAction(Action)
+- boolean getChallengeDecision(Action,Player)
+- boolean getBlockDecision(Action,Player)
 - boolean handleBlockAction(Player,Action,boolean)
 - boolean handleChallenge(Action)
 - void endTurn()
 - void executeAIPlayerTurn()
-- boolean isGameOver()
 + void handleLoseCard(Player)
 - void endGame()
-+ Player getCurrentPlayer()
 - void updateView()
 }
 
@@ -139,7 +144,6 @@ class com.example.demo6.Model.Game {
 - int currentPlayerIndex
 - Action lastExecutedAction
 + void addPlayer(Player)
-+ int getCurrentPlayerIndex()
 + void setCurrentPlayerIndex(int)
 + List<Action> getAvailableActions(Player)
 + Player getOpponent(Player)
@@ -150,10 +154,11 @@ class com.example.demo6.Model.Game {
 + void setDeck(Deck)
 + boolean isGameOver()
 + Player switchTurns()
-+ List<Card> drawCards(int)
 + void setPlayerList(List<Player>)
 + void setLastExecutedAction(Action)
 + Action getLastExecutedAction()
++ Player getHumanPlayer()
++ Player getAIPlayer()
 + Game deepCopy()
 + void executeAction(Action,List<Card>)
 }
@@ -205,8 +210,9 @@ class com.example.demo6.View.GameView {
 - void createPlayerArea(Player,List<String>)
 + void createCardStackArea(Deck)
 + void updateDeckInfo(Deck)
-- void animateCardReveal(Player,ImageView)
-- void animateCoinUpdate(Label,int,int)
+- VBox createControlButtonsVBox()
+- Button createNewGameButton()
+- Button createRevealAICardsButton()
 + void displayWinner(Player)
 + void displayMessage(String)
 - String getCardImage(Card)
@@ -234,8 +240,7 @@ class com.example.demo6.AI.MCTS {
 - Node root
 - int numOfSimulations
 - int maxDepth
-- Player aiPlayer
-+ Action bestMove()
++ Action bestMove(Game)
 + void search(int,int)
 - NodeGamePair selectNode(int)
 - void expand(Node,Game)
@@ -243,9 +248,9 @@ class com.example.demo6.AI.MCTS {
 - Action selectActionForPlayer(Game,Player,List<Action>)
 - boolean handleChallenge(Game,Action,boolean,Player)
 - boolean handleBlock(Game,Action,boolean,Player)
++ void handleLoseCard(Player,Game)
 - boolean shouldTerminateSearch(Game)
 - Player determineWinner(Game)
-- Action selectActionHeuristically(List<Action>,Game)
 - void backPropagate(Node,Player,Player,Game)
 + void handleAction(Action)
 + void handleGameOver(Player)
@@ -280,16 +285,12 @@ class com.example.demo6.Model.Player {
 
 
 com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.StealAction
-java.io.Serializable <|.. com.example.demo6.Model.Deck
 com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.ForeignAidAction
 com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.SwapAction
 com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.AssassinateAction
 com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.CoupAction
 com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.IncomeAction
-java.io.Serializable <|.. com.example.demo6.Model.Card
-java.io.Serializable <|.. com.example.demo6.Model.Game
 javafx.application.Application <|-- com.example.demo6.View.GameView
 com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.TaxAction
 com.example.demo6.Model.Actions.Action <|-- com.example.demo6.Model.Actions.BlockAction
-java.io.Serializable <|.. com.example.demo6.Model.Player
 @enduml
