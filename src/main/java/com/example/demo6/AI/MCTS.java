@@ -56,21 +56,23 @@ public class MCTS {
 
         double maxUCB1 = Double.NEGATIVE_INFINITY;
         List<Node> maxNodes = new ArrayList<>();
-
+        List<Action> aiAvailableActions = game.getAvailableActions(game.getAIPlayer());
         System.out.println("Available actions:");
         for (Node child : root.getChildren().values()) {
             if (child.getVisitCount() > 0) {
-                double averageReward = child.getReward() / (double) child.getVisitCount();
-                double ucb1 = averageReward + Math.sqrt(2 * Math.log(root.getVisitCount()) / child.getVisitCount());
-                System.out.println(child.getAction().actionCodeToString() + ": Visit Count = " + child.getVisitCount()
-                        + ", Reward = " + child.getReward() + ", Average Reward = " + averageReward
-                        + ", UCB1 = " + ucb1);
-                if (ucb1 > maxUCB1) {
-                    maxUCB1 = ucb1;
-                    maxNodes.clear();
-                    maxNodes.add(child);
-                } else if (ucb1 == maxUCB1) {
-                    maxNodes.add(child);
+                if (aiAvailableActions.stream().anyMatch(action -> action.getActionCode() == child.getAction().getActionCode())) {
+                    double averageReward = child.getReward() / (double) child.getVisitCount();
+                    double ucb1 = averageReward + Math.sqrt(2 * Math.log(root.getVisitCount()) / child.getVisitCount());
+                    System.out.println(child.getAction().actionCodeToString() + ": Visit Count = " + child.getVisitCount()
+                            + ", Reward = " + child.getReward() + ", Average Reward = " + averageReward
+                            + ", UCB1 = " + ucb1);
+                    if (ucb1 > maxUCB1) {
+                        maxUCB1 = ucb1;
+                        maxNodes.clear();
+                        maxNodes.add(child);
+                    } else if (ucb1 == maxUCB1) {
+                        maxNodes.add(child);
+                    }
                 }
             }
         }
@@ -219,10 +221,11 @@ public class MCTS {
      * @return The selected action, determined heuristically for the AI and randomly for the human simulation.
      */
     private Action selectActionForPlayer(Game game, Player player, List<Action> availableActions) {
-        if (player == game.getPlayers().get(1)) { // If the player is the AI
+        if (player.getName().equals(game.getAIPlayer().getName())) { // If the player is the AI
             // Select the best action based on a heuristic evaluation
             return Heuristic.selectActionHeuristically(availableActions, game);
-        } else { // If the player is simulated as a human
+        } else {
+            // If the player is simulated as a human
             // Select a random action to simulate unpredictability
             return availableActions.get(ThreadLocalRandom.current().nextInt(availableActions.size()));
         }
@@ -290,7 +293,7 @@ public class MCTS {
      */
     public void handleLoseCard(Player player, Game game) {
         Card cardToLose;
-        if (player.getName().equals(game.getPlayers().get(1).getName())) {
+        if (player.getName().equals(game.getAIPlayer().getName())) {
             // If the AI is the player whose turn it is during the simulation, the method selects a card to lose and returns it.
             cardToLose = selectCardToGiveUp(game, player);
             player.returnCard(cardToLose);
@@ -308,8 +311,8 @@ public class MCTS {
      * @return true if the MCTS should be terminated, false otherwise.
      */
     private boolean shouldTerminateSearch(Game game) {
-        int aiPlayerScore = evaluatePosition(game.getPlayers().get(1));
-        int humanPlayerScore = evaluatePosition(game.getPlayers().get(0));
+        int aiPlayerScore = evaluatePosition(game.getAIPlayer());
+        int humanPlayerScore = evaluatePosition(game.getHumanPlayer());
         return aiPlayerScore < humanPlayerScore - 30; // Stop searching if the AI is significantly behind
     }
 
@@ -324,9 +327,9 @@ public class MCTS {
      */
     private Player determineWinner(Game game) {
         if (!game.isGameOver()) {
-            int aiPlayerScore = evaluatePosition(game.getPlayers().get(1));
-            int humanPlayerScore = evaluatePosition(game.getPlayers().get(0));
-            return aiPlayerScore > humanPlayerScore ? game.getPlayers().get(1) : game.getPlayers().get(0);
+            int aiPlayerScore = evaluatePosition(game.getAIPlayer());
+            int humanPlayerScore = evaluatePosition(game.getHumanPlayer());
+            return aiPlayerScore > humanPlayerScore ? game.getAIPlayer() : game.getHumanPlayer();
         }
         List<Player> activePlayers = game.getActivePlayers();
         if (activePlayers.isEmpty()) {
@@ -358,21 +361,21 @@ public class MCTS {
             node.incrementVisitCount();
 
             if (winner != null) {
-                if (winner.getName().equals(game.getPlayers().get(1).getName())) {
+                if (winner.getName().equals(game.getAIPlayer().getName())) {
                     node.incrementReward(200);
                 } else {
                     node.incrementReward(-200);
                 }
             } else {
                 // Evaluate the position when there is no clear winner
-                int aiPlayerScore = evaluatePosition(game.getPlayers().get(1));
-                int humanPlayerScore = evaluatePosition(game.getPlayers().get(0));
+                int aiPlayerScore = evaluatePosition(game.getAIPlayer());
+                int humanPlayerScore = evaluatePosition(game.getHumanPlayer());
                 node.incrementReward(aiPlayerScore-humanPlayerScore);
             }
 
             // Move to the parent node until the root is reached
             node = node.getParent();
-            if (node == root.getParent()) { // effectively acts as if node == null for the root (as root's parent is null)
+            if (node == root.getParent()) {
                 node = null;
             }
         }
@@ -404,9 +407,9 @@ public class MCTS {
      * @param winner the player who has won the game
      */
     public void handleGameOver(Player winner) {
-        if (winner == rootGame.getPlayers().get(0)) {
+        if (winner == rootGame.getHumanPlayer()) {
             root.incrementReward(-1000);
-        } else if (winner == rootGame.getPlayers().get(1)) {
+        } else if (winner == rootGame.getAIPlayer()) {
             root.incrementReward(1000);
         }
 
@@ -461,7 +464,6 @@ public class MCTS {
                 cards.add(cardToLose);
             }
         }
-
         game.executeAction(action, cards);
         if (!game.isGameOver()) {
             game.switchTurns();

@@ -185,7 +185,23 @@ public class Game implements Serializable {
         return lastExecutedAction;
     }
 
-
+    /**
+     * Retrieves the first player in the list, typically the human player.
+     *
+     * @return the first player in the list.
+     */
+    public Player getHumanPlayer()
+    {
+        return this.playerList.get(0);
+    }
+    /**
+     * Retrieves the AI player from the list of players.
+     *
+     * @return the AI player.
+     */
+    public Player getAIPlayer() {
+        return this.playerList.get(1);
+    }
     /**
      * Creates a deep copy of this game instance.
      * @return a deep copy of the game.
