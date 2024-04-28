@@ -24,6 +24,8 @@ public class GameController {
     private Player currentPlayer;
     private Player aiPlayer;
     private MCTS mcts;
+    private final String HUMANN_PLAYER_NAME = "Human Player";
+    private final String AI_PLAYER_NAME = "AI Player";
 
     /**
      * Constructor for GameController.
@@ -43,8 +45,8 @@ public class GameController {
         Set<Deck.CardType> allCardTypes = EnumSet.allOf(Deck.CardType.class);
         this.game = new Game(new Deck(allCardTypes, 2));
 
-        Player humanPlayer = new Player("Human Player");
-        this.aiPlayer = new Player("AI Player");
+        Player humanPlayer = new Player(HUMANN_PLAYER_NAME);
+        this.aiPlayer = new Player(AI_PLAYER_NAME);
         this.game.addPlayer(humanPlayer);
         this.game.addPlayer(aiPlayer);
 
@@ -81,7 +83,7 @@ public class GameController {
 
         // Handling challenges
         if (action.canBeChallenged) {
-            if (opponent == aiPlayer) {
+            if (opponent.equals(aiPlayer)) {
                 challengeResponse = simulateChallenge(game, action);
             } else {
                 challengeResponse = view.promptForChallenge("Do you want to challenge " + currentPlayer.getName() + "'s action?");
@@ -97,7 +99,7 @@ public class GameController {
 
         // Handling blocks
         if (action.canBeBlocked && actionExecuted) {
-            if (opponent == aiPlayer) {
+            if (opponent.equals(aiPlayer)) {
                 blockResponse = simulateBlock(game, action);
             } else {
                 blockResponse = view.promptForBlock("Do you want to block " + currentPlayer.getName() + "'s action?");
@@ -246,7 +248,7 @@ public class GameController {
      */
     public void handleLoseCard(Player player) {
         Card cardToLose;
-        if (player == aiPlayer) {
+        if (player.equals(aiPlayer)) {
             cardToLose = selectCardToGiveUp(game, player);
         } else {
             cardToLose = view.promptPlayerForCardToGiveUp(player);
