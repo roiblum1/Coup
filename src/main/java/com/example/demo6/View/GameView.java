@@ -124,7 +124,9 @@ public class GameView extends Application {
 
 
     /**
-     * This method ask the player which cards he wants to keep.
+     * This method asks the player which cards they want to keep.
+     * If the user cancels the selection dialog, this method returns the number of cards that were not yet selected
+     * randomly or based on the remaining cards available for selection.
      *
      * @param options the list of available cards
      * @param numberOfCardsToSelect the number of cards the player can select
@@ -133,25 +135,38 @@ public class GameView extends Application {
     public List<Card> promptForCardSelection(List<Card> options, int numberOfCardsToSelect) {
         List<String> choices = options.stream().map(Card::toString).collect(Collectors.toList());
         List<Card> selectedCards = new ArrayList<>();
-        for (int i = 0; i < numberOfCardsToSelect; i++) {
+
+        while (selectedCards.size() < numberOfCardsToSelect && !choices.isEmpty()) {
             ChoiceDialog<String> dialog = new ChoiceDialog<>(choices.get(0), choices);
             dialog.setTitle("Select Cards");
             dialog.setHeaderText("Select a card:");
             dialog.setContentText("Available cards:");
+
             Optional<String> result = dialog.showAndWait();
-            result.ifPresent(cardDescription -> {
-                for (Card card : options) {
-                    if (card.toString().equals(cardDescription)) {
-                        selectedCards.add(card);
-                        choices.remove(cardDescription);
-                        break;
-                    }
-                }
-            });
-            if (result.isEmpty()) break;
+            if (result.isPresent()) {
+                String selected = result.get();
+                // Add the corresponding Card object to the selectedCards list
+                options.stream()
+                        .filter(card -> card.toString().equals(selected))
+                        .findFirst()
+                        .ifPresent(card -> {
+                            selectedCards.add(card);
+                            choices.remove(selected); // Remove the selected item from the choices list
+                        });
+            } else {
+                // User canceled the selection, add the remaining needed cards randomly or based on your criteria
+                int remainingCards = numberOfCardsToSelect - selectedCards.size();
+                List<Card> remainingOptions = options.stream()
+                        .filter(card -> !selectedCards.contains(card))
+                        .collect(Collectors.toList());
+                Collections.shuffle(remainingOptions); // Shuffle to randomize or apply your own logic here
+                selectedCards.addAll(remainingOptions.subList(0, Math.min(remainingCards, remainingOptions.size())));
+                return selectedCards;
+            }
         }
         return selectedCards;
     }
+
 
 
     /**

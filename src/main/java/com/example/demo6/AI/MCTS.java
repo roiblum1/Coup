@@ -129,7 +129,7 @@ public class MCTS {
 
             // If the current node has no children, break the loop
             if (node.getChildren().isEmpty()) {
-                break;
+                return new NodeGamePair(node, game);
             }
 
             // Select a child node for further exploration
