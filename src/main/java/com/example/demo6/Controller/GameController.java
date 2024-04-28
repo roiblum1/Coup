@@ -91,33 +91,7 @@ public class GameController {
         }
 
         if (actionExecuted) {
-            List<Card> cards = null;
-            if (action.getActionCode() == ActionCode.SWAP) {
-                List<Card> newCards = this.game.getDeck().drawCards(2);
-                List<Card> selectedCards;
-                if (currentPlayer == aiPlayer) {
-                    selectedCards = selectCardsToKeep(game, currentPlayer, newCards);
-                } else {
-                    List<Card> swapOptions = new ArrayList<>(currentPlayer.getCards());
-                    swapOptions.addAll(newCards);
-                    selectedCards = view.promptForCardSelection(swapOptions, 2);
-                }
-                cards = new ArrayList<>();
-                cards.addAll(selectedCards);
-                cards.addAll(newCards);
-            } else if (action.getActionCode() == ActionCode.COUP || action.getActionCode() == ActionCode.ASSASSINATE) {
-                Player targetPlayer = game.getOpponent(action.getPlayer());
-                if (!targetPlayer.getCards().isEmpty()) {
-                    Card cardToLose;
-                    if (targetPlayer == aiPlayer) {
-                        cardToLose = selectCardToGiveUp(game, targetPlayer);
-                    } else {
-                        cardToLose = view.promptPlayerForCardToGiveUp(targetPlayer);
-                    }
-                    cards = new ArrayList<>();
-                    cards.add(cardToLose);
-                }
-            }
+            List<Card> cards = getCardsForAction(action);
             game.executeAction(action, cards);
             mcts.handleAction(action);
         }
@@ -131,6 +105,52 @@ public class GameController {
         }
     }
 
+    /**
+     * Retrieves the cards required for a specific action.
+     *
+     * @param action The action for which cards are needed.
+     * @return The list of cards required for the action, or null if no cards are needed.
+     */
+    private List<Card> getCardsForAction(Action action) {
+        List<Card> cards = null;
+        if (action.getActionCode() == ActionCode.SWAP) {
+            List<Card> newCards = this.game.getDeck().drawCards(2);
+            List<Card> selectedCards;
+            if (currentPlayer == aiPlayer) {
+                selectedCards = selectCardsToKeep(game, currentPlayer, newCards);
+            } else {
+                List<Card> swapOptions = new ArrayList<>(currentPlayer.getCards());
+                swapOptions.addAll(newCards);
+                selectedCards = view.promptForCardSelection(swapOptions, 2);
+            }
+            cards = new ArrayList<>();
+            cards.addAll(selectedCards);
+            cards.addAll(newCards);
+        } else if (action.getActionCode() == ActionCode.COUP || action.getActionCode() == ActionCode.ASSASSINATE) {
+            Player targetPlayer = game.getOpponent(action.getPlayer());
+            if (!targetPlayer.getCards().isEmpty()) {
+                Card cardToLose;
+                if (targetPlayer == aiPlayer) {
+                    cardToLose = selectCardToGiveUp(game, targetPlayer);
+                } else {
+                    cardToLose = view.promptPlayerForCardToGiveUp(targetPlayer);
+                }
+                cards = new ArrayList<>();
+                cards.add(cardToLose);
+            }
+        }
+        return cards;
+    }
+
+    /**
+     * Determines if a challenge is issued for the given action. This method checks if the action can be challenged, and if so,
+     * prompts the opponent (if it's the AI player) or the user to decide whether to challenge the action. If the challenge is
+     * accepted, it proceeds to handle the challenge.
+     *
+     * @param action The action to be challenged.
+     * @param opponent The opponent player who is being prompted to challenge the action.
+     * @return true if the challenge is accepted, false otherwise.
+     */
     private boolean getChallengeDecision(Action action, Player opponent) {
         if (!action.canBeChallenged) {
             return true;
@@ -148,6 +168,17 @@ public class GameController {
         return handleChallenge(action);
     }
 
+    /**
+     * Determines whether a block is issued against a specified action.
+     * This method prompts the defender (either an AI or human player) to decide if they want to block the action.
+     * If a block is initiated, it then handles the sequence of events that may include the attacker challenging the block.
+     * The interactions are managed based on player responses or AI simulation results.
+     *
+     * @param action The action that might be blocked.
+     * @param opponent The player attempting to block the action.
+     * @return true if the block is not successful (either it was not attempted, or challenged successfully by the initiator),
+     *         false if the block is successful and the action is stopped.
+     */
     private boolean getBlockDecision(Action action, Player opponent) {
         boolean blockResponse = opponent.equals(aiPlayer)
                 ? simulateBlock(game, action)
