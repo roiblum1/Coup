@@ -100,7 +100,7 @@ public class Deck {
             throw new IllegalStateException("Card types cannot be empty.");
         }
 
-        Deck copiedDeck = new Deck(cardTypes, Deck.NUMBER_OF_COPIES);  // Assuming default number of copies is 2
+        Deck copiedDeck = new Deck(cardTypes, Deck.NUMBER_OF_COPIES);
         for (Card card : this.copyContents()) {
             if (card == null) {
                 throw new IllegalStateException("Deck contains a null card.");

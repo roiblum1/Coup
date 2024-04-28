@@ -1,15 +1,12 @@
 package com.example.demo6.Model;
 
 import com.example.demo6.Model.Actions.*;
-import javafx.collections.ObservableArray;
-import javafx.collections.ObservableList;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Game implements Serializable {
+public class Game  {
     private List<Player> playerList;
     private Deck deck;
     private int currentPlayerIndex;
