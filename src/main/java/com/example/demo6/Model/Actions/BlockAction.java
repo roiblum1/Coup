@@ -57,7 +57,6 @@ public class BlockAction extends Action {
 
     @Override
     // Handles the challenge to the blocking action
-    //TODO : check with switch
     public boolean challenge() {
         // Check if the player has the appropriate card to block the action
         return switch (actionToBlock.getActionCode()) {

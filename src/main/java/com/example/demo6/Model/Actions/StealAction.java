@@ -33,11 +33,9 @@ public class StealAction extends Action {
             return false;
         } else {
             // Perform the steal action
-            System.out.println("The player is " + player.getName() + " and the Target player is " + opponent.getName() + ".");
             int stolenCoins = Math.min(2, opponent.getCoins());
             player.updateCoins(stolenCoins);
             opponent.updateCoins(-stolenCoins);
-            // The steal action was successful
             return true;
         }
     }

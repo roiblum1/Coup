@@ -77,6 +77,20 @@ public class Deck implements Serializable {
     }
 
     /**
+     * Draws a specified number of cards from the deck.
+     * @param count The number of cards to draw.
+     * @return A list of cards drawn from the deck.
+     */
+    public List<Card> drawCards(int count) {
+        List<Card> cards = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            if (!this.isEmpty()) {
+                cards.add(this.getCard());
+            }
+        }
+        return cards;
+    }
+    /**
      * Creates a deep copy of this deck.
      * @return a deep copy of the deck.
      * @throws IllegalStateException if the deck contains a null card or if card types are empty.

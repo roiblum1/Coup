@@ -1,11 +1,10 @@
 package com.example.demo6.Model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class Player implements Serializable {
+public class Player {
     private final int NUMBER_OF_CARDS = 2;
     public final int NUMBER_OF_COINS = 3;
     private final String name;

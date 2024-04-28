@@ -6,7 +6,7 @@ import java.io.Serializable;
  * Represents a card in the game. Each card has a unique type.
  * This class implements Serializable to allow card instances to be serialized for storage or transmission.
  */
-public class Card implements Serializable {
+public class Card {
     private Deck.CardType type;
 
     /**

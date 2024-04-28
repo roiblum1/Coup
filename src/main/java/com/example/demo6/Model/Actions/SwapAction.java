@@ -22,7 +22,6 @@ public class SwapAction extends Action {
         if (isChallenged && !challenge()) {
             return false; // Correctly handles challenge failure
         }
-        // Perform the swap logic here if necessary
         return true;
     }
 

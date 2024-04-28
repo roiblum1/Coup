@@ -69,6 +69,8 @@ public class GameView extends Application {
         BorderPane root = new BorderPane();
         // Set the HBox in the center of the BorderPane
         root.setCenter(mainContent);
+        // Add control buttons to the left side of the BorderPane
+        root.setLeft(createControlButtonsVBox());
 
         Scene scene = new Scene(root, 800, 600);
         String css = Objects.requireNonNull(this.getClass().getResource("/style.css")).toExternalForm();
@@ -296,26 +298,43 @@ public class GameView extends Application {
         gameContent.getChildren().add(turnLabel);
     }
 
-    //* This method create the Player area in the view. */
+    /**
+     * This method create the Player area in the view.
+     *
+     * @param player the player whose information will be displayed
+     * @param cardImages the list of images representing the player's cards
+     */
     private void createPlayerArea(Player player, List<String> cardImages) {
         VBox playerArea = new VBox(10);
         playerArea.setAlignment(Pos.CENTER);
         playerArea.getStyleClass().add("player-area");
+
+        // Create a label for the player's name
         Label nameLabel = new Label(player.getName());
         nameLabel.setFont(new Font("Arial", 20));
+
+        // Create a horizontal box for the player's cards
         HBox cardsArea = new HBox(10);
         cardsArea.setAlignment(Pos.CENTER);
+
+        // Add the player's cards to the cards area
         for (String cardImageName : cardImages) {
             ImageView cardView = new ImageView(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/demo6/" + cardImageName))));
             cardView.setFitHeight(100);
             cardView.setFitWidth(70);
             cardsArea.getChildren().add(cardView);
         }
+
+        // Create a label for the player's coins
         Label coinsLabel = new Label("Coins: " + player.getCoins());
         coinsLabel.setFont(new Font("Arial", 16));
         coinsLabel.getStyleClass().add("coins-label");
+
+        // Add the player's name, cards, and coins to the player area
         playerCardsMap.put(player.getName(), cardsArea);
         playerArea.getChildren().addAll(nameLabel, cardsArea, coinsLabel);
+
+        // Add the player area to the game content
         gameContent.getChildren().addAll(playerArea);
     }
 
@@ -341,7 +360,43 @@ public class GameView extends Application {
         });
     }
 
-    private void createNewGameButton() {
+    // This method creates a VBox with control buttons
+    private VBox createControlButtonsVBox() {
+        Button showRulesButton = new Button("Show Rules");
+        showRulesButton.setFont(new Font("Arial", 16));
+        showRulesButton.setOnAction(event -> {
+            // Display the rules in an alert dialog
+            Alert rulesAlert = new Alert(Alert.AlertType.INFORMATION);
+            rulesAlert.setTitle("Game Rules");
+            rulesAlert.setHeaderText("Rules of the Game");
+            rulesAlert.setContentText("1. Income: Take one coin from the bank. This cannot be Challenged or Blocked.\n" +
+                    "2. Foreign Aid: Take two coins from the bank. This cannot be Challenged but it can be Blocked by the Duke.\n" +
+                    "3. Coup: Costs seven coins. Cause a player to give up an Influence card. Cannot be Challenged or Blocked. If you start your turn with 10+ coins, you must take this action.\n" +
+                    "4. Taxes (the Duke): Take three coins from the bank. Can be Challenged.\n" +
+                    "5. Assassinate (the Assassin): Costs three coins. Force one player to give up an Influence card of their choice. Can be Challenged. Can be Blocked by the Contessa.\n" +
+                    "6. Steal (the Captain): Take two coins from another player. Can be Challenged. Can be Blocked by another Captain or an Ambassador.\n" +
+                    "7. Swap Influence (the Ambassador): Draw two Influence cards from the deck, look at them and mix them with your current Influence card(s). Place two cards back in the deck and shuffle the deck. Can be Challenged. Cannot be Blocked.\n\n" +
+                    "Blocking: If another player takes an action that can be Blocked, any other player may Block it by claiming to have the proper character on one of their Influence cards. The acting player cannot perform the action and takes no other action this turn. The acting player MAY choose to Challenge the Blocking player. If they win the Challenge, the action goes through as normal.\n\n" +
+                    "Challenge: When the acting player declares their action, any other player may Challenge their right to take the action. They are saying “I don't believe you have the proper character to do that.” The acting player now must prove they have the power to take the action or lose the Challenge. If they have the right character, they reveal it and place the revealed card back in the deck. They then shuffle the deck and draw a new card. The Challenging player has lost the Challenge. If they do NOT have the proper character, they lose the Challenge.");
+            rulesAlert.showAndWait();
+        });
+
+        // Create 'New Game' button
+        Button newGameButton = createNewGameButton();
+
+        VBox controlButtons = new VBox(10); // Spacing of 10 between buttons
+        controlButtons.getChildren().addAll(showRulesButton, newGameButton);
+        controlButtons.setAlignment(Pos.BOTTOM_LEFT); // Align the buttons to the bottom left
+
+        // Add padding or any additional styling as needed
+        controlButtons.setPadding(new Insets(10));
+
+        return controlButtons;
+    }
+
+    // Modify this existing method to return the 'New Game' button
+// so it can be used in the 'createShowRulesButton' method
+    private Button createNewGameButton() {
         Button newGameButton = new Button("New Game");
         newGameButton.setFont(new Font("Arial", 16));
         newGameButton.setOnAction(event -> {
@@ -351,50 +406,8 @@ public class GameView extends Application {
                 controller.initializeGame();
             });
         });
-
-        gameContent.getChildren().add(newGameButton);
+        return newGameButton; // Return the button instead of adding it directly to the gameContent
     }
-
-    private void animateCardReveal(Player player, ImageView cardView) {
-        TranslateTransition translate = new TranslateTransition(Duration.seconds(0.5), cardView);
-        translate.setFromX(-200);  // Start from left (adjust as needed)
-        translate.setToX(0);       // End at the card's final position
-
-        FadeTransition fade = new FadeTransition(Duration.seconds(0.5), cardView);
-        fade.setFromValue(0);
-        fade.setToValue(1);
-
-        ParallelTransition animation = new ParallelTransition(translate, fade);
-        animation.setOnFinished(event -> {
-            // Update any necessary state or perform further actions after the animation completes
-        });
-        animation.play();
-    }
-    private void animateCoinUpdate(Label coinsLabel, int oldCount, int newCount) {
-        Duration duration = Duration.millis(500);  // Total duration of the animation
-        int steps = Math.abs(newCount - oldCount); // Calculate the number of steps to increment or decrement
-
-        // Use an array to hold the mutable integer
-        final int[] count = {oldCount};
-
-        Timeline timeline = new Timeline();
-        timeline.setCycleCount(steps);
-        timeline.setAutoReverse(false);
-
-        KeyFrame keyFrame = new KeyFrame(duration.divide(steps), event -> {
-            if (newCount > oldCount) {
-                count[0]++;  // Increment coin count
-            } else {
-                count[0]--;  // Decrement coin count
-            }
-            coinsLabel.setText("Coins: " + count[0]);  // Update the label text
-        });
-
-        timeline.getKeyFrames().add(keyFrame);
-        timeline.play();
-    }
-
-
 
     /**
      * Displays the winner in the alert box.

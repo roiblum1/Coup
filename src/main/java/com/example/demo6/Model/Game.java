@@ -155,28 +155,11 @@ public class Game implements Serializable {
             System.out.println("No opponent found");
             return null;
         }
-
         // Update the current player index to the index of the next player
         currentPlayerIndex = activePlayers.indexOf(nextPlayer);
-        System.out.println("Switching turns from " + currentPlayer.getName() + " to " + nextPlayer.getName());
         return nextPlayer;
     }
 
-    /**
-     * Draws a specified number of cards from the deck.
-     * @param count The number of cards to draw.
-     * @return A list of cards drawn from the deck.
-     */
-    //TODO : move to Deck
-    public List<Card> drawCards(int count) {
-        List<Card> cards = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            if (!this.getDeck().isEmpty()) {
-                cards.add(this.getDeck().getCard());
-            }
-        }
-        return cards;
-    }
 
     /**
      * Sets the list of players in the game.
@@ -249,5 +232,4 @@ public class Game implements Serializable {
         }
         lastExecutedAction = action;
     }
-
 }

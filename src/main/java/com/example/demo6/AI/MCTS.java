@@ -108,7 +108,6 @@ public class MCTS {
                 System.out.println("Rollout ended with no winner.");
             }
 
-            System.out.println(game.getCurrentPlayer().getName() + "'s turn.");
             backPropagate(node, game.getCurrentPlayer(), winner, game);
 
             if (node.getParent() == root) {
@@ -177,7 +176,6 @@ public class MCTS {
         for (Action action : availableActions) {
             Node child = new Node(action, parent);
             childNodes.add(child);
-            System.out.println("Created child node for action: " + action.actionCodeToString());
         }
         parent.addChildren(childNodes);
     }
@@ -204,8 +202,6 @@ public class MCTS {
                     Action action = selectActionForPlayer(game, currentPlayer, availableActions);
                     boolean isChallenged = simulateChallenge(game, action);
                     boolean isBlocked = simulateBlock(game, action);
-
-                    System.out.println("Rollout action: " + action.actionCodeToString());
 
                     if (handleChallenge(game, action, isChallenged, currentPlayer) && handleBlock(game, action, isBlocked, currentPlayer)) {
                         executeAction(game, action, false, false); // Execute without further blocks or challenges
@@ -240,6 +236,18 @@ public class MCTS {
         }
     }
 
+    /**
+     * Handles the challenge event during the game simulation.
+     * This method evaluates the challenge outcome and updates the game state accordingly.
+     * If the action can be challenged and the challenge is successful, the challenging player loses influence.
+     * If the action can be challenged and the challenge fails, the challenging player loses influence.
+     * If the action cannot be challenged, the method returns true, indicating that the action can proceed.
+     * @param game The current state of the game, used to access the current players and game context.
+     * @param action The action being challenged.
+     * @param isChallenged A boolean value indicating whether the action is being challenged.
+     * @param currentPlayer The player whose turn it is during the simulation.
+     * @return true if the action can proceed, false otherwise.
+     */
     private boolean handleChallenge(Game game, Action action, boolean isChallenged, Player currentPlayer) {
         if (action.canBeChallenged && isChallenged) {
             if (!action.challenge()) {
@@ -274,6 +282,16 @@ public class MCTS {
             }
         }
         return true; // Continue with the action if no block or if block failed
+    }
+
+    public void handleLoseCard(Player player, Game game) {
+        Card cardToLose;
+        if (player.getName().equals(game.getPlayers().get(1).getName())) {
+            cardToLose = selectCardToGiveUp(game, player);
+            player.returnCard(cardToLose);
+        } else {
+            player.loseRandomInfluence();
+        }
     }
     /**
      * Function to check if the Monte Carlo Tree Search (MCTS) should terminate based on the current game state.
@@ -346,13 +364,6 @@ public class MCTS {
                 node.incrementReward(aiPlayerScore-humanPlayerScore);
             }
 
-            // Log the backpropagation process for debugging and insight into tree development
-            if (node.getAction() != null) {
-                System.out.println("Backpropagation: Action = " + node.getAction().actionCodeToString() + ", Visit Count = " + node.getVisitCount() + ", Reward = " + node.getReward());
-            } else {
-                System.out.println("Backpropagation: Action = null, Visit Count = " + node.getVisitCount() + ", Reward = " + node.getReward());
-            }
-
             // Move to the parent node until the root is reached
             node = node.getParent();
             if (node == root.getParent()) { // effectively acts as if node == null for the root (as root's parent is null)
@@ -360,7 +371,6 @@ public class MCTS {
             }
         }
     }
-
 
 
     /**
@@ -446,7 +456,6 @@ public class MCTS {
         }
 
         game.executeAction(action, cards);
-        System.out.println("The executed action is : " + action.getActionCode() + " the player " +action.getPlayer().getName());
         if(!game.isGameOver()) {
             game.switchTurns();
         }

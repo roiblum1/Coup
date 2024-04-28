@@ -22,10 +22,7 @@ public class TaxAction extends Action {
         if (isChallenged && !challenge()) {
             return false; // Challenge failed, do not collect taxes
         }
-        System.out.println("Before TAX action, coins: " + player.getCoins());
-        player.updateCoins(3); // Update coins if no challenge or challenge passed
-        System.out.println("After TAX action, coins: " + player.getCoins());
-
+        player.updateCoins(3);
         return true;
     }
 

@@ -120,7 +120,7 @@ public class GameController {
         if (actionExecuted) {
             List<Card> cards = null;
             if (action.getActionCode() == ActionCode.SWAP) {
-                List<Card> newCards = this.game.drawCards(2);
+                List<Card> newCards = this.game.getDeck().drawCards(2);
                 List<Card> selectedCards;
                 if (currentPlayer == aiPlayer) {
                     selectedCards = selectCardsToKeep(game, currentPlayer, newCards);
