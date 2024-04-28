@@ -61,6 +61,15 @@ public class GameController {
     }
 
     /**
+     * Returns the game model associated with this GameController instance.
+     *
+     * @return the game model
+     */
+    public Game getGame() {
+        return game;
+    }
+
+    /**
      * Executes a given action within the game context. This method first validates if the action can be legally performed
      * by the current player. It then handles potential challenges and blocks by opponents, and if unchallenged or
      * successfully challenged, executes the action. This method also updates the game state and view after the action
@@ -74,48 +83,11 @@ public class GameController {
             view.displayMessage("Action cannot be performed due to game rules.");
             return;
         }
-        boolean challengeResponse;
-        boolean blockResponse;
-        boolean actionExecuted = true;
-        boolean challengeResult;
         Player opponent = game.getOpponent(currentPlayer);
+        boolean actionExecuted = getChallengeDecision(action, opponent);
 
-        // Handling challenges
-        if (action.canBeChallenged) {
-            if (opponent.equals(aiPlayer)) {
-                challengeResponse = simulateChallenge(game, action);
-            } else {
-                challengeResponse = view.promptForChallenge("Do you want to challenge " + currentPlayer.getName() + "'s action?");
-            }
-            if (challengeResponse) {
-                view.displayMessage(opponent.getName() + " challenges " + currentPlayer.getName() + "'s action!");
-                challengeResult = handleChallenge(action);
-                if (!challengeResult) {
-                    actionExecuted = false;
-                }
-            }
-        }
-
-        // Handling blocks
         if (action.canBeBlocked && actionExecuted) {
-            if (opponent.equals(aiPlayer)) {
-                blockResponse = simulateBlock(game, action);
-            } else {
-                blockResponse = view.promptForBlock("Do you want to block " + currentPlayer.getName() + "'s action?");
-            }
-            if (blockResponse) {
-                view.displayMessage(opponent.getName() + " blocks " + currentPlayer.getName() + "'s action!");
-                boolean challengeBlock = currentPlayer == aiPlayer ? simulateBlockChallenge(game, action) : view.promptForChallenge("Do you want to challenge this block?");
-                if (!challengeBlock) {
-                    actionExecuted = false;
-                } else {
-                    view.displayMessage(currentPlayer.getName() + " challenges the block by " + opponent.getName());
-                    boolean blockSucceed = handleBlockAction(opponent, action, challengeBlock);
-                    if (blockSucceed) {
-                        actionExecuted = false;
-                    }
-                }
-            }
+            actionExecuted = getBlockDecision(action, opponent);
         }
 
         if (actionExecuted) {
@@ -157,6 +129,46 @@ public class GameController {
         } else {
             endTurn();
         }
+    }
+
+    private boolean getChallengeDecision(Action action, Player opponent) {
+        if (!action.canBeChallenged) {
+            return true;
+        }
+
+        boolean challengeResponse = opponent.equals(aiPlayer)
+                ? simulateChallenge(game, action)
+                : view.promptForChallenge("Do you want to challenge " + currentPlayer.getName() + "'s action?");
+
+        if (!challengeResponse) {
+            return true;
+        }
+
+        view.displayMessage(opponent.getName() + " challenges " + currentPlayer.getName() + "'s action!");
+        return handleChallenge(action);
+    }
+
+    private boolean getBlockDecision(Action action, Player opponent) {
+        boolean blockResponse = opponent.equals(aiPlayer)
+                ? simulateBlock(game, action)
+                : view.promptForBlock("Do you want to block " + currentPlayer.getName() + "'s action?");
+
+        if (!blockResponse) {
+            return true;
+        }
+
+        view.displayMessage(opponent.getName() + " blocks " + currentPlayer.getName() + "'s action!");
+        boolean challengeBlock = currentPlayer == aiPlayer
+                ? simulateBlockChallenge(game, action)
+                : view.promptForChallenge("Do you want to challenge this block?");
+
+        if (!challengeBlock) {
+            return false;
+        }
+
+        view.displayMessage(currentPlayer.getName() + " challenges the block by " + opponent.getName());
+        boolean blockSucceed = handleBlockAction(opponent, action, challengeBlock);
+        return !blockSucceed;
     }
 
     /**

@@ -50,35 +50,28 @@ public class GameView extends Application {
         HBox mainContent = new HBox(10);
         mainContent.setAlignment(Pos.CENTER);
         mainContent.setPadding(new Insets(15, 12, 15, 12));
-
         // VBox for player info and actions
         gameContent = new VBox(10);
         gameContent.setAlignment(Pos.CENTER);
-
         createTurnTable();
         createNewGameButton();
-
         // VBox for the card stack area
         cardStackArea = new VBox(10);
         cardStackArea.setAlignment(Pos.CENTER_RIGHT);
-
         // Add gameContent and cardStackArea to mainContent
         mainContent.getChildren().addAll(gameContent, cardStackArea);
-
         // Use a BorderPane as the root for scene for flexibility
         BorderPane root = new BorderPane();
         // Set the HBox in the center of the BorderPane
         root.setCenter(mainContent);
         // Add control buttons to the left side of the BorderPane
         root.setLeft(createControlButtonsVBox());
-
         Scene scene = new Scene(root, 800, 600);
         String css = Objects.requireNonNull(this.getClass().getResource("/style.css")).toExternalForm();
         scene.getStylesheets().add(css);
         primaryStage.setTitle("Coup Game");
         primaryStage.setScene(scene);
         primaryStage.show();
-
         // Initialize the game controller and game state
         controller = new GameController(this, new Game(new Deck(EnumSet.allOf(Deck.CardType.class), Deck.NUMBER_OF_COPIES)));
         Platform.runLater(() -> controller.initializeGame());
@@ -128,6 +121,7 @@ public class GameView extends Application {
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == buttonTypeYes;
     }
+
 
     /**
      * This method ask the player which cards he wants to keep.
@@ -196,9 +190,9 @@ public class GameView extends Application {
             gameContent.getChildren().removeIf(node -> node instanceof VBox && node.getStyleClass().contains("player-area"));
             players.forEach(player -> {
                 List<String> cardImages;
-                if (players.indexOf(player) == 1) { // Assuming index 1 is always the opponent
+                if (player.equals(controller.getGame().getAIPlayer())) {
                     cardImages = player.getCards().stream()
-                            .map(card -> "Screenshot_15.png") // Use the back image for all cards of the opponent
+                            .map(card -> "Screenshot_15.png")
                             .collect(Collectors.toList());
                 } else {
                     cardImages = player.getCards().stream()
@@ -396,9 +390,9 @@ public class GameView extends Application {
 
         // Create 'New Game' button
         Button newGameButton = createNewGameButton();
-
+        Button revealAICardsButton = createRevealAICardsButton();
         VBox controlButtons = new VBox(10); // Spacing of 10 between buttons
-        controlButtons.getChildren().addAll(showRulesButton, newGameButton);
+        controlButtons.getChildren().addAll(showRulesButton, newGameButton,revealAICardsButton);
         controlButtons.setAlignment(Pos.BOTTOM_LEFT); // Align the buttons to the bottom left
 
         // Add padding or any additional styling as needed
@@ -425,6 +419,31 @@ public class GameView extends Application {
         // Return the button instead of adding it directly to the gameContent
         return newGameButton;
     }
+
+    private Button createRevealAICardsButton() {
+        Button revealAICardsButton = new Button("Reveal AI Cards");
+        revealAICardsButton.setFont(new Font("Arial", 16));
+        revealAICardsButton.setOnAction(event -> {
+            // Get the AI player
+            Player aiPlayer = controller.getGame().getAIPlayer();
+            Player humanPlayer = controller.getGame().getHumanPlayer();
+            // Map cards to images, assuming aiPlayer is always available and valid
+            List<String> cardImagesAI = aiPlayer.getCards().stream()
+                    .map(this::getCardImage)
+                    .toList();
+            List<String> cardImagesHuman = humanPlayer.getCards().stream().map(this::getCardImage).toList();
+            Platform.runLater(() -> {
+                // Clear and recreate the AI player's card area
+                // Remove all nodes from gameContent that are player areas, then recreate them
+                gameContent.getChildren().removeIf(node -> node instanceof VBox && node.getStyleClass().contains("player-area"));
+                createPlayerArea(humanPlayer, cardImagesHuman); // Recreate the human player area with the revealed cards
+                createPlayerArea(aiPlayer, cardImagesAI); // Recreate the AI player area with the revealed cards
+            });
+        });
+        return revealAICardsButton;
+    }
+
+
 
     /**
      * Displays the winner in the alert box.
