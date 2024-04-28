@@ -37,14 +37,6 @@ public class Game implements Serializable {
     }
 
     /**
-     * Gets the index of the current player in the turn order.
-     * @return The index of the current player.
-     */
-    public int getCurrentPlayerIndex() {
-        return currentPlayerIndex;
-    }
-
-    /**
      * Sets the index of the current player in the turn order.
      * @param currentPlayerIndex The new index for the current player.
      */
@@ -95,7 +87,8 @@ public class Game implements Serializable {
             if (isGameOver()) {
                 System.out.println("Game Over");
             }
-            return null; // or throw an appropriate exception
+            // or throw an appropriate exception
+            return null;
         }
         return getActivePlayers().get(currentPlayerIndex);
     }

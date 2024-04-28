@@ -80,7 +80,7 @@ public class GameView extends Application {
         primaryStage.show();
 
         // Initialize the game controller and game state
-        controller = new GameController(this, new Game(new Deck(EnumSet.allOf(Deck.CardType.class), 3)));
+        controller = new GameController(this, new Game(new Deck(EnumSet.allOf(Deck.CardType.class), Deck.NUMBER_OF_COPIES)));
         Platform.runLater(() -> controller.initializeGame());
     }
 
@@ -417,7 +417,7 @@ public class GameView extends Application {
         newGameButton.setFont(new Font("Arial", 16));
         newGameButton.setOnAction(event -> {
             // Reset the game state and initialize a new game
-            controller = new GameController(this, new Game(new Deck(EnumSet.allOf(Deck.CardType.class), 2)));
+            controller = new GameController(this, new Game(new Deck(EnumSet.allOf(Deck.CardType.class), Deck.NUMBER_OF_COPIES)));
             Platform.runLater(() -> {
                 controller.initializeGame();
             });

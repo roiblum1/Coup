@@ -1,10 +1,9 @@
 package com.example.demo6.Model;
 
-import java.io.Serializable;
 import java.util.*;
 
-public class Deck implements Serializable {
-
+public class Deck {
+    public static final int NUMBER_OF_COPIES = 2;
     /**
      * Enum representing different card types.
      */
@@ -101,7 +100,7 @@ public class Deck implements Serializable {
             throw new IllegalStateException("Card types cannot be empty.");
         }
 
-        Deck copiedDeck = new Deck(cardTypes, 2);  // Assuming default number of copies is 2
+        Deck copiedDeck = new Deck(cardTypes, Deck.NUMBER_OF_COPIES);  // Assuming default number of copies is 2
         for (Card card : this.copyContents()) {
             if (card == null) {
                 throw new IllegalStateException("Deck contains a null card.");

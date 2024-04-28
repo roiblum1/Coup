@@ -18,7 +18,8 @@ public class Player {
      */
     public Player(String name) {
         this.name = name;
-        this.coins = NUMBER_OF_COINS; //the base number of coins that each player start with
+        //the base number of coins that each player start with
+        this.coins = NUMBER_OF_COINS;
         this.cards = new ArrayList<>();
     }
 

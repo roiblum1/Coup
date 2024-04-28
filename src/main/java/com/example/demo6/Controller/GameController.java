@@ -1,6 +1,5 @@
 package com.example.demo6.Controller;
 
-import com.example.demo6.AI.Heuristic;
 import com.example.demo6.AI.MCTS;
 import com.example.demo6.Model.Actions.*;
 import com.example.demo6.Model.Card;
@@ -20,7 +19,7 @@ import static com.example.demo6.AI.Heuristic.*;
  */
 public class GameController {
     private Game game;
-    private GameView view;
+    private final GameView view;
     private Player currentPlayer;
     private Player aiPlayer;
     private MCTS mcts;
@@ -43,7 +42,7 @@ public class GameController {
      */
     public void initializeGame() {
         Set<Deck.CardType> allCardTypes = EnumSet.allOf(Deck.CardType.class);
-        this.game = new Game(new Deck(allCardTypes, 2));
+        this.game = new Game(new Deck(allCardTypes, Deck.NUMBER_OF_COPIES));
 
         Player humanPlayer = new Player(HUMANN_PLAYER_NAME);
         this.aiPlayer = new Player(AI_PLAYER_NAME);
@@ -273,11 +272,11 @@ public class GameController {
      * ensure thread safety with UI components.
      */
     private void updateView() {
-        Platform.runLater(() -> {  // Ensures updates are performed on the JavaFX application thread
-            view.updatePlayerInfo(game.getPlayers());          // Updates UI with current player list
-            view.updateCurrentPlayer(currentPlayer);           // Updates UI to show the current player
-            view.updateAvailableActions(game.getAvailableActions(currentPlayer));  // Updates UI with actions available to the current player
-            view.updateDeckInfo(game.getDeck());               // Updates UI with the current state of the deck
+        Platform.runLater(() -> {
+            view.updatePlayerInfo(game.getPlayers());
+            view.updateCurrentPlayer(currentPlayer);
+            view.updateAvailableActions(game.getAvailableActions(currentPlayer));
+            view.updateDeckInfo(game.getDeck());
         });
     }
 }
