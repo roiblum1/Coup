@@ -338,7 +338,11 @@ public class GameView extends Application {
         gameContent.getChildren().addAll(playerArea);
     }
 
-    //* This method create the Deck area in the view. */
+    /**
+     * This method create the Deck area in the view.
+     *
+     * @param deck the deck to be displayed
+     */
     public void createCardStackArea(Deck deck) {
         cardStackArea.getChildren().clear();
         Image cardStackImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/demo6/Stack.png")));
@@ -352,7 +356,11 @@ public class GameView extends Application {
         cardStackArea.getChildren().addAll(cardStackImageView, cardStackCountLabel);
     }
 
-    //* This method updates the deck information in the view. */
+    /**
+     * Updates the deck information in the view.
+     *
+     * @param deck the deck to be displayed
+     */
     public void updateDeckInfo(Deck deck) {
         Platform.runLater(() -> {
             int numberOfRemainingCards = deck.getSize();
@@ -360,8 +368,13 @@ public class GameView extends Application {
         });
     }
 
-    // This method creates a VBox with control buttons
+    /**
+     * Creates a VBox with control buttons.
+     *
+     * @return the VBox containing the control buttons
+     */
     private VBox createControlButtonsVBox() {
+        // Create a 'Show Rules' button
         Button showRulesButton = new Button("Show Rules");
         showRulesButton.setFont(new Font("Arial", 16));
         showRulesButton.setOnAction(event -> {
@@ -394,8 +407,11 @@ public class GameView extends Application {
         return controlButtons;
     }
 
-    // Modify this existing method to return the 'New Game' button
-// so it can be used in the 'createShowRulesButton' method
+    /**
+     * Creates a 'New Game' button.
+     *
+     * @return the 'New Game' button
+     */
     private Button createNewGameButton() {
         Button newGameButton = new Button("New Game");
         newGameButton.setFont(new Font("Arial", 16));
@@ -406,7 +422,8 @@ public class GameView extends Application {
                 controller.initializeGame();
             });
         });
-        return newGameButton; // Return the button instead of adding it directly to the gameContent
+        // Return the button instead of adding it directly to the gameContent
+        return newGameButton;
     }
 
     /**
@@ -441,7 +458,12 @@ public class GameView extends Application {
     }
 
 
-    //* Returns the name of the image file to be used for the specified card. */
+    /**
+     * Returns the name of the image file to be used for the specified card.
+     *
+     * @param card the card for which the image file name is to be obtained
+     * @return the name of the image file to be used for the specified card
+     */
     private String getCardImage(Card card) {
         Map<Deck.CardType, String> cardImageMap = new HashMap<>();
         cardImageMap.put(Deck.CardType.DUKE, "duke.png");
