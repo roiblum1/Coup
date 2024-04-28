@@ -25,10 +25,14 @@ public class MCTS {
      * @param maxDepth The maximum depth of the MCTS tree.
      */
     public MCTS(Game game, int numOfSimulations, int maxDepth) {
-        this.rootGame = game.deepCopy(); // Creates a deep copy of the initial game state.
-        this.root = new Node(null); // Initializes the root node of the MCTS tree.
-        this.numOfSimulations = numOfSimulations; // Sets the number of simulations to be performed during the MCTS process.
-        this.maxDepth = maxDepth; // Sets the maximum depth of the MCTS tree.
+        // Creates a deep copy of the initial game state.
+        this.rootGame = game.deepCopy();
+        // Initializes the root node of the MCTS tree.
+        this.root = new Node(null);
+        // Sets the number of simulations to be performed during the MCTS process.
+        this.numOfSimulations = numOfSimulations;
+        // Sets the maximum depth of the MCTS tree.
+        this.maxDepth = maxDepth;
     }
 
 
@@ -95,19 +99,7 @@ public class MCTS {
             Node node = nodeGamePair.node;
             Game game = nodeGamePair.game;
 
-            if (node.getAction() != null) {
-                System.out.println("Selected node: " + node.getAction().actionCodeToString());
-            } else {
-                System.out.println("Selected node: null");
-            }
-
             Player winner = rollOut(game, maxDepth);
-            if (winner != null) {
-                System.out.println("Rollout winner: " + winner.getName());
-            } else {
-                System.out.println("Rollout ended with no winner.");
-            }
-
             backPropagate(node, game.getCurrentPlayer(), winner, game);
 
             if (node.getParent() == root) {
@@ -289,7 +281,7 @@ public class MCTS {
     }
 
     /**
-     * Handles the lose card event during the game simulation.
+     * Handles the loose card event during the game simulation.
      * This method evaluates the game state and determines whether the AI should lose a card.
      * If the AI is the player whose turn it is during the simulation, the method selects a card to lose and returns it.
      * If the AI is not the player whose turn it is during the simulation, the method loses a random influence point for the AI.
@@ -425,25 +417,26 @@ public class MCTS {
         }
     }
 
+    /**
+     * Executes the given action in the game, handling challenges and blocks.
+     * This method updates the game state based on the executed action,
+     * including the handling of challenges and blocks.
+     * It also updates the visit count of all the nodes in the tree.
+     * @param game The current state of the game, used to access the current players and game context.
+     * @param action The action executed in the game that determines the new root node.
+     * @param isChallenged A boolean value indicating whether the action is being challenged.
+     * @param isBlocked A boolean value indicating whether the action is being blocked.
+     */
     private void executeAction(Game game, Action action, boolean isChallenged, boolean isBlocked) {
         Player currentPlayer = game.getCurrentPlayer();
         Player targetPlayer = game.getOpponent(currentPlayer);
 
-        if (isChallenged) {
-            if (!action.challenge()) {
-                currentPlayer.loseRandomInfluence();
-                return;
-            }
+        if (!handleChallenge(game, action, isChallenged, currentPlayer)) {
+            return;
         }
 
-        if (isBlocked) {
-            if (simulateBlockChallenge(game, action)) {
-                if (targetPlayer != null) {
-                    targetPlayer.loseRandomInfluence();
-                }
-            } else {
-                return;
-            }
+        if (!handleBlock(game, action, isBlocked, currentPlayer)) {
+            return;
         }
 
         List<Card> cards = null;
@@ -460,7 +453,7 @@ public class MCTS {
             cards = new ArrayList<>();
             cards.addAll(selectedCards);
             cards.addAll(newCards);
-        } else if (action.getActionCode() == ActionCode.COUP || action.getActionCode() == ActionCode.ASSASSINATE ) {
+        } else if (action.getActionCode() == ActionCode.COUP || action.getActionCode() == ActionCode.ASSASSINATE) {
             assert targetPlayer != null;
             if (!targetPlayer.getCards().isEmpty()) {
                 Card cardToLose = targetPlayer.getCards().get(0);
@@ -470,11 +463,9 @@ public class MCTS {
         }
 
         game.executeAction(action, cards);
-        if(!game.isGameOver()) {
+        if (!game.isGameOver()) {
             game.switchTurns();
-        }
-        else
-        {
+        } else {
             handleGameOver(game.getPlayers().get(0));
         }
     }

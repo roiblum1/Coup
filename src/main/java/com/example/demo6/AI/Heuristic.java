@@ -15,7 +15,19 @@ import static com.example.demo6.Model.Deck.CardType.*;
 
 public class Heuristic {
 
-
+    /**
+     * Selects an action for the AI to perform heuristically. The method uses a simplified
+     * decision-making process based on the current game state, without exhaustive search or
+     * randomness typically involved in Monte Carlo Tree Search (MCTS).
+     * It analyzes the available actions and current game situation, such as the number of coins
+     * and cards the AI and the human player have, to determine the most advantageous move.
+     * The AI prioritizes actions that could lead to immediate victory, maximizes coin gain,
+     * or sets up a stronger position for subsequent turns.
+     *
+     * @param availableActions List of actions that the AI can currently take.
+     * @param game The current state of the game, which includes both AI and human players' statuses.
+     * @return The selected Action that the AI will perform.
+     */
     static Action selectActionHeuristically(List<Action> availableActions, Game game) {
         Player aiPlayer = game.getCurrentPlayer();
         Player humanPlayer = game.getOpponent(aiPlayer);
@@ -80,6 +92,7 @@ public class Heuristic {
                 .findFirst()
                 .orElse(null);
     }
+
     /**
      * Simulates the decision to challenge an action during the Monte Carlo Tree Search (MCTS).
      * This method evaluates whether the AI should challenge an opponent's action based on strategic considerations,
