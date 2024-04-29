@@ -241,12 +241,14 @@ public class MCTS {
             if (!action.challenge()) {
                 handleLoseCard(currentPlayer, game);
                 // The challenging player loses influence if the challenge fails
-                return false; // Action fails if the challenge is successful
+                // Action fails if the challenge is successful
+                return false;
             } else {
                 handleLoseCard(game.getOpponent(currentPlayer), game);
             }
         }
-        return true; // Continue with the action if no challenge or if challenge failed
+        // Continue with the action if no challenge or if challenge failed
+        return true;
     }
 
     /**
@@ -267,13 +269,16 @@ public class MCTS {
             if (simulateBlockChallenge(game, action)) {
                 // If the block is challenged successfully, the blocking player loses influence
                 handleLoseCard(game.getOpponent(currentPlayer), game);
-                return true; // Action proceeds if the block challenge is successful
+                // Action proceeds if the block challenge is successful
+                return true;
             } else {
                 // If the block is not challenged or the challenge fails, the action does not proceed
-                return false; // Action does not proceed if the block is successful
+                // Action does not proceed if the block is successful
+                return false;
             }
         }
-        return true; // Continue with the action if no block
+        // Continue with the action if no block
+        return true;
     }
 
     /**
