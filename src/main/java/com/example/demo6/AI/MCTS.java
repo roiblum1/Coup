@@ -55,17 +55,14 @@ public class MCTS {
 
         search(numOfSimulations, maxDepth);
 
-        double maxUCB1 = Double.NEGATIVE_INFINITY;
         List<Action> aiAvailableActions = game.getAvailableActions(game.getAIPlayer());
         List<Node> maxNodes = root.getChildren().values().stream()
                 .filter(child -> child.getVisitCount() > 0)
                 .collect(Collectors.toList());
-
         maxNodes = maxNodes.stream()
                 .filter(child -> aiAvailableActions.stream()
                         .anyMatch(action -> action.getActionCode() == child.getAction().getActionCode()))
                 .collect(Collectors.toList());
-
         maxNodes.sort(Comparator.comparingDouble(Node::getUCB1Value).reversed());
 
         System.out.println("Available actions:");
@@ -103,10 +100,6 @@ public class MCTS {
 
             Player winner = rollOut(game, maxDepth);
             backPropagate(node, game.getCurrentPlayer(), winner, game);
-
-            if (node.getParent() == root) {
-                return;
-            }
         }
     }
 
