@@ -151,7 +151,7 @@ public class Heuristic {
      */
     public static boolean simulateBlock(Game game, Action action) {
         // Check if the current player is the AI player
-        if (game.getCurrentPlayer().getName().equals(game.getPlayers().get(1).getName())) {
+        if (game.getCurrentPlayer().getName().equals(game.getAIPlayer().getName())) {
             Player aiPlayer = game.getCurrentPlayer();
 
             // If AI has only one card left and the human player is performing an Assassinate action,
@@ -199,7 +199,7 @@ public class Heuristic {
      */
     public static boolean simulateBlockChallenge(Game game, Action action) {
         // Determine if the current player is the AI player
-        if (game.getCurrentPlayer().getName().equals(game.getPlayers().get(1).getName())){
+        if (game.getCurrentPlayer().getName().equals(game.getAIPlayer().getName())){
             Player aiPlayer = game.getCurrentPlayer();
             // Avoid challenging if the AI player is at a high risk (only one card left)
             if (aiPlayer.getCards().size() == 1) {
