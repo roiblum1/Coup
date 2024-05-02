@@ -270,18 +270,26 @@ public class GameController {
     /**
      * Executes the turn for the AI player. Determines the best move using the MCTS algorithm and performs it.
      * Displays which action the AI decided to execute in the view.
+     * Uses a separate thread to prevent the GUI from freezing during the computation.
      */
     private void executeAIPlayerTurn() {
-        Action bestAction = mcts.bestMove(game.deepCopy());
-        if (bestAction != null) {
-            bestAction.setPlayer(aiPlayer);
-            bestAction.setOpponent(game.getOpponent(aiPlayer));
-            System.out.println("The best action is : " + bestAction.actionCodeToString() + " " + bestAction.getPlayer().getName());
-            view.displayMessage("AI decides to execute the action: " + bestAction.actionCodeToString());
-            executeAction(bestAction);
-        }
+        view.setControlsDisable(true);
+        Thread aiThread = new Thread(() -> {
+            Action bestAction = mcts.bestMove(game.deepCopy());
+            Platform.runLater(() -> {
+                if (bestAction != null) {
+                    bestAction.setPlayer(aiPlayer);
+                    bestAction.setOpponent(game.getOpponent(aiPlayer));
+                    System.out.println("The best action is: " + bestAction.actionCodeToString() + " " + bestAction.getPlayer().getName());
+                    view.displayMessage("AI decides to execute the action: " + bestAction.actionCodeToString());
+                    executeAction(bestAction);
+                }
+                view.setControlsDisable(false);
+            });
+        });
+        aiThread.setDaemon(true);
+        aiThread.start();
     }
-
     /**
      * Handles the loss of a card for a given player. This method determines which card the player should lose,
      * either through AI selection or player input, and then performs the necessary actions to update the game state.

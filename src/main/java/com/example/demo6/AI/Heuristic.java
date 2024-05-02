@@ -105,7 +105,7 @@ public class Heuristic {
      */
     public static boolean simulateChallenge(Game game, Action action) {
         // Check if the current player is the AI player
-        if (game.getCurrentPlayer().equals(game.getPlayers().get(1))) {
+        if (game.getCurrentPlayer().equals(game.getAIPlayer())) {
             Player aiPlayer = game.getCurrentPlayer();
             Player humanPlayer = game.getOpponent(aiPlayer);
             // Always challenge if the AI has only one card left and the human player is performing an Assassinate action,

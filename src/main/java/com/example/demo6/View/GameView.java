@@ -32,6 +32,8 @@ public class GameView extends Application {
     private Label cardStackCountLabel;
     private int cardStackCount;
     private VBox cardStackArea;
+    private ComboBox<Action> actionsComboBox;
+    private Button newGameButton;
     private Player currentPlayer;
     private GameController controller;
     public static void main(String[] args) {
@@ -243,7 +245,7 @@ public class GameView extends Application {
             HBox actionsBox = new HBox(10);
             actionsBox.setAlignment(Pos.CENTER);
             actionsBox.getStyleClass().add("actions-box");
-            ComboBox<Action> actionsComboBox = new ComboBox<>();
+            actionsComboBox = new ComboBox<>();
             actionsComboBox.setPromptText("Choose an action");
             actionsComboBox.setCellFactory(lv -> new ListCell<>() {
                 @Override
@@ -422,7 +424,7 @@ public class GameView extends Application {
      * @return the 'New Game' button
      */
     private Button createNewGameButton() {
-        Button newGameButton = new Button("New Game");
+        newGameButton = new Button("New Game");
         newGameButton.setFont(new Font("Arial", 16));
         newGameButton.setOnAction(event -> {
             // Reset the game state and initialize a new game
@@ -506,5 +508,21 @@ public class GameView extends Application {
         cardImageMap.put(Deck.CardType.AMBASSADOR, "ambassador.png");
         cardImageMap.put(Deck.CardType.CONTESSA, "contessa.png");
         return cardImageMap.getOrDefault(card.getType(), "screen_.png");
+    }
+
+    /**
+     * Disables or enables the controls in the game view.
+     *
+     * @param disable true to disable the controls, false to enable them
+     */
+    public void setControlsDisable(boolean disable) {
+        Platform.runLater(() -> {
+            if (actionsComboBox != null) {
+                actionsComboBox.setDisable(disable);
+            }
+            if (newGameButton != null) {
+                newGameButton.setDisable(disable);
+            }
+        });
     }
 }
