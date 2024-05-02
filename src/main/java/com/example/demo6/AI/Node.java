@@ -59,7 +59,12 @@ public class Node {
             return Double.POSITIVE_INFINITY;
         }
         double averageReward = (double) reward / visitCount;
-        double explorationFactor = EXPLORATION * Math.sqrt(Math.log(parent.getVisitCount()) / visitCount);
+        double explorationFactor;
+        if (parent != null && parent.getVisitCount() > 0) {
+            explorationFactor = Math.sqrt(2 * Math.log(parent.getVisitCount()) / visitCount);
+        } else {
+            explorationFactor = Math.sqrt(2 * Math.log(visitCount) / visitCount);
+        }
         return averageReward + explorationFactor;
     }
 

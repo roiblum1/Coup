@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import static com.example.demo6.AI.Heuristic.*;
 
 public class MCTS {
+    private static final int PRUNING_THRESHOLD = 300;
+    private static final double PRUNING_FACTOR = 0.9;
     private Game rootGame;
     private Node root;
     private final int numOfSimulations;
@@ -35,8 +37,6 @@ public class MCTS {
         // Sets the maximum depth of the MCTS tree.
         this.maxDepth = maxDepth;
     }
-
-
 
     /**
      * This method returns the best action for the AI to take in the game.
@@ -338,24 +338,18 @@ public class MCTS {
         return activePlayers.get(0);
     }
 
-
-
     /**
-     * Backpropagates the results of a game simulation up the MCTS tree, updating nodes with the simulation's outcome.
-     * This method adjusts the visit count and reward of each node based on the outcome of the simulated game.
-     * It increments the visit count for each node as the simulation trace passes through it.
-     * Rewards are updated based on whether the AI won or lost the game, or based on a position evaluation:
-     * - If there's a winner, the reward is adjusted by +10 or -10 depending on whether the turn player is the winner.
-     * - If there's no clear winner, the game state is evaluated, and rewards are adjusted by +1 or -1 based on the AI's relative position.
-     * This feedback loop helps refine future decisions made by the AI during the MCTS.
-     *
-     * @param node the node from which to start backpropagation.
-     * @param turn the player whose turn it was during the simulation.
-     * @param winner the player who won the game, or null if there was no winner.
-     * @param game the game state used for position evaluation when there is no clear winner.
+     * Backpropagation the rewards and visit counts through the MCTS tree.
+     * This method updates the rewards and visit counts of the nodes in the tree based on the outcome of the game.
+     * It also prunes the tree if a node's UCB1 value is significantly lower than its parent's UCB1 value.
+     * @param node The node from which to start backpropagation.
+     * @param turn The player whose turn it is during the game.
+     * @param winner The winner of the game, or null if the game is not over.
+     * @param game The current state of the game, used to access the current players and game context.
      */
     private void backPropagate(Node node, Player turn, Player winner, Game game) {
-        while (node != null) {
+        boolean isPruned = false;
+        while (node != null && !isPruned) {
             node.incrementVisitCount();
 
             if (winner != null) {
@@ -365,20 +359,22 @@ public class MCTS {
                     node.incrementReward(-200);
                 }
             } else {
-                // Evaluate the position when there is no clear winner
                 int aiPlayerScore = evaluatePosition(game.getAIPlayer());
                 int humanPlayerScore = evaluatePosition(game.getHumanPlayer());
-                node.incrementReward(aiPlayerScore-humanPlayerScore);
+                node.incrementReward(aiPlayerScore - humanPlayerScore);
             }
+            if (node.getVisitCount() > PRUNING_THRESHOLD && node.getParent() != null) {
+                double ucb1Value = node.getUCB1Value();
+                double parentUCB1Value = node.getParent().getUCB1Value();
 
-            // Move to the parent node until the root is reached
-            node = node.getParent();
-            if (node == root.getParent()) {
-                node = null;
+                if (ucb1Value < parentUCB1Value * PRUNING_FACTOR) {
+                    node.getParent().getChildren().remove(node.getAction());
+                    isPruned = true;
+                }
             }
+            node = node.getParent();
         }
     }
-
 
     /**
      * Updates the root of the MCTS tree based on the executed action.
