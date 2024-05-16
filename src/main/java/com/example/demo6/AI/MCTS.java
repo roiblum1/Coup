@@ -189,8 +189,10 @@ public class MCTS {
                     Action action = selectActionForPlayer(game, currentPlayer, availableActions);
                     boolean isChallenged = simulateChallenge(game, action);
                     boolean isBlocked = simulateBlock(game, action);
-
                     if (handleChallenge(game, action, isChallenged, currentPlayer) && handleBlock(game, action, isBlocked, currentPlayer)) {
+                        if(game.isGameOver()) {
+                            return determineWinner(game);
+                        }
                         executeAction(game, action, false, false); // Execute without further blocks or challenges
                     }
                 }
@@ -237,6 +239,10 @@ public class MCTS {
      * @return true if the action can proceed, false otherwise.
      */
     private boolean handleChallenge(Game game, Action action, boolean isChallenged, Player currentPlayer) {
+        if(action == null || game.isGameOver())
+        {
+            return true;
+        }
         if (action.canBeChallenged && isChallenged) {
             if (!action.challenge()) {
                 handleLoseCard(currentPlayer, game);
@@ -265,6 +271,10 @@ public class MCTS {
      * @return true if the action can proceed, false otherwise.
      */
     private boolean handleBlock(Game game, Action action, boolean isBlocked, Player currentPlayer) {
+        if(action == null || game.isGameOver())
+        {
+            return true;
+        }
         if (action.canBeBlocked && isBlocked) {
             if (simulateBlockChallenge(game, action)) {
                 // If the block is challenged successfully, the blocking player loses influence

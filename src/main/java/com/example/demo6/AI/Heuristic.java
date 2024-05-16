@@ -6,12 +6,10 @@ import com.example.demo6.Model.Card;
 import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Game;
 import com.example.demo6.Model.Player;
-import javafx.scene.paint.RadialGradient;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Random;
 
 import static com.example.demo6.Model.Deck.CardType.*;
 
@@ -33,27 +31,19 @@ public class Heuristic {
     static Action selectActionHeuristically(List<Action> availableActions, Game game) {
         Player aiPlayer = game.getCurrentPlayer();
         Player humanPlayer = game.getOpponent(aiPlayer);
-        List<Card> aiPlayerCards = aiPlayer.getCards();
         int aiPlayerCoins = aiPlayer.getCoins();
         int humanPlayerCoins = humanPlayer.getCoins();
         int humanPlayerCardCount = humanPlayer.getCards().size();
 
         // Immediate winning moves: If human player has 1 card, prioritize COUP or ASSASSINATE if possible.
-        if (aiPlayerCoins >= 7) { // Coup is a guaranteed kill if it can be afforded and not blocked.
+        if (aiPlayerCoins >= 7) {
             return availableActions.stream()
                     .filter(action -> action.getActionCode() == ActionCode.COUP)
                     .findFirst()
                     .orElse(null);
         }
 
-        if (aiPlayerCoins >= 3 && aiPlayerCards.contains(ASSASSIN)) { // Assassinate if possible.
-            return availableActions.stream()
-                    .filter(action -> action.getActionCode() == ActionCode.ASSASSINATE)
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        if(humanPlayerCardCount == 1 && aiPlayerCards.contains(ASSASSIN)) {
+        if (aiPlayerCoins >= 3 && aiPlayer.hasCard(ASSASSIN)) { // Assassinate if possible.
             return availableActions.stream()
                     .filter(action -> action.getActionCode() == ActionCode.ASSASSINATE)
                     .findFirst()
@@ -61,7 +51,7 @@ public class Heuristic {
         }
 
         // Use Duke to collect taxes if available to maximize coin gain safely.
-        if (aiPlayerCards.contains(DUKE)) {
+        if (aiPlayer.hasCard(DUKE)) {
             return availableActions.stream()
                     .filter(action -> action.getActionCode() == ActionCode.TAX)
                     .findFirst()
@@ -69,7 +59,7 @@ public class Heuristic {
         }
 
         // Use Captain to steal if the human player has coins and the AI has the Captain.
-        if (aiPlayerCards.contains(CAPTAIN) && humanPlayerCoins > 0) {
+        if (aiPlayer.hasCard(CAPTAIN) && humanPlayerCoins > 0) {
             return availableActions.stream()
                     .filter(action -> action.getActionCode() == ActionCode.STEAL)
                     .findFirst()
@@ -84,16 +74,20 @@ public class Heuristic {
                         .findFirst()
                         .orElse(null); // Foreign Aid or Income to get to 7 coins for a Coup next turn.
             }
+            // Consider swapping if having excess coins and possibly bad cards.
         }
-        Random random = new Random();
-        double probability = random.nextDouble();
-        if (probability < 0.8) {
+
+        if(humanPlayerCardCount ==  1 && aiPlayer.getCoins() > 3)
+        {
             return availableActions.stream()
-                    .filter(action -> action.getActionCode() == ActionCode.INCOME)
+                    .filter(action -> action.getActionCode() == ActionCode.ASSASSINATE)
                     .findFirst()
                     .orElse(null);
         }
-        else return availableActions.get(random.nextInt(availableActions.size()));
+        return availableActions.stream()
+                .filter(action -> action.getActionCode() == ActionCode.INCOME)
+                .findFirst()
+                .orElse(null);
     }
 
     /**
@@ -113,7 +107,7 @@ public class Heuristic {
             Player humanPlayer = game.getOpponent(aiPlayer);
             // Always challenge if the AI has only one card left and the human player is performing an Assassinate action,
             // and the AI does not have a Contessa to block it. This is to avoid losing the game.
-            if (aiPlayer.getCards().size() == 1 && action.getActionCode() == ActionCode.ASSASSINATE && !aiPlayer.hasCard(Deck.CardType.CONTESSA)) {
+            if (aiPlayer.getCards().size() == 1 && action.getActionCode() == ActionCode.ASSASSINATE && !aiPlayer.hasCard(CONTESSA)) {
                 return true;
             }
             // Avoid challenging if the AI has only one card left unless it's a critical situation,
@@ -129,7 +123,7 @@ public class Heuristic {
             // Challenge a Tax action if the AI suspects the human player might not have a Duke,
             // especially if the AI itself does not have a Duke.
             if (action.getActionCode() == ActionCode.TAX) {
-                return !aiPlayer.getCards().contains(DUKE);
+                return !aiPlayer.hasCard(DUKE);
             }
             // If none of the specific conditions are met, do not challenge.
             return false;
@@ -160,26 +154,23 @@ public class Heuristic {
             // If AI has only one card left and the human player is performing an Assassinate action,
             // always block to avoid losing the game, provided the AI has a Contessa.
             if (aiPlayer.getCards().size() == 1 && action.getActionCode() == ActionCode.ASSASSINATE) {
-                return aiPlayer.getCards().contains(Deck.CardType.CONTESSA);
+                return aiPlayer.hasCard(CONTESSA);
             }
 
             // Block Foreign Aid if the AI has a Duke, since a Duke allows blocking Foreign Aid.
-            if (action.getActionCode() == ActionCode.FOREIGN_AID && aiPlayer.getCards().contains(DUKE)) {
+            if (action.getActionCode() == ActionCode.FOREIGN_AID && aiPlayer.hasCard(DUKE)) {
                 return true;
             }
 
             // Block Steal if the AI has a Captain or Ambassador, as these characters can block Stealing.
-            if (action.getActionCode() == ActionCode.STEAL && (aiPlayer.getCards().contains(CAPTAIN) || aiPlayer.getCards().contains(Deck.CardType.AMBASSADOR))) {
+            if (action.getActionCode() == ActionCode.STEAL && (aiPlayer.hasCard(CAPTAIN) || aiPlayer.hasCard(AMBASSADOR))) {
                 return true;
             }
 
             // Block Assassinate if the AI has a Contessa, which can block an Assassinate action.
-            if (action.getActionCode() == ActionCode.ASSASSINATE && aiPlayer.getCards().contains(Deck.CardType.CONTESSA)) {
-                return true;
-            }
+            return action.getActionCode() == ActionCode.ASSASSINATE && aiPlayer.hasCard(CONTESSA);
 
             // If none of the conditions apply, do not block.
-            return false;
         } else {
             // For a human player, simulate a random decision to block with a 50% probability.
             // This randomness reflects uncertainty in human decision-making in the simulation.

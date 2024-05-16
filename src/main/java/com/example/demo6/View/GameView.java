@@ -53,6 +53,7 @@ public class GameView extends Application {
         mainContent.setAlignment(Pos.CENTER);
         mainContent.setPadding(new Insets(15, 12, 15, 12));
         // VBox for player info and actions
+        actionsComboBox = new ComboBox<>();
         gameContent = new VBox(10);
         gameContent.setAlignment(Pos.CENTER);
         createTurnTable();
@@ -245,7 +246,7 @@ public class GameView extends Application {
             HBox actionsBox = new HBox(10);
             actionsBox.setAlignment(Pos.CENTER);
             actionsBox.getStyleClass().add("actions-box");
-            actionsComboBox = new ComboBox<>();
+            actionsComboBox.getItems().clear();
             actionsComboBox.setPromptText("Choose an action");
             actionsComboBox.setCellFactory(lv -> new ListCell<>() {
                 @Override
