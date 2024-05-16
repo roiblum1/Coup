@@ -6,10 +6,12 @@ import com.example.demo6.Model.Card;
 import com.example.demo6.Model.Deck;
 import com.example.demo6.Model.Game;
 import com.example.demo6.Model.Player;
+import javafx.scene.paint.RadialGradient;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 
 import static com.example.demo6.Model.Deck.CardType.*;
 
@@ -37,16 +39,21 @@ public class Heuristic {
         int humanPlayerCardCount = humanPlayer.getCards().size();
 
         // Immediate winning moves: If human player has 1 card, prioritize COUP or ASSASSINATE if possible.
-        if (humanPlayerCardCount == 1) {
-            if (aiPlayerCoins >= 7) { // Coup is a guaranteed kill if it can be afforded and not blocked.
-                return availableActions.stream()
-                        .filter(action -> action.getActionCode() == ActionCode.COUP)
-                        .findFirst()
-                        .orElse(null);
-            }
+        if (aiPlayerCoins >= 7) { // Coup is a guaranteed kill if it can be afforded and not blocked.
+            return availableActions.stream()
+                    .filter(action -> action.getActionCode() == ActionCode.COUP)
+                    .findFirst()
+                    .orElse(null);
         }
 
         if (aiPlayerCoins >= 3 && aiPlayerCards.contains(ASSASSIN)) { // Assassinate if possible.
+            return availableActions.stream()
+                    .filter(action -> action.getActionCode() == ActionCode.ASSASSINATE)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        if(humanPlayerCardCount == 1 && aiPlayerCards.contains(ASSASSIN)) {
             return availableActions.stream()
                     .filter(action -> action.getActionCode() == ActionCode.ASSASSINATE)
                     .findFirst()
@@ -77,20 +84,16 @@ public class Heuristic {
                         .findFirst()
                         .orElse(null); // Foreign Aid or Income to get to 7 coins for a Coup next turn.
             }
-            // Consider swapping if having excess coins and possibly bad cards.
-            if (aiPlayerCoins > 8) {
-                return availableActions.stream()
-                        .filter(action -> action.getActionCode() == ActionCode.SWAP)
-                        .findFirst()
-                        .orElse(null);
-            }
         }
-
-        // Default to income if no strategic moves are immediately necessary.
-        return availableActions.stream()
-                .filter(action -> action.getActionCode() == ActionCode.INCOME)
-                .findFirst()
-                .orElse(null);
+        Random random = new Random();
+        double probability = random.nextDouble();
+        if (probability < 0.8) {
+            return availableActions.stream()
+                    .filter(action -> action.getActionCode() == ActionCode.INCOME)
+                    .findFirst()
+                    .orElse(null);
+        }
+        else return availableActions.get(random.nextInt(availableActions.size()));
     }
 
     /**
