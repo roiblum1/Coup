@@ -193,7 +193,7 @@ public class MCTS {
                         if(game.isGameOver()) {
                             return determineWinner(game);
                         }
-                        executeAction(game, action, false, false); // Execute without further blocks or challenges
+                        executeAction(game, action, false, false);
                     }
                 }
             }
