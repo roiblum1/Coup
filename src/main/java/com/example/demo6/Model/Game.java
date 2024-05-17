@@ -134,7 +134,6 @@ public class Game  {
             System.out.println("No active players left");
             return null;
         }
-        // Toggle the current player between the two active players
         Player currentPlayer = getCurrentPlayer();
         Player nextPlayer = activePlayers.stream()
                 .filter(p -> !p.equals(currentPlayer))
@@ -145,7 +144,6 @@ public class Game  {
             System.out.println("No opponent found");
             return null;
         }
-        // Update the current player index to the index of the next player
         currentPlayerIndex = activePlayers.indexOf(nextPlayer);
         return nextPlayer;
     }
@@ -157,22 +155,6 @@ public class Game  {
      */
     public void setPlayerList(List<Player> clonedPlayerList) {
         this.playerList = clonedPlayerList;
-    }
-
-    /**
-     * Sets the last action executed in the game.
-     * @param lastExecutedAction The last action to set.
-     */
-    public void setLastExecutedAction(Action lastExecutedAction) {
-        this.lastExecutedAction = lastExecutedAction;
-    }
-
-    /**
-     * Gets the last action executed in the game.
-     * @return The last executed action.
-     */
-    public Action getLastExecutedAction() {
-        return lastExecutedAction;
     }
 
     /**
@@ -199,7 +181,6 @@ public class Game  {
     public Game deepCopy() {
         Game copiedGame = new Game(this.deck.deepCopy());
         copiedGame.setCurrentPlayerIndex(this.currentPlayerIndex);
-        copiedGame.setLastExecutedAction(this.lastExecutedAction);
         List<Player> copiedPlayerList = new ArrayList<>();
         for (Player player : this.playerList) {
             Player copiedPlayer = new Player(player.getName());
@@ -230,12 +211,26 @@ public class Game  {
                 Player currentPlayer = action.getPlayer();
                 List<Card> selectedCards = cards.subList(0, 2);
                 List<Card> newCards = cards.subList(2, 4);
-                // Call the swapCards method on the current player
                 currentPlayer.swapCards(selectedCards, newCards);
             }
         } else {
             action.execute(false, false);
         }
-        lastExecutedAction = action;
+    }
+
+    public long getStateHash() {
+        long hash = 0;
+        // Hash the cards of the AI player
+        Player aiPlayer = getAIPlayer();
+        for (Card card : aiPlayer.getCards()) {
+            hash = 31 * hash + card.hashCode();
+        }
+        Player humanPlayer = getHumanPlayer();
+        hash = 31 * hash + humanPlayer.getCards().size();
+        // Hash the coins of each player
+        for (Player player : getPlayers()) {
+            hash = 31 * hash + player.getCoins();
+        }
+        return hash;
     }
 }

@@ -12,7 +12,7 @@ import java.util.Map;
  * Each node corresponds to a game state, represented by an action taken from the parent node.
  */
 public class Node {
-    private static final double EXPLORATION = Math.sqrt(2);
+    private static final double EXPLORATION = 2;
     private final Action action;
     private final Node parent;
     private int visitCount;
@@ -61,9 +61,9 @@ public class Node {
         double averageReward = (double) reward / visitCount;
         double explorationFactor;
         if (parent != null && parent.getVisitCount() > 0) {
-            explorationFactor = Math.sqrt(2 * Math.log(parent.getVisitCount()) / visitCount);
+            explorationFactor = Math.sqrt(EXPLORATION * Math.log(parent.getVisitCount()) / visitCount);
         } else {
-            explorationFactor = Math.sqrt(2 * Math.log(visitCount) / visitCount);
+            explorationFactor = Math.sqrt(EXPLORATION * Math.log(visitCount) / visitCount);
         }
         return averageReward + explorationFactor;
     }
@@ -148,13 +148,5 @@ public class Node {
      */
     public double getReward() {
         return this.reward;
-    }
-
-    /**
-     * Returns the reward as a string.
-     * @return The reward in string format.
-     */
-    public String getRewardToString() {
-        return "" + this.reward;
     }
 }

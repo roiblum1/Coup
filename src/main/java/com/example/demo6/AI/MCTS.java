@@ -18,7 +18,8 @@ public class MCTS {
     private Node root;
     private final int numOfSimulations;
     private final int maxDepth;
-
+    private TranspositionTable transpositionTable;
+    private int count = 0;
 
     /**
      * Constructs a new instance of the Monte Carlo Tree Search (MCTS) class.
@@ -36,6 +37,7 @@ public class MCTS {
         this.numOfSimulations = numOfSimulations;
         // Sets the maximum depth of the MCTS tree.
         this.maxDepth = maxDepth;
+        this.transpositionTable = new TranspositionTable();
     }
 
     /**
@@ -52,7 +54,7 @@ public class MCTS {
         if (rootGame.isGameOver()) {
             return null;
         }
-
+        count = 0;
         search(numOfSimulations, maxDepth);
 
         List<Action> aiAvailableActions = game.getAvailableActions(game.getAIPlayer());
@@ -73,10 +75,10 @@ public class MCTS {
                     + ", Reward = " + child.getReward() + ", Average Reward = " + averageReward
                     + ", UCB1 = " + ucb1);
         });
-
-        if (maxNodes.isEmpty()) {
+        System.out.println(count);
+        if (maxNodes.isEmpty() || !maxNodes.get(0).getAction().canPlayerPerform()) {
             System.out.println("No valid moves available.");
-            return null;
+            return selectActionHeuristically(aiAvailableActions, rootGame);
         } else {
             Node bestNode = maxNodes.get(0);
             System.out.println("Selected best action: " + bestNode.getAction().actionCodeToString());
@@ -112,19 +114,29 @@ public class MCTS {
         Node node = root;
         Game game = rootGame.deepCopy();
         int depth = 0;
+        int expandedNodeCount = 0;
+        final int minExpandedNodesForTranspositionTable = 10;
 
         // Loop through the MCTS tree up to the specified maximum depth
         while (depth < maxDepth) {
             // If the current node is a leaf node, expand it by simulating rollouts
             if (node.isLeaf()) {
                 expand(node, game);
+                expandedNodeCount++;
             }
 
             // If the current node has no children, break the loop
             if (node.getChildren().isEmpty()) {
                 return new NodeGamePair(node, game);
             }
-
+            if (expandedNodeCount >= minExpandedNodesForTranspositionTable) {
+                long stateHash = game.getStateHash();
+                TranspositionEntry entry = transpositionTable.lookup(stateHash);
+                if (entry != null && entry.getDepth() >= maxDepth - depth) {
+                    count++;
+                    return new NodeGamePair(entry.getNode(), game);
+                }
+            }
             // Select a child node for further exploration
             node = node.selectChild();
 
@@ -139,6 +151,8 @@ public class MCTS {
             // Increment the depth counter
             depth++;
         }
+        long stateHash = game.getStateHash();
+        transpositionTable.store(stateHash, new TranspositionEntry(node, depth, node.getUCB1Value()));
         // Return a pair containing the selected node and the corresponding game state
         return new NodeGamePair(node, game);
     }
