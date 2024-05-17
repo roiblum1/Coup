@@ -60,12 +60,15 @@ public class MCTS {
         List<Action> aiAvailableActions = game.getAvailableActions(game.getAIPlayer());
         List<Node> maxNodes = root.getChildren().values().stream()
                 .filter(child -> child.getVisitCount() > 0)
-                .collect(Collectors.toList());
-        maxNodes = maxNodes.stream()
                 .filter(child -> aiAvailableActions.stream()
                         .anyMatch(action -> action.getActionCode() == child.getAction().getActionCode()))
+                .sorted(Comparator.comparingDouble(Node::getUCB1Value).reversed())
                 .collect(Collectors.toList());
-        maxNodes.sort(Comparator.comparingDouble(Node::getUCB1Value).reversed());
+
+        maxNodes.removeIf(child -> {
+            child.getAction().setPlayer(game.getAIPlayer());
+            return !child.getAction().canPlayerPerform();
+        });
 
         System.out.println("Available actions:");
         maxNodes.forEach(child -> {
@@ -75,8 +78,9 @@ public class MCTS {
                     + ", Reward = " + child.getReward() + ", Average Reward = " + averageReward
                     + ", UCB1 = " + ucb1);
         });
+
         System.out.println(count);
-        if (maxNodes.isEmpty() || !maxNodes.get(0).getAction().canPlayerPerform()) {
+        if (maxNodes.isEmpty()) {
             System.out.println("No valid moves available.");
             return selectActionHeuristically(aiAvailableActions, rootGame);
         } else {
@@ -129,31 +133,26 @@ public class MCTS {
             if (node.getChildren().isEmpty()) {
                 return new NodeGamePair(node, game);
             }
-            if (expandedNodeCount >= minExpandedNodesForTranspositionTable) {
-                long stateHash = game.getStateHash();
-                TranspositionEntry entry = transpositionTable.lookup(stateHash);
-                if (entry != null && entry.getDepth() >= maxDepth - depth) {
-                    count++;
-                    return new NodeGamePair(entry.getNode(), game);
-                }
-            }
-            // Select a child node for further exploration
-            node = node.selectChild();
 
-            // Simulate the AI's decision-making process based on the current game state
+//            if (expandedNodeCount >= minExpandedNodesForTranspositionTable) {
+//                long stateHash = game.getStateHash();
+//                TranspositionEntry entry = transpositionTable.lookup(stateHash);
+//                if (entry != null && entry.getDepth() >= maxDepth - depth) {
+//                    count++;
+//                    return new NodeGamePair(entry.getNode(), game);
+//                }
+//            }
+
+            node = node.selectChild();
             boolean isChallenged = simulateChallenge(game, node.getAction());
             boolean isBlocked = simulateBlock(game, node.getAction());
-
-            // Execute the selected action in the game state
             Game simulationGame = game.deepCopy();
             executeAction(simulationGame, node.getAction(), isChallenged, isBlocked);
             game.switchTurns();
-            // Increment the depth counter
             depth++;
         }
-        long stateHash = game.getStateHash();
-        transpositionTable.store(stateHash, new TranspositionEntry(node, depth, node.getUCB1Value()));
-        // Return a pair containing the selected node and the corresponding game state
+//        long stateHash = game.getStateHash();
+//        transpositionTable.store(stateHash, new TranspositionEntry(node, depth, node.getUCB1Value()));
         return new NodeGamePair(node, game);
     }
 

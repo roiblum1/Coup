@@ -10,6 +10,7 @@ import com.example.demo6.Model.Player;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 
 import static com.example.demo6.Model.Deck.CardType.*;
 
@@ -84,10 +85,17 @@ public class Heuristic {
                     .findFirst()
                     .orElse(null);
         }
-        return availableActions.stream()
-                .filter(action -> action.getActionCode() == ActionCode.INCOME)
-                .findFirst()
-                .orElse(null);
+        Random random = new Random();
+        double probability = random.nextDouble();
+        if(probability < 0.8) {
+            return availableActions.stream()
+                    .filter(action -> action.getActionCode() == ActionCode.INCOME)
+                    .findFirst()
+                    .orElse(null);
+        }
+        else {
+            return availableActions.get(random.nextInt(availableActions.size()));
+        }
     }
 
     /**
@@ -126,7 +134,9 @@ public class Heuristic {
                 return !aiPlayer.hasCard(DUKE);
             }
             // If none of the specific conditions are met, do not challenge.
-            return false;
+            Random random = new Random();
+            double probability = random.nextDouble();
+            return probability < 0.3;
         } else {
             // For the human player, simulate a random decision to challenge with a 50% probability.
             // This adds an element of unpredictability to the human player's strategy in the simulation.

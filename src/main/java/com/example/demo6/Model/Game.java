@@ -226,11 +226,26 @@ public class Game  {
             hash = 31 * hash + card.hashCode();
         }
         Player humanPlayer = getHumanPlayer();
-        hash = 31 * hash + humanPlayer.getCards().size();
+        hash = 31 * hash + HashUtils.hashCard(humanPlayer.getCards().size());
         // Hash the coins of each player
         for (Player player : getPlayers()) {
-            hash = 31 * hash + player.getCoins();
+            hash = 31 * hash + HashUtils.hashCoin(player.getCoins());
         }
         return hash;
+    }
+
+    public class HashUtils{
+        private static final int CARD_PRIME1 = 73856093;
+        private static final int CARD_PRIME2 = 19349663;
+        private static final int CARD_PRIME3 = 83492791;
+        private static final int COIN_PRIME1 = 546345805;
+        private static final int COIN_PRIME2 = 22664871;
+        private static final int COIN_PRIME3 = 9249919;
+        public static int hashCard(int value) {
+            return (value * CARD_PRIME1) ^ (value * CARD_PRIME2) ^ (value * CARD_PRIME3);
+        }
+        public static int hashCoin(int value) {
+            return (value * COIN_PRIME1) ^ (value * COIN_PRIME2) ^ (value * COIN_PRIME3);
+        }
     }
 }
