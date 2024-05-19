@@ -160,37 +160,32 @@ public class Heuristic {
         // Check if the current player is the AI player
         if (game.getCurrentPlayer().getName().equals(game.getAIPlayer().getName())) {
             Player aiPlayer = game.getCurrentPlayer();
-
             // If AI has only one card left and the human player is performing an Assassinate action,
-            // always block to avoid losing the game, provided the AI has a Contessa.
+            // block with a 40% chance, regardless of whether the AI has a Contessa or not.
             if (aiPlayer.getCards().size() == 1 && action.getActionCode() == ActionCode.ASSASSINATE) {
-                return aiPlayer.hasCard(CONTESSA);
+                return Math.random() < 0.4;
             }
-
+            // If the AI has a Contessa and the human player is performing an Assassinate action,
+            // always block to protect against the assassination attempt.
+            if (action.getActionCode() == ActionCode.ASSASSINATE && aiPlayer.hasCard(CONTESSA)) {
+                return true;
+            }
             // Block Foreign Aid if the AI has a Duke, since a Duke allows blocking Foreign Aid.
             if (action.getActionCode() == ActionCode.FOREIGN_AID && aiPlayer.hasCard(DUKE)) {
                 return true;
             }
-
             // Block Steal if the AI has a Captain or Ambassador, as these characters can block Stealing.
             if (action.getActionCode() == ActionCode.STEAL && (aiPlayer.hasCard(CAPTAIN) || aiPlayer.hasCard(AMBASSADOR))) {
                 return true;
             }
-
-            if(action.getActionCode() == ActionCode.ASSASSINATE && aiPlayer.hasCard(CONTESSA)){
-                return true;
-            }
-
-            Random random = new Random();
-            double probability = random.nextDouble();
-            return probability < 0.3;
+            // For other cases, block with a 30% probability.
+            return Math.random() < 0.3;
         } else {
             // For a human player, simulate a random decision to block with a 50% probability.
             // This randomness reflects uncertainty in human decision-making in the simulation.
             return Math.random() < 0.5;
         }
     }
-
 
 
     /**
@@ -250,9 +245,11 @@ public class Heuristic {
     public static boolean isSuspiciousBlock(Deck.CardType requiredCard, Player aiPlayer) {
         List<Card> aiPlayerCards = aiPlayer.getCards();
         long countInAIHand = aiPlayerCards.stream().filter(card -> card.getType() == requiredCard).count();
-        final long totalInGame = 2;  // Total copies of each card type in the game
+        // Total copies of each card type in the game
+        final long totalInGame = 2;
         long totalPossible = totalInGame - countInAIHand;
-        return totalPossible < 1;  // Less than 1 means the opponent unlikely to have a card
+        // Less than 1 means the opponent unlikely to have a card
+        return totalPossible < 1;
     }
 
     /**
@@ -267,7 +264,8 @@ public class Heuristic {
         List<Card> allCards = new ArrayList<>(player.getCards());
         allCards.addAll(newCards);
         allCards.sort(Comparator.comparingInt(Heuristic::getCardValue).reversed());
-        return allCards.subList(0, 2); // Keeping the two most valuable cards
+        // Keeping the two most valuable cards
+        return allCards.subList(0, 2);
     }
 
     /**
