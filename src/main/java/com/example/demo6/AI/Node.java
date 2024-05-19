@@ -128,8 +128,15 @@ public class Node {
      * @return The child node with the highest UCT value.
      */
     public Node selectChild() {
+        final double explorationBonus = 200.0; // Adjust this value as needed
         return children.values().stream()
-                .max(Comparator.comparingDouble(Node::getUCB1Value))
+                .max(Comparator.comparingDouble(child -> {
+                    if (child.getVisitCount() == 0) {
+                        return child.getUCB1Value() + explorationBonus;
+                    } else {
+                        return child.getUCB1Value();
+                    }
+                }))
                 .orElse(null);
     }
 

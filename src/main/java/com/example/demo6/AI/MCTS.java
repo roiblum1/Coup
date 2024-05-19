@@ -71,15 +71,17 @@ public class MCTS {
         });
 
         System.out.println("Available actions:");
-        maxNodes.forEach(child -> {
+        int i = 1;
+        for (Node child : maxNodes) {
             double averageReward = child.getReward() / (double) child.getVisitCount();
             double ucb1 = child.getUCB1Value();
-            System.out.println(child.getAction().actionCodeToString() + ": Visit Count = " + child.getVisitCount()
+            System.out.println(i +". "+child.getAction().actionCodeToString() + ": Visit Count = " + child.getVisitCount()
                     + ", Reward = " + child.getReward() + ", Average Reward = " + averageReward
                     + ", UCB1 = " + ucb1);
-        });
+            i++;
+        }
 
-        System.out.println(count);
+        System.out.println("Transposition table have been used for : " +count+ " times");
         if (maxNodes.isEmpty()) {
             System.out.println("No valid moves available.");
             return selectActionHeuristically(aiAvailableActions, rootGame);
@@ -134,14 +136,14 @@ public class MCTS {
                 return new NodeGamePair(node, game);
             }
 
-//            if (expandedNodeCount >= minExpandedNodesForTranspositionTable) {
-//                long stateHash = game.getStateHash();
-//                TranspositionEntry entry = transpositionTable.lookup(stateHash);
-//                if (entry != null && entry.getDepth() >= maxDepth - depth) {
-//                    count++;
-//                    return new NodeGamePair(entry.getNode(), game);
-//                }
-//            }
+            if (expandedNodeCount >= minExpandedNodesForTranspositionTable) {
+                long stateHash = game.getStateHash();
+                TranspositionEntry entry = transpositionTable.lookup(stateHash);
+                if (entry != null && entry.getDepth() >= maxDepth - depth) {
+                    count++;
+                    return new NodeGamePair(entry.getNode(), game);
+                }
+            }
 
             node = node.selectChild();
             boolean isChallenged = simulateChallenge(game, node.getAction());
@@ -151,8 +153,8 @@ public class MCTS {
             game.switchTurns();
             depth++;
         }
-//        long stateHash = game.getStateHash();
-//        transpositionTable.store(stateHash, new TranspositionEntry(node, depth, node.getUCB1Value()));
+        long stateHash = game.getStateHash();
+        transpositionTable.store(stateHash, new TranspositionEntry(node, depth, node.getUCB1Value()));
         return new NodeGamePair(node, game);
     }
 
