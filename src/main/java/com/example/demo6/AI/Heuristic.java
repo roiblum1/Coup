@@ -133,7 +133,7 @@ public class Heuristic {
             if (action.getActionCode() == ActionCode.TAX) {
                 return !aiPlayer.hasCard(DUKE);
             }
-            // If none of the specific conditions are met, do not challenge.
+
             Random random = new Random();
             double probability = random.nextDouble();
             return probability < 0.3;
@@ -177,10 +177,13 @@ public class Heuristic {
                 return true;
             }
 
-            // Block Assassinate if the AI has a Contessa, which can block an Assassinate action.
-            return action.getActionCode() == ActionCode.ASSASSINATE && aiPlayer.hasCard(CONTESSA);
+            if(action.getActionCode() == ActionCode.ASSASSINATE && aiPlayer.hasCard(CONTESSA)){
+                return true;
+            }
 
-            // If none of the conditions apply, do not block.
+            Random random = new Random();
+            double probability = random.nextDouble();
+            return probability < 0.3;
         } else {
             // For a human player, simulate a random decision to block with a 50% probability.
             // This randomness reflects uncertainty in human decision-making in the simulation.
@@ -224,8 +227,9 @@ public class Heuristic {
                     return ambassadorSuspicious || captainSuspicious;
 
                 default:
-                    // Do not challenge by default if the action is not one of the specified blockable actions
-                    return false;
+                    Random random = new Random();
+                    double probability = random.nextDouble();
+                    return probability < 0.3;
             }
         } else {
             // For a human player, simulate a random decision to block with a 50% probability.
@@ -246,7 +250,7 @@ public class Heuristic {
     public static boolean isSuspiciousBlock(Deck.CardType requiredCard, Player aiPlayer) {
         List<Card> aiPlayerCards = aiPlayer.getCards();
         long countInAIHand = aiPlayerCards.stream().filter(card -> card.getType() == requiredCard).count();
-        long totalInGame = 2;  // Total copies of each card type in the game
+        final long totalInGame = 2;  // Total copies of each card type in the game
         long totalPossible = totalInGame - countInAIHand;
         return totalPossible < 1;  // Less than 1 means the opponent unlikely to have a card
     }
