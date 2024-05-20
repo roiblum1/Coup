@@ -73,13 +73,9 @@ public class MCTS {
         System.out.println("Available actions:");
         int i = 1;
         for (Node child : maxNodes) {
-            double averageReward;
-            if(child.getVisitCount() == 0) averageReward = 0.0;
-            else averageReward = child.getReward() / (double) child.getVisitCount();
             double ucb1 = child.getUCB1Value();
             System.out.println(i +". "+child.getAction().actionCodeToString() + ": Visit Count = " + child.getVisitCount()
-                    + ", Reward = " + child.getReward() + ", Average Reward = " + averageReward
-                    + ", UCB1 = " + ucb1);
+                    + ", Reward = " + child.getReward() + ", UCB1 = " + ucb1);
             i++;
         }
         System.out.println("Transposition table have been used for : " + countTransposition + " times");
@@ -381,9 +377,9 @@ public class MCTS {
 
             if (winner != null) {
                 if (winner.getName().equals(game.getAIPlayer().getName())) {
-                    node.incrementReward(1);
+                    node.incrementReward(20);
                 } else {
-                    node.incrementReward(-1);
+                    node.incrementReward(-20);
                 }
             } else {
                 int aiPlayerScore = evaluatePosition(game.getAIPlayer());
@@ -431,9 +427,9 @@ public class MCTS {
      */
     public void handleGameOver(Player winner) {
         if (winner == rootGame.getHumanPlayer()) {
-            root.incrementReward(-1);
+            root.incrementReward(-20);
         } else if (winner == rootGame.getAIPlayer()) {
-            root.incrementReward(1);
+            root.incrementReward(20);
         }
 
         Node node = root;
