@@ -56,7 +56,8 @@ public class Node {
      */
     public double getUCB1Value() {
         if (visitCount == 0) {
-            return Double.POSITIVE_INFINITY;
+            // I have chosen this value because in my option unvisited node worth more than losing node and less than winning node.
+            return 20.0;
         }
         double averageReward = (double) reward / visitCount;
         double explorationFactor;
@@ -128,6 +129,7 @@ public class Node {
      * @return The child node with the highest UCT value.
      */
     public Node selectChild() {
+        //The explorationBonus is for unvisited nodes
         final double explorationBonus = 200.0; // Adjust this value as needed
         return children.values().stream()
                 .max(Comparator.comparingDouble(child -> {

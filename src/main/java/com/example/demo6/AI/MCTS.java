@@ -6,7 +6,6 @@ import com.example.demo6.Model.Game;
 import com.example.demo6.Model.Player;
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import static com.example.demo6.AI.Heuristic.*;
@@ -19,7 +18,8 @@ public class MCTS {
     private final int numOfSimulations;
     private final int maxDepth;
     private TranspositionTable transpositionTable;
-    private int count = 0;
+    private int countTransposition = 0;
+    private int countPruning = 0;
 
     /**
      * Constructs a new instance of the Monte Carlo Tree Search (MCTS) class.
@@ -54,12 +54,12 @@ public class MCTS {
         if (rootGame.isGameOver()) {
             return null;
         }
-        count = 0;
+        countTransposition = 0;
+        countPruning = 0;
         search(numOfSimulations, maxDepth);
 
         List<Action> aiAvailableActions = game.getAvailableActions(game.getAIPlayer());
         List<Node> maxNodes = root.getChildren().values().stream()
-                .filter(child -> child.getVisitCount() > 0)
                 .filter(child -> aiAvailableActions.stream()
                         .anyMatch(action -> action.getActionCode() == child.getAction().getActionCode()))
                 .sorted(Comparator.comparingDouble(Node::getUCB1Value).reversed())
@@ -73,21 +73,22 @@ public class MCTS {
         System.out.println("Available actions:");
         int i = 1;
         for (Node child : maxNodes) {
-            double averageReward = child.getReward() / (double) child.getVisitCount();
+            double averageReward;
+            if(child.getVisitCount() == 0) averageReward = 0.0;
+            else averageReward = child.getReward() / (double) child.getVisitCount();
             double ucb1 = child.getUCB1Value();
             System.out.println(i +". "+child.getAction().actionCodeToString() + ": Visit Count = " + child.getVisitCount()
                     + ", Reward = " + child.getReward() + ", Average Reward = " + averageReward
                     + ", UCB1 = " + ucb1);
             i++;
         }
-
-        System.out.println("Transposition table have been used for : " +count+ " times");
+        System.out.println("Transposition table have been used for : " + countTransposition + " times");
+        System.out.println("Pruning have been used for : " + countPruning + " times");
         if (maxNodes.isEmpty()) {
             System.out.println("No valid moves available.");
             return selectActionHeuristically(aiAvailableActions, rootGame);
         } else {
             Node bestNode = maxNodes.get(0);
-            System.out.println("Selected best action: " + bestNode.getAction().actionCodeToString());
             return bestNode.getAction();
         }
     }
@@ -140,7 +141,7 @@ public class MCTS {
                 long stateHash = game.getStateHash();
                 TranspositionEntry entry = transpositionTable.lookup(stateHash);
                 if (entry != null && entry.getDepth() >= maxDepth - depth) {
-                    count++;
+                    countTransposition++;
                     return new NodeGamePair(entry.getNode(), game);
                 }
             }
@@ -237,7 +238,8 @@ public class MCTS {
         } else {
             // If the player is simulated as a human
             // Select a random action to simulate unpredictability
-            return availableActions.get(ThreadLocalRandom.current().nextInt(availableActions.size()));
+            Random random = new Random();
+            return availableActions.get(random.nextInt(availableActions.size()));
         }
     }
 
@@ -336,7 +338,7 @@ public class MCTS {
     private boolean shouldTerminateSearch(Game game) {
         int aiPlayerScore = evaluatePosition(game.getAIPlayer());
         int humanPlayerScore = evaluatePosition(game.getHumanPlayer());
-        return aiPlayerScore < humanPlayerScore - 30; // Stop searching if the AI is significantly behind
+        return aiPlayerScore < humanPlayerScore - 40;
     }
 
     /**
@@ -393,6 +395,7 @@ public class MCTS {
                 double parentUCB1Value = node.getParent().getUCB1Value();
 
                 if (ucb1Value < parentUCB1Value * PRUNING_FACTOR) {
+                    countPruning++;
                     node.getParent().getChildren().remove(node.getAction());
                     isPruned = true;
                 }

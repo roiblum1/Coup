@@ -280,7 +280,7 @@ public class GameController {
                 if (bestAction != null) {
                     bestAction.setPlayer(aiPlayer);
                     bestAction.setOpponent(game.getHumanPlayer());
-                    System.out.println("The best action is: " + bestAction.actionCodeToString());
+                    System.out.println("The best action is: " + bestAction.actionCodeToString() +"\n");
                     view.displayMessage("AI decides to execute the action: " + bestAction.actionCodeToString());
                     executeAction(bestAction);
                 }
