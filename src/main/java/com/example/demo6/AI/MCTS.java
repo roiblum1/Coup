@@ -72,7 +72,7 @@ public class MCTS {
             return !child.getAction().canPlayerPerform();
         });
 
-        System.out.println("Searched nodes:");
+        System.out.println("Search Result:");
         int i = 1;
         for (Node child : maxNodes) {
             double ucb1 = child.getUCB1Value();
@@ -137,6 +137,7 @@ public class MCTS {
 
             if (expandedNodeCount >= minExpandedNodesForTranspositionTable) {
                 long stateHash = game.getStateHash();
+                //check if the current game state is existed in the transposition table
                 TranspositionEntry entry = transpositionTable.lookup(stateHash);
                 if (entry != null && entry.getDepth() >= maxDepth - depth) {
                     countTransposition++;
@@ -153,6 +154,7 @@ public class MCTS {
             depth++;
         }
         long stateHash = game.getStateHash();
+        //add the current game state to the transposition table
         transpositionTable.store(stateHash, new TranspositionEntry(node, depth, node.getUCB1Value()));
         return new NodeGamePair(node, game);
     }
@@ -389,10 +391,14 @@ public class MCTS {
                 int reward = aiPlayerScore > humanPlayerScore ? 10 : -10;
                 node.incrementReward(reward);
             }
+            //check if the node has minimum visit count in order to purge
             if (node.getVisitCount() > PRUNING_THRESHOLD && node.getParent() != null) {
                 double ucb1Value = node.getUCB1Value();
                 double parentUCB1Value = node.getParent().getUCB1Value();
 
+                //check if the current ucb1 is significantly lower than the parent's ucb1
+                //in our case it should be less than 70% of the parents ucb1.
+                //70% because we want that more nodes will continue to be searched
                 if (ucb1Value < parentUCB1Value * PRUNING_FACTOR) {
                     countPruning++;
                     node.getParent().getChildren().remove(node.getAction());
