@@ -12,7 +12,7 @@ import static com.example.demo6.AI.Heuristic.*;
 
 public class MCTS {
     private static final int PRUNING_THRESHOLD = 300;
-    private static final double PRUNING_FACTOR = 0.9;
+    private static final double PRUNING_FACTOR = 0.75;
     private Game rootGame;
     private Node root;
     private final int numOfSimulations;
@@ -59,18 +59,20 @@ public class MCTS {
         search(numOfSimulations, maxDepth);
 
         List<Action> aiAvailableActions = game.getAvailableActions(game.getAIPlayer());
+        //this filter the nodes so only the legal action will be presented, and sort the nodes by their UCB1 value
         List<Node> maxNodes = root.getChildren().values().stream()
                 .filter(child -> aiAvailableActions.stream()
                         .anyMatch(action -> action.getActionCode() == child.getAction().getActionCode()))
                 .sorted(Comparator.comparingDouble(Node::getUCB1Value).reversed())
                 .collect(Collectors.toList());
 
+        //This double check the actions and remove the illegal actions
         maxNodes.removeIf(child -> {
             child.getAction().setPlayer(game.getAIPlayer());
             return !child.getAction().canPlayerPerform();
         });
 
-        System.out.println("Available actions:");
+        System.out.println("Searched nodes:");
         int i = 1;
         for (Node child : maxNodes) {
             double ucb1 = child.getUCB1Value();
@@ -384,7 +386,7 @@ public class MCTS {
             } else {
                 int aiPlayerScore = evaluatePosition(game.getAIPlayer());
                 int humanPlayerScore = evaluatePosition(game.getHumanPlayer());
-                int reward = aiPlayerScore > humanPlayerScore ? 1 : -1;
+                int reward = aiPlayerScore > humanPlayerScore ? 10 : -10;
                 node.incrementReward(reward);
             }
             if (node.getVisitCount() > PRUNING_THRESHOLD && node.getParent() != null) {
