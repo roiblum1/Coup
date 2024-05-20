@@ -338,7 +338,7 @@ public class MCTS {
     private boolean shouldTerminateSearch(Game game) {
         int aiPlayerScore = evaluatePosition(game.getAIPlayer());
         int humanPlayerScore = evaluatePosition(game.getHumanPlayer());
-        return aiPlayerScore < humanPlayerScore - 40;
+        return aiPlayerScore < humanPlayerScore - 30;
     }
 
     /**
@@ -381,14 +381,15 @@ public class MCTS {
 
             if (winner != null) {
                 if (winner.getName().equals(game.getAIPlayer().getName())) {
-                    node.incrementReward(200);
+                    node.incrementReward(1);
                 } else {
-                    node.incrementReward(-200);
+                    node.incrementReward(-1);
                 }
             } else {
                 int aiPlayerScore = evaluatePosition(game.getAIPlayer());
                 int humanPlayerScore = evaluatePosition(game.getHumanPlayer());
-                node.incrementReward(aiPlayerScore - humanPlayerScore);
+                int reward = aiPlayerScore > humanPlayerScore ? 1 : -1;
+                node.incrementReward(reward);
             }
             if (node.getVisitCount() > PRUNING_THRESHOLD && node.getParent() != null) {
                 double ucb1Value = node.getUCB1Value();
@@ -430,9 +431,9 @@ public class MCTS {
      */
     public void handleGameOver(Player winner) {
         if (winner == rootGame.getHumanPlayer()) {
-            root.incrementReward(-1000);
+            root.incrementReward(-1);
         } else if (winner == rootGame.getAIPlayer()) {
-            root.incrementReward(1000);
+            root.incrementReward(1);
         }
 
         Node node = root;

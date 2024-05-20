@@ -55,14 +55,19 @@ public class Node {
      * @return The UCB1 value for this node.
      */
     public double getUCB1Value() {
+        // A large value to ensure unvisited nodes are explored
         if (visitCount == 0) {
-            // A large value to ensure unvisited nodes are explored
             return Double.MAX_VALUE;
-
         }
         double averageReward = (double) reward / visitCount;
         double explorationFactor;
         if (parent != null && parent.getVisitCount() > 0) {
+            //EXPLORATION - higher value will increase unvisited nodes, lower value will increase explored nodes
+
+            //Math.log is used because its increase slowly in higher x so the exploration factor will be less effective in large visit counts
+            //and that ensure that nodes that have been visited more will not get high priority compared to other nodes.
+
+            //visit count - in order to give more priority for less visited nodes
             explorationFactor = Math.sqrt(EXPLORATION * Math.log(parent.getVisitCount()) / visitCount);
         } else {
             explorationFactor = Math.sqrt(EXPLORATION * Math.log(visitCount) / visitCount);
