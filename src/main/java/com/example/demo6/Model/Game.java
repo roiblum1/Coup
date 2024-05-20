@@ -202,6 +202,8 @@ public class Game  {
             if (action.getActionCode() == ActionCode.COUP || action.getActionCode() == ActionCode.ASSASSINATE) {
                 boolean success = action.execute(false, false);
                 if (success) {
+                    //card 0 is the card that send to this function in the cards list
+                    //It represented the card that the opponent choose to return
                     getOpponent(action.getPlayer()).returnCard(cards.get(0));
                 }
             }

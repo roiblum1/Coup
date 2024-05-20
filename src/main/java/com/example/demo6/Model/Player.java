@@ -127,6 +127,7 @@ public class Player {
 
     /**
      * Removes a random card from the player's hand and returns it to the deck.
+     * used for human player in the monte carlo simulation.
      */
     public void loseRandomInfluence() {
         Random random = new Random();

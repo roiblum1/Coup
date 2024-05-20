@@ -78,7 +78,6 @@ public class GameController {
      * @param action The action to be executed, derived from the current player's available actions.
      */
     public void executeAction(Action action) {
-        //another validation that the action is legal to be performed
         if (!action.canPlayerPerform()) {
             view.displayMessage("Action cannot be performed due to game rules.");
             return;
@@ -189,7 +188,7 @@ public class GameController {
         }
 
         view.displayMessage(opponent.getName() + " blocks " + currentPlayer.getName() + "'s action!");
-        boolean challengeBlock = currentPlayer == aiPlayer
+        boolean challengeBlock = currentPlayer.equals(aiPlayer)
                 ? simulateBlockChallenge(game, action)
                 : view.promptForChallenge("Do you want to challenge this block?");
 
@@ -313,7 +312,6 @@ public class GameController {
     private void endGame() {
         Player winner = game.getActivePlayers().get(0);
         view.displayWinner(winner);
-        mcts.handleGameOver(winner);
     }
 
     /**

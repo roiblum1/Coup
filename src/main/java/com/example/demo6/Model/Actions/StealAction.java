@@ -31,7 +31,7 @@ public class StealAction extends Action {
      */
     @Override
     public boolean canPlayerPerform() {
-        return true;
+        return opponent.getCoins() > 0;
     }
 
     /**
