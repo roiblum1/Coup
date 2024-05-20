@@ -234,13 +234,13 @@ public class Game  {
         return hash;
     }
 
-    public class HashUtils{
-        private static final int CARD_PRIME1 = 73856093;
-        private static final int CARD_PRIME2 = 19349663;
-        private static final int CARD_PRIME3 = 83492791;
-        private static final int COIN_PRIME1 = 546345805;
-        private static final int COIN_PRIME2 = 22664871;
-        private static final int COIN_PRIME3 = 9249919;
+    public static class HashUtils{
+        private static final int CARD_PRIME1 = 31;
+        private static final int CARD_PRIME2 = 37;
+        private static final int CARD_PRIME3 = 41;
+        private static final int COIN_PRIME1 = 43;
+        private static final int COIN_PRIME2 = 47;
+        private static final int COIN_PRIME3 = 53;
         public static int hashCard(int value) {
             return (value * CARD_PRIME1) ^ (value * CARD_PRIME2) ^ (value * CARD_PRIME3);
         }
