@@ -10,8 +10,6 @@ public class Game  {
     private List<Player> playerList;
     private Deck deck;
     private int currentPlayerIndex;
-    private Action lastExecutedAction;
-
 
     /**
      * Initializes a game with a specified deck.
@@ -218,6 +216,13 @@ public class Game  {
         }
     }
 
+    /**
+     * Retrieves a hash value representing the current state of the game.
+     * This hash value is used to compare the current state of the game with previous states,
+     * and to determine if the game has reached a winning or losing state.
+     *
+     * @return a long hash value representing the current state of the game.
+     */
     public long getStateHash() {
         long hash = 0;
         // Hash the cards of the AI player
@@ -241,9 +246,22 @@ public class Game  {
         private static final int COIN_PRIME1 = 43;
         private static final int COIN_PRIME2 = 47;
         private static final int COIN_PRIME3 = 53;
+        /**
+         * Hashes a card's value using a combination of prime numbers.
+         *
+         * @param value The value of the card to be hashed.
+         * @return A hash value for the card.
+         */
         public static int hashCard(int value) {
             return (value * CARD_PRIME1) ^ (value * CARD_PRIME2) ^ (value * CARD_PRIME3);
         }
+
+        /**
+         * Hashes a coin's value using a combination of prime numbers.
+         *
+         * @param value The value of the coin to be hashed.
+         * @return A hash value for the coin.
+         */
         public static int hashCoin(int value) {
             return (value * COIN_PRIME1) ^ (value * COIN_PRIME2) ^ (value * COIN_PRIME3);
         }
